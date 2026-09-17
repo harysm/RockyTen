@@ -10,7 +10,7 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 * **Tech Stack**: Next.js 16 (App Router + Turbopack), TypeScript, TailwindCSS, Lucide Icons, Recharts.
 * **Database Cloud**: Supabase PostgreSQL (`https://kgdesstrvhrkounqqruk.supabase.co`)
 * **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnZGVzc3Rydmhya291bnFxcnVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MDA1NjUsImV4cCI6MjEwMTQ3NjU2NX0.fML9JKsx72oexrjC-cAS1u-mHdYYA6dTorL2J8k1khU`
-* **GitHub Repository**: `https://github.com/databasegerilya-cyber/Scoreboard_nasigerilya`
+* **GitHub Repository**: `https://github.com/harysm/RockyTen`
 * **Auto-Push & Deployment**: Terintegrasi otomatis via Git & Vercel.
 
 ---
