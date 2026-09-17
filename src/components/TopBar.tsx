@@ -14,7 +14,8 @@ import {
   LogOut,
   ShieldCheck,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Calendar
 } from "lucide-react";
 import NetworkStatusBadge from "@/components/NetworkStatusBadge";
 import NotificationDropdown from "@/components/NotificationDropdown";
@@ -38,6 +39,18 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
 
   const [accountMenuOpen, setAccountMenuOpen] = useState<boolean>(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const [formattedDate, setFormattedDate] = useState<string>("");
+
+  useEffect(() => {
+    const today = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    };
+    setFormattedDate(today.toLocaleDateString(language === "id" ? "id-ID" : "en-US", options));
+  }, [language]);
 
   // Close account menu on click outside or Escape
   useEffect(() => {
@@ -89,11 +102,11 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
     return dept ? dept.name : "PIC";
   };
 
-  // Resolve current page title
+  // Resolve current page title (uses formatted date for Dashboard)
   const getPageTitle = () => {
     switch (pathname) {
       case "/":
-        return language === "id" ? "Dashboard" : "Dashboard";
+        return formattedDate || (language === "id" ? "Dashboard" : "Dashboard");
       case "/scoreboard":
         return language === "id" ? "Scoreboard KPI" : "KPI Scoreboard";
       case "/rocks":
@@ -140,9 +153,16 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
           </span>
         </div>
 
-        {/* Desktop Breadcrumb / Title */}
+        {/* Desktop Breadcrumb / Title (Shows Date on Dashboard) */}
         <div className="hidden lg:flex items-center gap-2 min-w-0">
-          <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+          {pathname === "/" && (
+            <Calendar className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
+          )}
+          <h1 className={`text-sm sm:text-base tracking-tight truncate ${
+            pathname === "/"
+              ? "font-semibold text-slate-700 dark:text-zinc-300"
+              : "font-bold text-slate-900 dark:text-white"
+          }`}>
             {getPageTitle()}
           </h1>
         </div>

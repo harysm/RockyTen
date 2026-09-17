@@ -618,6 +618,14 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
   * Mengganti logo gambar dan badge subtitle di bagian atas sidebar menjadi teks tebal minimalis **RockyTen** (`Link` ke dashboard).
 * **Penyempurnaan UI TopBar & Notifikasi**:
   * Memperbaiki posisi badge jumlah notifikasi di `NotificationDropdown.tsx` (`top-0 right-0 translate-x-1 -translate-y-1`) serta mengatur ukuran tombol trigger menjadi `w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center` sehingga badge angka tidak lagi menutupi icon lonceng (*bell icon*).
-  * Menyelaraskan dimensi tombol tema gelap/terang di TopBar agar simetris.
+* **Pembaruan Dashboard - Executive Performance Center (Opsi 1)**:
+  * Titik rollback aman dibuat di Git lokal pada commit `627ba1d` (`checkpoint: pre-dashboard-redesign-option-1`).
+  * Menghapus bagian *Aktivitas Terakhir* di dashboard sepenuhnya.
+  * Mengubah feed berita *Headline* menjadi Announcement Banner tipis di bawah stat card.
+  * Mengimplementasikan grafik **Tren Ketercapaian Metrik Mingguan (Recharts AreaChart)** dengan kurva gradien halus memetakan W1 - W5.
+  * Mengimplementasikan diagram **Kesehatan Status Metrik (Recharts Donut/PieChart)** dengan indikator persentase ketercapaian di tengah dan legend status (Tercapai, Berjalan, Gagal Target).
+  * Mengatur tata letak bawah menjadi 2 kolom seimbang: *Prioritas Rocks (90 Hari - Traction L10)* di sisi kiri dan *Radar Kendala Kritis (Urgent Issues Only)* di sisi kanan.
+  * Menghapus widget tanggal di sisi kanan salam pembuka Dashboard, dan memindahkannya ke bilah TopBar menggantikan teks "Dashboard" saat berada di halaman utama.
+  * Menghapus strip banner *Headline Terkini* dari halaman Dashboard agar tampilan langsung fokus pada 4 Stat Cards dan Grafik Analitik Recharts.
 
 
