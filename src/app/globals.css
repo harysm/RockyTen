@@ -1,0 +1,708 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Strictly Monochrome Light Theme (Black, Gray, White) */
+  --background: #fafafa;
+  --foreground: #18181b;
+
+  --card: #ffffff;
+  --card-foreground: #18181b;
+
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+
+  /* Status Colors (Strict Monochrome Grayscale) */
+  --success: #3f3f46;
+  --warning: #71717a;
+  --danger: #18181b;
+  --info: #52525b;
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Strictly Monochrome Dark Theme (Black, Gray, White) */
+  --background: #09090b;
+  --foreground: #ffffff;
+
+  --card: #141416;
+  --card-foreground: #ffffff;
+
+  --popover: #141416;
+  --popover-foreground: #ffffff;
+
+  --primary: #ffffff;
+  --primary-foreground: #09090b;
+
+  --secondary: #27272a;
+  --secondary-foreground: #ffffff;
+
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #27272a;
+  --accent-foreground: #ffffff;
+
+  --border: #27272a;
+  --input: #27272a;
+
+  /* Status Colors (Strict Monochrome Grayscale) */
+  --success: #d4d4d8;
+  --warning: #a1a1aa;
+  --danger: #ffffff;
+  --info: #e4e4e7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism utility classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 228, 231, 0.8);
+}
+
+.dark .glass-panel {
+  background: rgba(20, 20, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Micro-animations */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.08);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium Minimalist Dark Theme Overrides */
+.dark body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.dark .bg-white {
+  background-color: var(--card) !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #0d0d0f !important;
+  /* Zinc-950 deep black secondary bg */
+}
+
+.dark .bg-slate-50\/30 {
+  background-color: rgba(9, 9, 11, 0.4) !important;
+  /* Premium dark transparent zinc-950 footer */
+}
+
+.dark .bg-slate-50\/50 {
+  background-color: rgba(9, 9, 11, 0.6) !important;
+}
+
+.dark .bg-slate-50\/80 {
+  background-color: rgba(9, 9, 11, 0.9) !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1e1e22 !important;
+  /* Zinc-900 border/input shade */
+}
+
+.dark .bg-slate-200 {
+  background-color: #27272a !important;
+}
+
+/* Borders */
+.dark .border-slate-50,
+.dark .border-slate-100,
+.dark .border-slate-150,
+.dark .border-slate-200,
+.dark .border-slate-250,
+.dark .border-slate-300,
+.dark .border-slate-850,
+.dark .border-slate-805,
+.dark .border-slate-800 {
+  border-color: var(--border) !important;
+}
+
+.dark .divide-slate-50> :not([hidden])~ :not([hidden]),
+.dark .divide-slate-100> :not([hidden])~ :not([hidden]),
+.dark .divide-slate-200> :not([hidden])~ :not([hidden]) {
+  border-color: var(--border) !important;
+}
+
+/* Text overrides */
+.dark .text-slate-900,
+.dark .text-slate-850,
+.dark .text-slate-800,
+.dark .text-slate-750,
+.dark .text-slate-700 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-slate-650,
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-450 {
+  color: var(--muted-foreground) !important;
+}
+
+.dark .text-slate-400 {
+  color: #a1a1aa !important;
+  /* Zinc-400 muted text for high contrast */
+}
+
+/* Specific elements like active hover state or buttons */
+/* Next / UI elements custom theme rules */
+.dark aside {
+  background-color: var(--background);
+  border-color: var(--border);
+}
+
+/* Dark utility overrides matching minimalist black */
+.dark .dark\:bg-slate-900 {
+  background-color: var(--card) !important;
+}
+
+.dark .dark\:bg-slate-950 {
+  background-color: var(--background) !important;
+}
+
+.dark .dark\:border-slate-800 {
+  border-color: var(--border) !important;
+}
+
+.dark .dark\:text-slate-100 {
+  color: var(--foreground) !important;
+}
+
+.dark .bg-slate-800,
+.dark .hover\:bg-slate-800:hover,
+.dark .dark\:bg-slate-800,
+.dark .dark\:hover\:bg-slate-800:hover {
+  background-color: #27272a !important;
+}
+
+/* Translucent White Badge & Active Tab Button with Crisp 1px White Border */
+.badge-glass {
+  background-color: rgba(24, 24, 27, 0.06) !important;
+  color: #18181b !important;
+  border: 1px solid rgba(24, 24, 27, 0.25) !important;
+}
+
+.dark .badge-glass {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.tab-active-glass {
+  background-color: rgba(24, 24, 27, 0.1) !important;
+  color: #18181b !important;
+  border: 1px solid rgba(24, 24, 27, 0.4) !important;
+}
+
+.dark .tab-active-glass {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Executive Select Form Controls */
+select {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.dark select {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+  border-color: #3f3f46 !important;
+}
+
+.dark select option {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+}
+
+/* Executive Custom Todo Checkbox */
+.custom-todo-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1.5px solid #cbd5e1;
+  background-color: transparent;
+  margin-top: 2px;
+}
+
+.custom-todo-checkbox:hover {
+  border-color: #64748b;
+  background-color: #f1f5f9;
+}
+
+.custom-todo-checkbox.checked {
+  background-color: #18181b !important;
+  border-color: #18181b !important;
+  color: #ffffff !important;
+}
+
+.custom-todo-checkbox.checked svg {
+  stroke: #ffffff !important;
+  stroke-width: 3.5px;
+}
+
+.dark .custom-todo-checkbox {
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+  background-color: transparent !important;
+}
+
+.dark .custom-todo-checkbox:hover {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .custom-todo-checkbox.checked {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #09090b !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25) !important;
+}
+
+.dark .custom-todo-checkbox.checked svg {
+  stroke: #09090b !important;
+  stroke-width: 3.5px;
+}
+
+/* Transparent Green/Red/Amber Status Badges with Thin Border */
+.badge-status-selesai {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+.dark .badge-status-selesai {
+  background-color: rgba(16, 185, 129, 0.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+}
+
+.badge-status-gagal {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+  color: #f43f5e !important;
+  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+}
+
+.dark .badge-status-gagal {
+  background-color: rgba(244, 63, 94, 0.18) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.45) !important;
+}
+
+.badge-status-berjalan {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.dark .badge-status-berjalan {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+}
+
+/* 100% Strict Monochrome Utility Overrides (Black, Gray, White Only) */
+
+/* Eliminate all Red Box Shadows and Red Rings */
+[class*="shadow-red"],
+[class*="shadow-rose"] {
+  --tw-shadow-color: rgba(24, 24, 27, 0.1) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark [class*="shadow-red"],
+.dark [class*="shadow-rose"] {
+  --tw-shadow-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+[class*="ring-red"] {
+  --tw-ring-color: rgba(24, 24, 27, 0.2) !important;
+}
+
+.dark [class*="ring-red"] {
+  --tw-ring-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Primary CTA Buttons (Charcoal in Light Mode, Pure White in Dark Mode) */
+.bg-zinc-900,
+.bg-black {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+  border-color: #18181b !important;
+}
+
+.dark .bg-zinc-900,
+.dark .bg-black {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+  border-color: #ffffff !important;
+}
+
+/* Department & Neutral Badges */
+.bg-blue-50,
+.bg-indigo-50,
+.bg-purple-50 {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+  border-color: #e4e4e7 !important;
+}
+
+.dark .bg-blue-50,
+.dark .bg-blue-950\/20,
+.dark .bg-blue-950\/30,
+.dark .bg-blue-950\/40,
+.dark .dark\:bg-blue-950\/20,
+.dark .dark\:bg-blue-950\/40 {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+  border-color: #3f3f46 !important;
+}
+
+/* Preserve KPI Status Colors (Green for Achieved / Red for Failed Target) */
+.text-emerald-600,
+.text-emerald-700 {
+  color: #16a34a !important;
+}
+
+.dark .text-emerald-400,
+.dark .text-emerald-450,
+.dark .text-emerald-500 {
+  color: #4ade80 !important;
+}
+
+.text-rose-600,
+.text-rose-700 {
+  color: #dc2626 !important;
+}
+
+.dark .text-rose-400,
+.dark .text-rose-450,
+.dark .text-rose-500 {
+  color: #f87171 !important;
+}
+
+.bg-emerald-50 {
+  background-color: rgba(240, 253, 244, 1) !important;
+}
+
+.dark .bg-emerald-950\/20,
+.dark .bg-emerald-950\/30 {
+  background-color: rgba(6, 78, 59, 0.35) !important;
+}
+
+.bg-rose-50 {
+  background-color: rgba(254, 242, 242, 1) !important;
+}
+
+.dark .bg-rose-950\/20,
+.dark .bg-rose-950\/30 {
+  background-color: rgba(136, 19, 55, 0.35) !important;
+}
+
+/* Fix date/time picker calendar icon visibility in Light & Dark Mode */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 16px 16px !important;
+  filter: none !important;
+  opacity: 0.8 !important;
+  cursor: pointer !important;
+}
+
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"],
+.dark input[type="month"],
+.dark input[type="week"] {
+  color-scheme: dark !important;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator,
+.dark input[type="week"]::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 16px 16px !important;
+  filter: none !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1 !important;
+}
+
+@keyframes toastCountdown {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+/* Universal Button Hover Micro-Animations */
+button,
+a.button,
+.btn {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, opacity 0.18s ease !important;
+}
+
+button:hover:not(:disabled),
+a.button:hover:not(:disabled),
+.btn:hover:not(:disabled) {
+  transform: translateY(-1.5px) scale(1.02);
+}
+
+button:active:not(:disabled),
+a.button:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Skeleton Wave Shine Animation */
+@keyframes waveShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-wave-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-wave-shine::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.35) 20%,
+    rgba(255, 255, 255, 0.65) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: waveShimmer 1.6s infinite;
+  content: '';
+}
+
+.dark .animate-wave-shine::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.15) 60%,
+    rgba(255, 255, 255, 0)
+  );
+}
+
+/* Accessibility Custom Rules */
+html[data-font-size="large"] {
+  font-size: 115% !important;
+}
+
+html[data-font-size="xlarge"] {
+  font-size: 130% !important;
+}
+
+/* COMPACT DENSITY (RAPAT) */
+html[data-density="compact"] .p-5,
+html[data-density="compact"] .p-6,
+html[data-density="compact"] .p-8,
+html[data-density="compact"] .p-4 {
+  padding: 0.75rem !important;
+}
+
+html[data-density="compact"] .py-3\.5,
+html[data-density="compact"] .py-3,
+html[data-density="compact"] .py-4,
+html[data-density="compact"] .py-5 {
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+}
+
+html[data-density="compact"] .gap-5,
+html[data-density="compact"] .gap-6,
+html[data-density="compact"] .gap-8 {
+  gap: 0.625rem !important;
+}
+
+html[data-density="compact"] .space-y-4 > :not([hidden]) ~ :not([hidden]),
+html[data-density="compact"] .space-y-5 > :not([hidden]) ~ :not([hidden]),
+html[data-density="compact"] .space-y-6 > :not([hidden]) ~ :not([hidden]),
+html[data-density="compact"] .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse))) !important;
+  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse)) !important;
+}
+
+/* COMFORTABLE DENSITY (LONGGAR) */
+html[data-density="comfortable"] .p-5,
+html[data-density="comfortable"] .p-6,
+html[data-density="comfortable"] .p-8 {
+  padding: 2rem !important;
+}
+
+html[data-density="comfortable"] .py-3\.5,
+html[data-density="comfortable"] .py-3,
+html[data-density="comfortable"] .py-4 {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+html[data-density="comfortable"] .gap-5,
+html[data-density="comfortable"] .gap-6,
+html[data-density="comfortable"] .gap-8 {
+  gap: 2rem !important;
+}
+
+html[data-density="comfortable"] .space-y-4 > :not([hidden]) ~ :not([hidden]),
+html[data-density="comfortable"] .space-y-5 > :not([hidden]) ~ :not([hidden]),
+html[data-density="comfortable"] .space-y-6 > :not([hidden]) ~ :not([hidden]),
+html[data-density="comfortable"] .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(2rem * calc(1 - var(--tw-space-y-reverse))) !important;
+  margin-bottom: calc(2rem * var(--tw-space-y-reverse)) !important;
+}
+
+html[data-high-contrast="true"] {
+  --border: #000000;
+  border-color: #000000 !important;
+}
+
+html[data-high-contrast="true"].dark {
+  --border: #ffffff;
+  border-color: #ffffff !important;
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
