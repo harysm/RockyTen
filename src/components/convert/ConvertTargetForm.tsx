@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import {
   Target,
@@ -84,6 +84,61 @@ const getSourceTypeName = (type: ConvertSourceType): string => {
   }
 };
 
+// Static option arrays defined outside component to avoid re-allocation on every keystroke
+const METRIC_UNIT_OPTIONS = [
+  { value: "number", label: "Angka (Qty)", icon: <Hash className="w-3.5 h-3.5 text-slate-500" /> },
+  { value: "percentage", label: "Persen (%)", icon: <Percent className="w-3.5 h-3.5 text-emerald-500" /> },
+  { value: "currency", label: "Rupiah (Rp)", icon: <Coins className="w-3.5 h-3.5 text-amber-500" /> }
+];
+
+const METRIC_TARGET_TYPE_OPTIONS = [
+  { value: "higher_better", label: "≥ Lebih Tinggi", icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> },
+  { value: "lower_better", label: "≤ Lebih Rendah", icon: <TrendingDown className="w-3.5 h-3.5 text-rose-500" /> }
+];
+
+const METRIC_ACCUMULATION_OPTIONS = [
+  { value: "sum", label: "Penjumlahan (SUM)", icon: <Plus className="w-3.5 h-3.5 text-blue-500" /> },
+  { value: "average", label: "Rata-Rata (AVG)", icon: <BarChart2 className="w-3.5 h-3.5 text-amber-500" /> }
+];
+
+const METRIC_CYCLE_OPTIONS = [
+  { value: "monthly", label: "Bulanan (4 Minggu)", icon: <Calendar className="w-3.5 h-3.5 text-blue-500" /> },
+  { value: "special", label: "Khusus / Ad-Hoc", icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> }
+];
+
+const HEADLINE_CATEGORY_OPTIONS = [
+  {
+    value: "announcement",
+    label: "Pengumuman",
+    sublabel: "Informasi resmi tim",
+    icon: <Megaphone className="w-3.5 h-3.5 text-blue-500" />
+  },
+  {
+    value: "achievement",
+    label: "Pencapaian",
+    sublabel: "Prestasi target tim",
+    icon: <Trophy className="w-3.5 h-3.5 text-amber-500" />
+  },
+  {
+    value: "good_news",
+    label: "Kabar Baik",
+    sublabel: "Kabar gembira / progres positif",
+    icon: <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+  },
+  {
+    value: "bad_news",
+    label: "Kendala / Masalah",
+    sublabel: "Hambatan operasional",
+    icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+  },
+  {
+    value: "reminder",
+    label: "Pengingat",
+    sublabel: "Tenggat waktu & atensi",
+    icon: <Bell className="w-3.5 h-3.5 text-indigo-500" />
+  }
+];
+
 export default function ConvertTargetForm({
   sourceType,
   sourceItem,
@@ -107,28 +162,28 @@ export default function ConvertTargetForm({
     addHistoryLog
   } = useApp();
 
-  const availableTargets: { type: ConvertTargetType; label: string; icon: React.ReactNode; desc: string }[] = [
+  const availableTargets = useMemo(() => [
     { type: "metric" as ConvertTargetType, label: "Scoreboard KPI", icon: <Target className="w-4 h-4 text-amber-600 dark:text-amber-400" />, desc: "Sasaran berkala mingguan/khusus" },
     { type: "todo" as ConvertTargetType, label: "Agenda Todo", icon: <ClipboardList className="w-4 h-4 text-blue-600 dark:text-blue-400" />, desc: "Tindakan eksekusi tim" },
     { type: "issue" as ConvertTargetType, label: "Masalah Issue", icon: <AlertOctagon className="w-4 h-4 text-rose-600 dark:text-rose-400" />, desc: "Kendala untuk rapat IDS" },
     { type: "headline" as ConvertTargetType, label: "Berita Headline", icon: <Megaphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />, desc: "Pengumuman/pencapaian tim" },
-  ].filter(t => t.type !== sourceType);
+  ].filter(t => t.type !== sourceType), [sourceType]);
 
-  const [targetType, setTargetType] = useState<ConvertTargetType>(availableTargets[0]?.type || "todo");
+  const [targetType, setTargetType] = useState<ConvertTargetType>(() => availableTargets[0]?.type || "todo");
 
-  // Form states (Pre-filled from sourceItem)
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [deptId, setDeptId] = useState("");
+  // Form states (Pre-filled directly from sourceItem at initialization - Zero Mount Lag)
+  const [title, setTitle] = useState(() => sourceItem?.title || "");
+  const [desc, setDesc] = useState(() => sourceItem?.description || sourceItem?.content || "");
+  const [deptId, setDeptId] = useState(() => sourceItem?.departmentId || currentProfile?.departmentId || departments[0]?.id || "");
 
   // PIC States
-  const [selectedPicId, setSelectedPicId] = useState("");
-  const [selectedPicName, setSelectedPicName] = useState("");
+  const [selectedPicId, setSelectedPicId] = useState(() => sourceItem?.picId || currentProfile?.id || "");
+  const [selectedPicName, setSelectedPicName] = useState(() => sourceItem?.picName || currentProfile?.name || "");
 
   // Target Specific States
   // Metric
-  const [metricTarget, setMetricTarget] = useState<string>("100");
-  const [metricUnit, setMetricUnit] = useState<"number" | "currency" | "percentage">("number");
+  const [metricTarget, setMetricTarget] = useState<string>(() => (sourceItem?.target ? String(sourceItem.target) : "100"));
+  const [metricUnit, setMetricUnit] = useState<"number" | "currency" | "percentage">(() => (sourceItem?.unit === "currency" || sourceItem?.unit === "percentage" || sourceItem?.unit === "number" ? sourceItem.unit : "number"));
   const [metricAccumulationMode, setMetricAccumulationMode] = useState<"sum" | "average">("sum");
   const [metricTargetType, setMetricTargetType] = useState<"higher_better" | "lower_better">("higher_better");
   const [metricCycle, setMetricCycle] = useState<"monthly" | "special">("monthly");
@@ -136,19 +191,21 @@ export default function ConvertTargetForm({
   const [metricDurationDays, setMetricDurationDays] = useState(7);
 
   // Todo / Issue
-  const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">("medium");
+  const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">(() => sourceItem?.priority || "medium");
 
   // Headline
-  const [headlineCategory, setHeadlineCategory] = useState<"good_news" | "bad_news" | "reminder" | "announcement" | "achievement">("announcement");
+  const [headlineCategory, setHeadlineCategory] = useState<"good_news" | "bad_news" | "reminder" | "announcement" | "achievement">(() => sourceItem?.category || "announcement");
 
   // Attachment States
-  const [attachmentFiles, setAttachmentFiles] = useState<AttachmentInfo[]>([]);
+  const [attachmentFiles, setAttachmentFiles] = useState<AttachmentInfo[]>(() => (sourceItem?.attachments && Array.isArray(sourceItem.attachments) ? [...sourceItem.attachments] : []));
   const [linkInputUrl, setLinkInputUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Populate from sourceItem whenever sourceItem changes
+  // Only update state if sourceItem ID actually changes after mount (avoids cascading re-renders on mount)
+  const prevSourceIdRef = useRef(sourceItem?.id);
   useEffect(() => {
-    if (sourceItem) {
+    if (sourceItem && sourceItem.id !== prevSourceIdRef.current) {
+      prevSourceIdRef.current = sourceItem.id;
       setTitle(sourceItem.title || "");
       setDesc(sourceItem.description || sourceItem.content || "");
       setDeptId(sourceItem.departmentId || currentProfile.departmentId || departments[0]?.id || "");
@@ -323,14 +380,63 @@ export default function ConvertTargetForm({
   };
 
   const isSpecificDept = deptId && deptId !== "global";
-  const deptPics = isSpecificDept ? allProfiles.filter(p => p.departmentId === deptId) : [];
-  const otherPics = isSpecificDept ? allProfiles.filter(p => p.departmentId !== deptId) : allProfiles;
+  const deptPics = useMemo(() => isSpecificDept ? allProfiles.filter(p => p.departmentId === deptId) : [], [isSpecificDept, allProfiles, deptId]);
+  const otherPics = useMemo(() => isSpecificDept ? allProfiles.filter(p => p.departmentId !== deptId) : allProfiles, [isSpecificDept, allProfiles, deptId]);
+
+  const divisionOptions = useMemo(() => [
+    {
+      value: "global",
+      label: "Semua Divisi (Global)",
+      icon: <Building2 className="w-3.5 h-3.5 text-slate-500" />,
+      sublabel: "Akses terbuka lintas divisi"
+    },
+    ...departments.map((d) => ({
+      value: d.id,
+      label: `${d.name} Division`,
+      icon: <Building2 className="w-3.5 h-3.5 text-blue-500" />,
+      sublabel: `Divisi ${d.name}`
+    }))
+  ], [departments]);
+
+  const picOptions = useMemo(() => {
+    if (deptPics.length > 0) {
+      return [
+        ...deptPics.map(p => ({
+          value: p.id,
+          label: p.name,
+          badge: p.role,
+          group: "PIC Divisi Terkait",
+          icon: <User className="w-3.5 h-3.5 text-blue-500" />
+        })),
+        ...otherPics.map(p => ({
+          value: p.id,
+          label: p.name,
+          badge: p.role,
+          group: "PIC Lainnya",
+          icon: <User className="w-3.5 h-3.5 text-slate-400" />
+        }))
+      ];
+    }
+    return allProfiles.map(p => ({
+      value: p.id,
+      label: p.name,
+      badge: p.role,
+      icon: <User className="w-3.5 h-3.5 text-slate-500" />
+    }));
+  }, [deptPics, otherPics, allProfiles]);
+
+  const priorityOptions = useMemo(() => [
+    { val: "low" as const, label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
+    { val: "medium" as const, label: "Medium", color: "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/20" },
+    { val: "high" as const, label: "High", color: "text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 hover:bg-orange-50/50 dark:hover:bg-orange-950/20" },
+    ...(targetType === "issue" ? [{ val: "critical" as const, label: "Critical", color: "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20" }] : [])
+  ], [targetType]);
 
   const sourceDept = departments.find(d => d.id === sourceItem.departmentId);
   const sourceDeptName = sourceItem.departmentId === "global" ? "Semua Divisi (Global)" : (sourceDept ? `${sourceDept.name} Division` : "");
 
   return (
-    <form onSubmit={handleConvert} className="flex flex-col h-full overflow-hidden bg-white dark:bg-zinc-900">
+    <form onSubmit={handleConvert} className="flex flex-col h-full overflow-hidden bg-white dark:bg-zinc-900 transform-gpu">
       {/* Header Form with Breadcrumb & Back button */}
       <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
@@ -450,20 +556,7 @@ export default function ConvertTargetForm({
               size="sm"
               value={deptId}
               onChange={handleDeptChange}
-              options={[
-                {
-                  value: "global",
-                  label: "Semua Divisi (Global)",
-                  icon: <Building2 className="w-3.5 h-3.5 text-slate-500" />,
-                  sublabel: "Akses terbuka lintas divisi"
-                },
-                ...departments.map((d) => ({
-                  value: d.id,
-                  label: `${d.name} Division`,
-                  icon: <Building2 className="w-3.5 h-3.5 text-blue-500" />,
-                  sublabel: `Divisi ${d.name}`
-                }))
-              ]}
+              options={divisionOptions}
             />
           </div>
 
@@ -481,31 +574,7 @@ export default function ConvertTargetForm({
                   setSelectedPicName(found.name);
                 }
               }}
-              options={
-                deptPics.length > 0
-                  ? [
-                      ...deptPics.map(p => ({
-                        value: p.id,
-                        label: p.name,
-                        badge: p.role,
-                        group: "PIC Divisi Terkait",
-                        icon: <User className="w-3.5 h-3.5 text-blue-500" />
-                      })),
-                      ...otherPics.map(p => ({
-                        value: p.id,
-                        label: p.name,
-                        badge: p.role,
-                        group: "PIC Lainnya",
-                        icon: <User className="w-3.5 h-3.5 text-slate-400" />
-                      }))
-                    ]
-                  : allProfiles.map(p => ({
-                      value: p.id,
-                      label: p.name,
-                      badge: p.role,
-                      icon: <User className="w-3.5 h-3.5 text-slate-500" />
-                    }))
-              }
+              options={picOptions}
             />
           </div>
         </div>
@@ -539,11 +608,7 @@ export default function ConvertTargetForm({
                   size="sm"
                   value={metricUnit}
                   onChange={(val) => setMetricUnit(val as any)}
-                  options={[
-                    { value: "number", label: "Angka (Qty)", icon: <Hash className="w-3.5 h-3.5 text-slate-500" /> },
-                    { value: "percentage", label: "Persen (%)", icon: <Percent className="w-3.5 h-3.5 text-emerald-500" /> },
-                    { value: "currency", label: "Rupiah (Rp)", icon: <Coins className="w-3.5 h-3.5 text-amber-500" /> }
-                  ]}
+                  options={METRIC_UNIT_OPTIONS}
                 />
               </div>
 
@@ -553,10 +618,7 @@ export default function ConvertTargetForm({
                   size="sm"
                   value={metricTargetType}
                   onChange={(val) => setMetricTargetType(val as any)}
-                  options={[
-                    { value: "higher_better", label: "≥ Lebih Tinggi", icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> },
-                    { value: "lower_better", label: "≤ Lebih Rendah", icon: <TrendingDown className="w-3.5 h-3.5 text-rose-500" /> }
-                  ]}
+                  options={METRIC_TARGET_TYPE_OPTIONS}
                 />
               </div>
             </div>
@@ -568,10 +630,7 @@ export default function ConvertTargetForm({
                   size="sm"
                   value={metricAccumulationMode}
                   onChange={(val) => setMetricAccumulationMode(val as any)}
-                  options={[
-                    { value: "sum", label: "Penjumlahan (SUM)", icon: <Plus className="w-3.5 h-3.5 text-blue-500" /> },
-                    { value: "average", label: "Rata-Rata (AVG)", icon: <BarChart2 className="w-3.5 h-3.5 text-amber-500" /> }
-                  ]}
+                  options={METRIC_ACCUMULATION_OPTIONS}
                 />
               </div>
 
@@ -581,10 +640,7 @@ export default function ConvertTargetForm({
                   size="sm"
                   value={metricCycle}
                   onChange={(val) => setMetricCycle(val as any)}
-                  options={[
-                    { value: "monthly", label: "Bulanan (4 Minggu)", icon: <Calendar className="w-3.5 h-3.5 text-blue-500" /> },
-                    { value: "special", label: "Khusus / Ad-Hoc", icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> }
-                  ]}
+                  options={METRIC_CYCLE_OPTIONS}
                 />
               </div>
             </div>
@@ -618,12 +674,7 @@ export default function ConvertTargetForm({
               Prioritas <span className="text-rose-500">*</span>
             </label>
             <div className={`grid ${targetType === "issue" ? "grid-cols-4" : "grid-cols-3"} gap-1.5`}>
-              {[
-                { val: "low", label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
-                { val: "medium", label: "Medium", color: "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/20" },
-                { val: "high", label: "High", color: "text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 hover:bg-orange-50/50 dark:hover:bg-orange-950/20" },
-                ...(targetType === "issue" ? [{ val: "critical", label: "Critical", color: "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20" }] : [])
-              ].map((p) => (
+              {priorityOptions.map((p) => (
                 <button
                   key={p.val}
                   type="button"
@@ -651,38 +702,7 @@ export default function ConvertTargetForm({
               size="sm"
               value={headlineCategory}
               onChange={(val) => setHeadlineCategory(val as any)}
-              options={[
-                {
-                  value: "announcement",
-                  label: "Pengumuman",
-                  sublabel: "Informasi resmi tim",
-                  icon: <Megaphone className="w-3.5 h-3.5 text-blue-500" />
-                },
-                {
-                  value: "achievement",
-                  label: "Pencapaian",
-                  sublabel: "Prestasi target tim",
-                  icon: <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                },
-                {
-                  value: "good_news",
-                  label: "Kabar Baik",
-                  sublabel: "Kabar gembira / progres positif",
-                  icon: <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                },
-                {
-                  value: "bad_news",
-                  label: "Kendala / Masalah",
-                  sublabel: "Hambatan operasional",
-                  icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-                },
-                {
-                  value: "reminder",
-                  label: "Pengingat",
-                  sublabel: "Tenggat waktu & atensi",
-                  icon: <Bell className="w-3.5 h-3.5 text-indigo-500" />
-                }
-              ]}
+              options={HEADLINE_CATEGORY_OPTIONS}
             />
           </div>
         )}

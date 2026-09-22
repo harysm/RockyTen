@@ -139,12 +139,12 @@ export default function IssueDetailModal({
       }}
     >
       <div 
-        className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 transition-all duration-200"
+        className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* STEP 2: FORMULIR KONVERSI (Smooth In-Place Step Slide) */}
         {isConverting ? (
-          <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-6 duration-200">
+          <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-6 duration-200 transform-gpu will-change-transform">
             <ConvertTargetForm
               sourceType="issue"
               sourceItem={{
@@ -168,7 +168,7 @@ export default function IssueDetailModal({
           </div>
         ) : (
           /* STEP 1: DETAIL ISSUE ASAL */
-          <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-6 duration-200">
+          <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-6 duration-200 transform-gpu will-change-transform">
             {/* Header Modal */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800/80 flex justify-between items-start bg-slate-50/50 dark:bg-zinc-900/40">
               <div>

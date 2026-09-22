@@ -56,6 +56,16 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-09-22] - Convert Card High-Performance Optimization (Zero UI & Animation Degradation)
+* **Optimalisasi Kinerja & Akselerasi GPU Kartu Konversi (`src/components/convert/ConvertTargetForm.tsx`, `src/components/issues/IssueDetailModal.tsx`, `src/components/scoreboard/ScoreboardDetailModal.tsx`, `src/components/UniversalConvertModal.tsx`)**:
+  * **Komitmen Desain 100% Utuh**: Mempertahankan seluruh estetika UI, efek *backdrop-blur*, bayangan (*shadow-2xl*), layout bertingkat, serta animasi geser horizontal kartu (*slide-in-from-right-6*).
+  * **Akar Masalah (Root Cause)**: Kartu terasa berat bukan karena database, melainkan: (1) Benturan layout thrashing CPU dari `transition-all duration-200` pada pembungkus modal yang mencoba menginterpolasi perubahan tinggi kotak berbarengan dengan animasi slide anak; (2) Cascading 8x `setState` pasca-mount di `ConvertTargetForm` yang memotong frame awal animasi (0–100ms); (3) Unmemoized object arrays pada opsi dropdown yang dibuat ulang setiap ketikan keyboard.
+  * **Solusi & Optimasi Arsitektur**:
+    - **Akselerasi Hardware GPU (`transform-gpu will-change-transform`)**: Mendedikasikan rendering pergeseran step kartu langsung ke layer GPU compositing, menjamin gerakan mulus 60 FPS tanpa CPU bottleneck.
+    - **Eliminasi Layout Thrashing**: Menghapus `transition-all duration-200` dari kontainer modal luar; ukuran modal beradaptasi instan tanpa menahan siklus render browser.
+    - **Inisialisasi Lazy State (Zero Mount Lag)**: Menginisialisasi state form langsung dari `sourceItem` saat deklarasi `useState(() => ...)` dan membatasi `useEffect` hanya jika ID item asal berganti. Hasilnya, render pertama langsung berisi data final tanpa render ulang kedua.
+    - **Memoization Opsi Dropdown (`useMemo`) & Ekstraksi Konstanta Statis**: Seluruh opsi metrik, kategori headline, prioritas, divisi, dan PIC dibungkus `useMemo` / konstanta statis di luar komponen, mengeliminasi lag ketikan pada kolom Judul dan Deskripsi.
+
 ### [2026-09-22] - FormSelect Hover & Natural Downward Dropdown Fix (Eliminating Upward Overlap & Scroll Jitter)
 * **Perbaikan Posisi Melayang & Efek Hover Dropdown (`src/components/FormSelect.tsx`, `src/components/convert/ConvertTargetForm.tsx`)**:
   * **Akar Masalah (Root Cause)**: Logika kalkulasi `spaceBelow` sebelumnya mengukur jarak vertikal terhadap batas `parentRect` dari kontainer scrollable (`.overflow-y-auto`) dengan threshold terlalu agresif (`< 210px`). Akibatnya, setiap dropdown yang berada di separuh bawah form (seperti *Kategori Berita*) dipaksa membuka ke atas (*auto-flip upward `bottom-full`*), merentang ~240px ke atas dan menutupi seluruh kolom isian sebelumnya (*Judul Item Baru, Deskripsi, Divisi Terkait, PIC*). Ditambah lagi, listener `scroll` global dengan mode `capture: true` memicu re-evaluasi state dan kalkulasi ulang tinggi popover setiap kali mouse bergerak atau scroll di dalam opsi dropdown, menyebabkan efek gemetar/flicker (*hover jitter*).

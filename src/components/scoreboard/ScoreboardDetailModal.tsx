@@ -204,12 +204,12 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
       }}
     >
       <div
-        className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 transition-all duration-200"
+        className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* STEP 2: FORMULIR KONVERSI (Smooth In-Place Step Slide) */}
         {isConverting ? (
-          <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-6 duration-200">
+          <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-6 duration-200 transform-gpu will-change-transform">
             <ConvertTargetForm
               sourceType="metric"
               sourceItem={{
@@ -234,7 +234,7 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
           </div>
         ) : (
           /* STEP 1: DETAIL SCOREBOARD ASAL */
-          <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-6 duration-200">
+          <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-6 duration-200 transform-gpu will-change-transform">
             {/* Header Modal */}
             <div className="px-6 py-5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40">
               <div className="flex items-start justify-between gap-3">
