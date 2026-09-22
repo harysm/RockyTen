@@ -582,23 +582,23 @@ export default function ConvertTargetForm({
         {/* Priority Selector (Todo / Issue) */}
         {(targetType === "todo" || targetType === "issue") && (
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
               Prioritas <span className="text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className={`grid ${targetType === "issue" ? "grid-cols-4" : "grid-cols-3"} gap-1.5`}>
               {[
-                { val: "low", label: "Low", color: "text-slate-600 border-slate-300" },
-                { val: "medium", label: "Medium", color: "text-amber-600 border-amber-400" },
-                { val: "high", label: "High", color: "text-orange-600 border-orange-400" },
-                ...(targetType === "issue" ? [{ val: "critical", label: "Critical", color: "text-rose-600 border-rose-400" }] : [])
+                { val: "low", label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
+                { val: "medium", label: "Medium", color: "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/20" },
+                { val: "high", label: "High", color: "text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 hover:bg-orange-50/50 dark:hover:bg-orange-950/20" },
+                ...(targetType === "issue" ? [{ val: "critical", label: "Critical", color: "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20" }] : [])
               ].map((p) => (
                 <button
                   key={p.val}
                   type="button"
                   onClick={() => setPriority(p.val as any)}
-                  className={`py-1.5 px-2 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
+                  className={`py-1.5 px-2 rounded-lg text-xs font-bold border text-center transition-all cursor-pointer ${
                     priority === p.val
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white shadow-2xs"
+                      ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-xs"
                       : `bg-white dark:bg-zinc-950 ${p.color}`
                   }`}
                 >

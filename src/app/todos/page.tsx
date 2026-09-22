@@ -721,18 +721,29 @@ export default function TodoPage() {
 
                 {/* Priority */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                     Prioritas
                   </label>
-                  <select
-                    value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as Todo["priority"])}
-                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-900 dark:text-white"
-                  >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                  </select>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { val: "low" as const, label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
+                      { val: "medium" as const, label: "Medium", color: "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/20" },
+                      { val: "high" as const, label: "High", color: "text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 hover:bg-orange-50/50 dark:hover:bg-orange-950/20" },
+                    ].map((p) => (
+                      <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => setNewPriority(p.val)}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold border text-center transition-all cursor-pointer ${
+                          newPriority === p.val
+                            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-xs"
+                            : `bg-white dark:bg-zinc-950 ${p.color}`
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Attachment Section (File + Link) */}
@@ -1073,22 +1084,23 @@ export default function TodoPage() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Prioritas
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["low", "medium", "high"] as const).map((p) => (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { val: "low" as const, label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
+                    { val: "medium" as const, label: "Medium", color: "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/20" },
+                    { val: "high" as const, label: "High", color: "text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 hover:bg-orange-50/50 dark:hover:bg-orange-950/20" },
+                  ].map((p) => (
                     <button
+                      key={p.val}
                       type="button"
-                      key={p}
-                      onClick={() => setEditPriority(p)}
-                      className={`py-2 text-xs font-bold rounded-xl border capitalize transition-all ${editPriority === p
-                          ? p === "high"
-                            ? "bg-rose-50 border-rose-500 text-rose-600"
-                            : p === "medium"
-                              ? "bg-amber-50 border-amber-500 text-amber-600"
-                              : "bg-blue-50 border-blue-500 text-blue-600"
-                          : "bg-slate-50 border-slate-200 text-slate-600"
-                        }`}
+                      onClick={() => setEditPriority(p.val)}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-bold border text-center transition-all cursor-pointer ${
+                        editPriority === p.val
+                          ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-xs"
+                          : `bg-white dark:bg-zinc-950 ${p.color}`
+                      }`}
                     >
-                      {p}
+                      {p.label}
                     </button>
                   ))}
                 </div>
