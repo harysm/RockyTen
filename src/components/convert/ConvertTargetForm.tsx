@@ -330,7 +330,7 @@ export default function ConvertTargetForm({
   const sourceDeptName = sourceItem.departmentId === "global" ? "Semua Divisi (Global)" : (sourceDept ? `${sourceDept.name} Division` : "");
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-zinc-900">
+    <form onSubmit={handleConvert} className="flex flex-col h-full overflow-hidden bg-white dark:bg-zinc-900">
       {/* Header Form with Breadcrumb & Back button */}
       <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
@@ -367,7 +367,7 @@ export default function ConvertTargetForm({
       </div>
 
       {/* Form Content (Scrollable) */}
-      <form onSubmit={handleConvert} className="flex-1 overflow-y-auto p-5 pb-32 space-y-4 text-xs">
+      <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
         {/* Source Context Mini-Card */}
         <div className="px-4 py-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl border border-blue-200/70 dark:border-blue-900/50">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
@@ -749,34 +749,35 @@ export default function ConvertTargetForm({
           </div>
         )}
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
-          <button
-            type="button"
-            onClick={onBack || onCancel}
-            className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Memproses...</span>
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Konfirmasi Konversi</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+      </div>
+
+      {/* Footer Actions (Pinned cleanly at bottom dock, zero excess void) */}
+      <div className="px-5 py-3.5 border-t border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40 flex items-center justify-end gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={onBack || onCancel}
+          className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Memproses...</span>
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Konfirmasi Konversi</span>
+            </>
+          )}
+        </button>
+      </div>
+    </form>
   );
 }
