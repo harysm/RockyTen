@@ -56,6 +56,29 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-09-22] - Full-Page Documentation Hub Portal at /help (Dedicated Docs Experience)
+* **Transformasi Fitur Bantuan & Sistem dari Modal Pop-up Menjadi Halaman Dokumentasi Penuh 1 Layar (`src/app/help/page.tsx`, `src/components/Sidebar.tsx`)**:
+  * **Permintaan User**: Mengubah fitur "Bantuan & Sistem" dari modal dialog pop-up/tab kecil menjadi halaman dokumentasi penuh 1 layar (*full page*) dengan tata letak dokumentasi modern (*Stripe/Vercel/Next.js docs style*).
+  * **Halaman Dokumentasi Baru (`src/app/help/page.tsx`)**:
+    - **Hero & Live Search**: Header dokumentasi elegan dengan live search filter pencarian judul, ID, dan ringkasan secara real-time.
+    - **Pill Kategori**: Filter tab cepat (*Semua*, *Panduan Pengguna*, *Alur Kerja & Tips*, *Arsitektur & Sistem*).
+    - **Layout Docs Modern Dual-Column**: Sisi kiri berupa sidebar Table of Contents (TOC) sticky yang menyorot section aktif dan menyediakan navigasi cepat `scrollIntoView`, serta sisi kanan kanvas artikel terstruktur.
+    - **9 Modul Dokumentasi Mendalam**:
+      1. *Ringkasan & Filosofi Platform* (Traction EOS, irama L10, ekosistem RockyTen).
+      2. *Scoreboard KPI & Kalkulasi* (Siklus bulanan vs khusus/ad-hoc, SUM vs AVG, panduan pengisian W1–W4).
+      3. *Modul Rocks (Prioritas 90 Hari)* (Radar kesehatan otomatis, deteksi On Track / Off Track / Siap Review / Selesai / Dropped, dan verifikasi direksi).
+      4. *Pelacak Masalah (IDS Framework)* (Identify, Discuss, Solve, dan level prioritas kendala).
+      5. *Agenda Tugas (To-Do) & Warta (Headlines)* (Komitmen 7 hari, warta pencapaian/kabar baik/pengumuman, lampiran).
+      6. *Alur Transformasi Data (Universal Convert)* (Slide horizontal dual-card, pemindahan kendala ke rencana aksi atau KPI terukur).
+      7. *Hierarki Akun & Simulator* (Tabel hak akses Owner, Developer, PIC divisi beserta kredensial simulator cepat).
+      8. *Arsitektur Teknis & Database* (Next.js 16 Turbopack, Local-First engine, dan skema Supabase PostgreSQL).
+      9. *Pintasan Cepat & Tips Kerja* (Daftar keyboard shortcuts dan efisiensi navigasi operasional).
+    - **Dukungan Penuh Multi-Bahasa**: Teks dan konten otomatis beradaptasi dengan bahasa terpilih (Bahasa Indonesia dan Bahasa Inggris).
+    - **Dock Status Sistem**: Menampilkan status engine Local-First, Supabase Sync, dan versi rilis di bagian bawah halaman.
+  * **Integrasi Sidebar (`src/components/Sidebar.tsx`)**:
+    - Mengganti elemen `<button>` yang memicu `HelpSystemModal` menjadi tautan Next.js `<Link href="/help">` dengan indikator aktif bar merah vertikal di sisi kiri (`pathname === "/help"`).
+    - Menghilangkan `isHelpModalOpen` state dan rendering modal, memberikan pengalaman navigasi halaman penuh yang instan.
+
 ### [2026-09-22] - Convert Form Bottom Void Elimination (Resetting pb-40 to Standard p-5)
 * **Eliminasi Kelebihan Void Kosong Bawah pada Form Konversi (`src/components/convert/ConvertTargetForm.tsx`)**:
   * **Akar Masalah (Root Cause)**: Penambahan kelas utilitas `pb-40` (padding-bottom 160px) pada kontainer form scrollable meninggalkan celah putih raksasa yang tampak janggal (*excess void*) antara kartu konten form terbawah (seperti kartu Pengaturan Target Metrik) dan baris dock tombol aksi di footer (*Batal & Konfirmasi Konversi*).

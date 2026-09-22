@@ -17,7 +17,6 @@ import {
   HelpCircle,
   X
 } from "lucide-react";
-import { HelpSystemModal } from "@/components/HelpSystemModal";
 
 export interface SidebarProps {
   mobileOpen?: boolean;
@@ -31,7 +30,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   const pathname = usePathname();
   const { currentProfile, language } = useApp();
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen;
 
@@ -133,17 +131,27 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           <span>{language === "id" ? "Pengaturan" : "Settings"}</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => {
-            handleClose();
-            setIsHelpModalOpen(true);
-          }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-900/50 transition-all duration-150 cursor-pointer text-left group select-none hover:!transform-none"
+        <Link
+          href="/help"
+          onClick={handleClose}
+          className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-150 group select-none ${
+            pathname === "/help"
+              ? "bg-slate-100/90 text-slate-900 dark:bg-zinc-900/90 dark:text-white font-bold"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-900/50 font-medium"
+          }`}
         >
-          <HelpCircle className="w-4 h-4 flex-shrink-0 text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+          {pathname === "/help" && (
+            <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-red-600 dark:bg-red-500 shadow-xs" />
+          )}
+          <HelpCircle
+            className={`w-4 h-4 flex-shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5 ${
+              pathname === "/help"
+                ? "text-red-600 dark:text-red-500"
+                : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300"
+            }`}
+          />
           <span>{language === "id" ? "Bantuan & Sistem" : "Help & System"}</span>
-        </button>
+        </Link>
       </div>
     </>
   );
@@ -174,12 +182,6 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       <aside className="hidden lg:flex w-60 bg-white dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 flex-col h-screen fixed left-0 top-0 border-r border-slate-200 dark:border-zinc-850 z-20">
         <SidebarContent />
       </aside>
-
-      {/* Help & System Modal */}
-      <HelpSystemModal
-        isOpen={isHelpModalOpen}
-        onClose={() => setIsHelpModalOpen(false)}
-      />
     </>
   );
 });
