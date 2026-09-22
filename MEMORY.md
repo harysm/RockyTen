@@ -61,6 +61,8 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
   * **Peningkatan Komponen `FormSelect`**:
     - Menambahkan varian ukuran `size="sm"` (`px-3 py-2 text-xs font-semibold rounded-xl`) yang cocok presisi untuk form input compact.
     - Menambahkan dukungan `group` (header kategori optgroup yang elegan) untuk memisahkan daftar opsi secara visual tanpa garis pemisah kasar.
+    - **Smart Auto-Flip Direction & Adaptive MaxHeight**: Mendeteksi ruang kosong vertikal di parent scrollable (`.overflow-y-auto`) dan window. Jika ruang bawah < 210px dan ruang atas lebih luas, dropdown otomatis membuka ke atas (`bottom-full mb-1.5`) dengan ketinggian adaptif (`maxDropdownHeight`) sehingga opsi tidak pernah terpotong (*clipped*) oleh footer modal.
+    - **Ekstra Bottom Clearance**: Menambahkan `pb-32` pada form konversi untuk memberikan ruang scroll yang lapang.
   * **Penerapan Dropdown di `ConvertTargetForm.tsx`**:
     - **Divisi Terkait**: Dilengkapi icon gedung (`Building2`), label divisi, dan sublabel peran.
     - **PIC (Person In Charge)**: Menampilkan icon profil (`User`), role badge (`pic`, `owner`, `developer`), serta pengelompokan grup rapi (*PIC Divisi Terkait* dan *PIC Lainnya*).
