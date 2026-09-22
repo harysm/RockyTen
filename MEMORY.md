@@ -55,6 +55,22 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+
+### [2026-09-22] - FormSelect Hover & Natural Downward Dropdown Fix (Eliminating Upward Overlap & Scroll Jitter)
+* **Perbaikan Posisi Melayang & Efek Hover Dropdown (`src/components/FormSelect.tsx`, `src/components/convert/ConvertTargetForm.tsx`)**:
+  * **Akar Masalah (Root Cause)**: Logika kalkulasi `spaceBelow` sebelumnya mengukur jarak vertikal terhadap batas `parentRect` dari kontainer scrollable (`.overflow-y-auto`) dengan threshold terlalu agresif (`< 210px`). Akibatnya, setiap dropdown yang berada di separuh bawah form (seperti *Kategori Berita*) dipaksa membuka ke atas (*auto-flip upward `bottom-full`*), merentang ~240px ke atas dan menutupi seluruh kolom isian sebelumnya (*Judul Item Baru, Deskripsi, Divisi Terkait, PIC*). Ditambah lagi, listener `scroll` global dengan mode `capture: true` memicu re-evaluasi state dan kalkulasi ulang tinggi popover setiap kali mouse bergerak atau scroll di dalam opsi dropdown, menyebabkan efek gemetar/flicker (*hover jitter*).
+  * **Solusi & Optimasi**:
+    - **Arah Buka Alami ke Bawah (Downward Dropdown)**: Dropdown form distandarisasi untuk selalu membuka ke bawah (`top-full mt-1.5`) sesuai alur baca form. Auto-flip ke atas kini hanya aktif jika ruang layar browser (*window*) benar-benar sangat sempit (`windowSpaceBelow < 150px` dan `spaceAbove > 240px`).
+    - **Padding Bawah Kontainer Form (`pb-40`)**: Menambahkan padding bawah 160px (`pb-40`) pada kontainer scroll form konversi (`ConvertTargetForm.tsx`) sehingga seluruh dropdown di bagian bawah form memiliki ruang lapang ke bawah tanpa bertabrakan dengan pinned footer dock.
+    - **Eliminasi Scroll Event Capture Loop**: Menghapus listener scroll agresif yang memicu re-render saat mousewheel bergerak di dalam menu; ukuran dan posisi kini dihitung secara stabil saat dibuka (`onClick`) dan resize window.
+    - **Smooth Auto-Scroll mikro**: Menambahkan `scrollIntoView({ behavior: 'smooth', block: 'nearest' })` saat dropdown dibuka agar area dropdown yang baru terbuka langsung berada di fokus pandang pengguna secara nyaman.
+    - **Peningkatan Kontras Hover State Opsi**:
+      - Item terpilih (*selected*): Tetap berlatar gelap kontras, kini dilengkapi hover state dinamis (`hover:bg-zinc-800 dark:hover:bg-zinc-200`).
+      - Item belum terpilih: Hover highlight tegas `hover:bg-slate-100 dark:hover:bg-zinc-900`, teks menjadi `text-slate-950 dark:text-white`.
+      - Sublabel: Transisi warna mulus `group-hover:text-slate-600 dark:group-hover:text-zinc-400`.
+      - Ikon: Efek mikro `group-hover:scale-105` dan transisi warna stabil.
+      - Trigger Button: Menghapus `transition-all duration-150` dan menggantinya dengan `transition-colors duration-150` untuk mencegah micro-layout shift.
+
 ### [2026-09-22] - Custom Rich FormSelect Upgrade in Convert Form (Native Dropdowns Elimination)
 * **Modernisasi Seluruh Dropdown Form Konversi (`src/components/FormSelect.tsx`, `src/components/convert/ConvertTargetForm.tsx`)**:
   * **Eliminasi 100% Elemen `<select>` Native Browser**: Menggantikan seluruh dropdown bawaan browser (Chromium native `<select>`) yang kaku dan tidak konsisten dengan komponen kustom `FormSelect` modern.

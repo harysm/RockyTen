@@ -367,7 +367,7 @@ export default function ConvertTargetForm({
       </div>
 
       {/* Form Content (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+      <div className="flex-1 overflow-y-auto p-5 pb-40 space-y-4 text-xs">
         {/* Source Context Mini-Card */}
         <div className="px-4 py-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl border border-blue-200/70 dark:border-blue-900/50">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">

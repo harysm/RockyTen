@@ -43,28 +43,17 @@ export default function FormSelect({
   const updatePosition = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const windowSpaceBelow = window.innerHeight - rect.bottom - 16;
-      const windowSpaceAbove = rect.top - 16;
+      const windowHeight = window.innerHeight;
+      const spaceBelow = windowHeight - rect.bottom - 16;
+      const spaceAbove = rect.top - 16;
 
-      const scrollParent = containerRef.current.closest(".overflow-y-auto");
-      let parentSpaceBelow = windowSpaceBelow;
-      let parentSpaceAbove = windowSpaceAbove;
-
-      if (scrollParent) {
-        const parentRect = scrollParent.getBoundingClientRect();
-        parentSpaceBelow = parentRect.bottom - rect.bottom - 12;
-        parentSpaceAbove = rect.top - parentRect.top - 12;
-      }
-
-      const spaceBelow = Math.min(windowSpaceBelow, parentSpaceBelow);
-      const spaceAbove = Math.min(windowSpaceAbove, parentSpaceAbove);
-
-      // Flip upward if space below is limited (< 210px) and space above is larger
-      const shouldOpenUpward = spaceBelow < 210 && spaceAbove > spaceBelow;
+      // In forms, dropdowns should naturally open downward.
+      // Only flip upward if screen window bottom space is strictly insufficient (< 150px) AND space above is plenty (> 240px)
+      const shouldOpenUpward = spaceBelow < 150 && spaceAbove > 240;
       setOpenUpward(shouldOpenUpward);
 
       const availableSpace = shouldOpenUpward ? spaceAbove : spaceBelow;
-      setMaxDropdownHeight(Math.min(240, Math.max(130, Math.floor(availableSpace))));
+      setMaxDropdownHeight(Math.min(240, Math.max(140, Math.floor(availableSpace))));
     }
   };
 
@@ -81,21 +70,18 @@ export default function FormSelect({
     };
 
     if (isOpen) {
-      updatePosition();
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleKeyDown);
 
-      const handleScrollOrResize = () => {
+      const handleResize = () => {
         updatePosition();
       };
-      window.addEventListener("resize", handleScrollOrResize);
-      window.addEventListener("scroll", handleScrollOrResize, true);
+      window.addEventListener("resize", handleResize);
 
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
         document.removeEventListener("keydown", handleKeyDown);
-        window.removeEventListener("resize", handleScrollOrResize);
-        window.removeEventListener("scroll", handleScrollOrResize, true);
+        window.removeEventListener("resize", handleResize);
       };
     }
   }, [isOpen]);
@@ -122,14 +108,24 @@ export default function FormSelect({
         type="button"
         disabled={disabled}
         onClick={() => {
-          if (!isOpen) updatePosition();
-          setIsOpen(!isOpen);
+          if (!isOpen) {
+            updatePosition();
+            setIsOpen(true);
+            // Smoothly scroll container into view if near boundary
+            setTimeout(() => {
+              if (containerRef.current) {
+                containerRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              }
+            }, 50);
+          } else {
+            setIsOpen(false);
+          }
         }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={`w-full ${
           isSmall ? "px-3 py-2 rounded-xl text-xs" : "px-4 py-3 rounded-xl text-xs"
-        } bg-white dark:bg-zinc-950 border font-semibold text-left flex items-center justify-between cursor-pointer transition-all duration-150 group select-none shadow-2xs ${
+        } bg-white dark:bg-zinc-950 border font-semibold text-left flex items-center justify-between cursor-pointer transition-colors duration-150 group select-none shadow-2xs ${
           disabled
             ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800"
             : isOpen
@@ -201,16 +197,16 @@ export default function FormSelect({
                     }}
                     className={`w-full text-left ${
                       isSmall ? "px-2.5 py-2 text-xs" : "px-3 py-2.5 text-xs"
-                    } rounded-lg font-semibold transition-colors duration-100 flex items-center justify-between cursor-pointer group ${
+                    } rounded-lg font-semibold transition-colors duration-100 flex items-center justify-between cursor-pointer group select-none ${
                       isSelected
-                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-2xs"
-                        : "text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-white"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-bold shadow-2xs"
+                        : "text-slate-800 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-950 dark:hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate min-w-0 pr-2">
                       {opt.icon && (
                         <span
-                          className={`shrink-0 transition-colors duration-100 ${
+                          className={`shrink-0 transition-all duration-100 group-hover:scale-105 ${
                             isSelected
                               ? "text-white dark:text-zinc-950"
                               : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200"
@@ -236,10 +232,10 @@ export default function FormSelect({
                         </div>
                         {opt.sublabel && (
                           <p
-                            className={`text-[10px] mt-0.5 truncate ${
+                            className={`text-[10px] mt-0.5 truncate transition-colors duration-100 ${
                               isSelected
-                                ? "text-white/75 dark:text-zinc-950/75 font-normal"
-                                : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-500 dark:group-hover:text-zinc-400"
+                                ? "text-white/80 dark:text-zinc-950/80 font-normal"
+                                : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-600 dark:group-hover:text-zinc-400"
                             }`}
                           >
                             {opt.sublabel}
