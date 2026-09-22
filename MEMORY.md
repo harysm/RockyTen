@@ -55,6 +55,13 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-22] - Compact Todo Priority Selector & In-Place Convert Refinement
+* **Penyederhanaan & Pemadatan Selector Prioritas Todo (`src/components/convert/ConvertTargetForm.tsx`, `src/app/todos/page.tsx`)**:
+  * **Dynamic Grid Selector di Modal Convert**: Mengubah grid pemilih prioritas dari `grid-cols-4` statis menjadi dinamis: `${targetType === "issue" ? "grid-cols-4" : "grid-cols-3"} gap-1.5`. Menghilangkan slot kosong kolom ke-4 saat target konversi adalah Agenda Todo, sehingga 3 tombol prioritas (*Low*, *Medium*, *High*) mengisi baris secara proporsional dan padat (*dense*).
+  * **Standarisasi Desain Tier 2 (6px)**: Menggunakan `rounded-lg` (Tier 2), padding `py-1.5 px-2`, teks `text-xs font-bold`, active state berlatar kontras `bg-zinc-900 text-white dark:bg-white dark:text-zinc-950` berbayangan mikro `shadow-xs`, serta penyesuaian margin label yang rapat.
+  * **Harmonisasi di Halaman Todos**: Menggantikan elemen `<select>` tinggi di modal *Tambah Todo* dan tombol longgar di modal *Edit Todo* (`src/app/todos/page.tsx`) dengan grid 3-tombol tersegmentasi yang identik dan padat.
+  * **Pembersihan Ikon Bintang**: Menghilangkan seluruh ikon bintang/sparkle (`Sparkles`) dari alur konversi modal detail, breadcrumb header, kartu konteks asal, dan tombol submit (diselaraskan ke `RefreshCw`).
+
 ### [2026-09-22] - In-Place Sliding Dual-Card Convert Architecture (Live Detail Slide & Modular Target Dock)
 * **Pembaruan Alur Konversi Modal Detail (`src/components/scoreboard/ScoreboardDetailModal.tsx`, `src/components/issues/IssueDetailModal.tsx`, `src/components/convert/ConvertTargetForm.tsx`, `src/components/UniversalConvertModal.tsx`)**:
   * **In-Place Live Slide Transition**:
