@@ -55,21 +55,24 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-22] - In-Place Sliding Dual-Card Convert Architecture (Live Detail Slide & Modular Target Dock)
+* **Pembaruan Alur Konversi Modal Detail (`src/components/scoreboard/ScoreboardDetailModal.tsx`, `src/components/issues/IssueDetailModal.tsx`, `src/components/convert/ConvertTargetForm.tsx`, `src/components/UniversalConvertModal.tsx`)**:
+  * **In-Place Live Slide Transition**:
+    - Alur konversi kini terjadi langsung di dalam pop-up modal detail yang sedang dibuka pengguna (misal Detail Scoreboard atau Detail Issue).
+    - Modal detail **tidak ditutup/dihilangkan**, melainkan meluncur (*smooth slide*) ke sisi kiri layar (`lg:w-[560px]`) dengan animasi `transition-all duration-300 ease-out`.
+    - Muncul banner atas `Referensi Asal (Mode Konversi Aktif)` dengan tombol `Kembali ke Normal`.
+  * **Konektor Panah Tengah (`→`)**:
+    - Di antara kartu detail (kiri) dan formulir konversi (kanan), muncul lingkaran panah biru dengan pulsasi mikro yang mengarahkan alur transformasi data.
+    - Pada layar mobile (< 1024px), otomatis beralih menjadi konektor vertikal (`↓`).
+  * **Komponen Baru Terisolasi `ConvertTargetForm.tsx`**:
+    - Mengekstrak formulir tujuan konversi ke dalam satu komponen modular yang dipakai bersama oleh `ScoreboardDetailModal`, `IssueDetailModal`, dan `UniversalConvertModal`.
+    - Pilihan modul target otomatis mengecualikan modul asal, field otomatis terisi (*pre-filled*), dan mendukung upload file/link serta opsi target berkala.
+  * **Interaksi Dua Arah (Slide Back & Confirm)**:
+    - Pengguna dapat membatalkan konversi kapan saja dengan tombol `[ Batal Konversi ]` / `[ Batal ]`, yang secara instan menggeser kembali kartu detail ke tengah layar (*centered single card*).
+    - Tombol konfirmasi mengeksekusi konversi ke modul target, menghapus item asal, memicu notifikasi toast, dan menutup modal secara bersih.
+  * **Rollback Checkpoint**: Tersimpan aman di git commit `3897a02`.
+
 ### [2026-09-22] - Unified Split-Card Animated Convert Modal (Before -> After Interactive Canvas)
-* **Pembaruan Sistem Konversi Antar Modul (`src/components/UniversalConvertModal.tsx`)**:
-  * **Kanvas Split-Card Terpadu (Before &rarr; After)**: Mengubah modal konversi menjadi satu kanvas lebar (`max-w-5xl rounded-2xl`) yang memuat data sumber asal di sisi kiri dan formulir modul baru di sisi kanan secara berdampingan.
-  * **Panel Kiri (Data Sumber Asal / Read-Only Reference)**:
-    - Menampilkan informasi lengkap item asal: Judul asli, Divisi, PIC, Prioritas/Kategori, Deskripsi/Konten lengkap, serta Lampiran file/link pendukung.
-    - Menjamin pengguna tidak kehilangan konteks (*context amnesia*) saat mengisi formulir target baru.
-  * **Konektor Panah Mengalir (Floating Animated Bridge)**:
-    - Di layar desktop ($\ge$ 1024px), lingkaran aksen panah `ArrowRight` terapung di tengah sebagai penunjuk alur Before $\rightarrow$ After.
-    - Di layar mobile (< 1024px), bertransformasi menjadi pembatas horizontal dengan ikon `ArrowDown`.
-  * **Panel Kanan (Formulir Modul Target Aktif)**:
-    - Menggantikan raw emoji pilihan target dengan outline Lucide line icons (`Target`, `ClipboardList`, `AlertOctagon`, `Megaphone`).
-    - Formulir otomatis terisi (*pre-filled*) dari data sumber dan dapat disesuaikan.
-  * **Universal Cross-Module Deployment**:
-    - Langsung aktif secara serentak di 4 modul utama: **Scoreboard KPI**, **Agenda Todo**, **Masalah Issue**, dan **Berita Headline** tanpa duplikasi kode.
-  * **Rollback Ready**: Checkpoint git commit diamankan di commit hash `ded3297`.
 
 ### [2026-09-22] - Rocks Module Revamp (Automatic Dynamic Health Status, Executive Clean UI & Leader Verification)
 * **Pembaruan Menyeluruh Modul Rocks (`src/app/rocks/page.tsx`, `src/types/index.ts`, `src/context/AppContext.tsx`)**:

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Issue, Department } from "@/context/AppContext";
 import {
   X,
@@ -12,8 +12,12 @@ import {
   Building2,
   FileText,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  ArrowRight,
+  ArrowDown,
+  Sparkles
 } from "lucide-react";
+import ConvertTargetForm from "@/components/convert/ConvertTargetForm";
 
 interface IssueDetailModalProps {
   isOpen: boolean;
@@ -40,6 +44,15 @@ export default function IssueDetailModal({
   downloadAttachment,
   setLightboxImage,
 }: IssueDetailModalProps) {
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Reset convert mode whenever modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsConverting(false);
+    }
+  }, [isOpen]);
+
   // Lock background scroll & Escape key handler
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +60,11 @@ export default function IssueDetailModal({
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
-          onClose();
+          if (isConverting) {
+            setIsConverting(false);
+          } else {
+            onClose();
+          }
         }
       };
       document.addEventListener("keydown", handleKeyDown);
@@ -56,7 +73,7 @@ export default function IssueDetailModal({
         document.removeEventListener("keydown", handleKeyDown);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isConverting]);
 
   if (!isOpen || !issue) return null;
 
@@ -117,19 +134,48 @@ export default function IssueDetailModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in-0 duration-150"
-      onClick={onClose}
+      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain animate-in fade-in-0 duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div 
-        className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
+        className={`w-full transition-all duration-300 ease-out flex flex-col lg:flex-row items-center justify-center gap-3 sm:gap-4 ${
+          isConverting ? "max-w-6xl" : "max-w-xl"
+        }`}
       >
-        {/* Header Modal */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800/80 flex justify-between items-start bg-slate-50/50 dark:bg-zinc-900/40">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              Detail Masalah / Issue
-            </h3>
+        {/* Left Card: Issue Detail */}
+        <div 
+          className={`bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 transition-all duration-300 ease-out ${
+            isConverting ? "lg:w-[540px] shrink-0 ring-2 ring-blue-500/30" : "max-w-xl"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Active Conversion Reference Header */}
+          {isConverting && (
+            <div className="px-5 py-2.5 bg-blue-50 dark:bg-blue-950/60 border-b border-blue-100 dark:border-blue-900/60 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-in fade-in duration-200">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Referensi Asal (Mode Konversi Aktif)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConverting(false)}
+                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                Kembali ke Normal
+              </button>
+            </div>
+          )}
+
+          {/* Header Modal */}
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800/80 flex justify-between items-start bg-slate-50/50 dark:bg-zinc-900/40">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Detail Masalah / Issue
+              </h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Informasi lengkap kendala dan opsi tindak lanjut divisi.
             </p>
@@ -287,15 +333,16 @@ export default function IssueDetailModal({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onConvert(issue);
-              }}
+              onClick={() => setIsConverting(!isConverting)}
               title="Konversi Issue Ke Modul Lain"
-              className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                isConverting
+                  ? "bg-blue-600 text-white border border-blue-600 shadow-blue-500/20"
+                  : "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700"
+              }`}
             >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
-              <span>Konversi</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isConverting ? "animate-spin" : "text-slate-500 dark:text-zinc-400"}`} />
+              <span>{isConverting ? "Batal Konversi" : "Konversi"}</span>
             </button>
 
             <button
@@ -325,15 +372,64 @@ export default function IssueDetailModal({
             </button>
           </div>
 
-          {/* Right: Close Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
-          >
-            Tutup
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
         </div>
+
+        {/* Middle Connector Arrow */}
+        {isConverting && (
+          <>
+            {/* Desktop Arrow */}
+            <div className="hidden lg:flex flex-col items-center justify-center shrink-0 z-20 animate-in zoom-in-75 fade-in duration-300">
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center border-2 border-white dark:border-zinc-900 animate-pulse">
+                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wider">
+                Konversi
+              </span>
+            </div>
+
+            {/* Mobile Arrow */}
+            <div className="flex lg:hidden items-center justify-center py-1 text-blue-600 dark:text-blue-400 font-bold text-xs gap-1.5 animate-in fade-in duration-200">
+              <ArrowDown className="w-4 h-4" />
+              <span>Konversi Ke Modul Baru</span>
+            </div>
+          </>
+        )}
+
+        {/* Right Card: Convert Target Form */}
+        {isConverting && (
+          <div
+            className="w-full lg:w-[480px] shrink-0 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 animate-in fade-in slide-in-from-right-8 duration-300 ring-2 ring-blue-500/20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ConvertTargetForm
+              sourceType="issue"
+              sourceItem={{
+                id: issue.id,
+                title: issue.title,
+                description: issue.description,
+                departmentId: issue.departmentId,
+                picName: issue.picName,
+                picId: issue.picId,
+                priority: issue.priority,
+                attachments: issue.attachments,
+                createdAt: issue.createdAt
+              }}
+              onCancel={() => setIsConverting(false)}
+              onSuccess={() => {
+                setIsConverting(false);
+                onClose();
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

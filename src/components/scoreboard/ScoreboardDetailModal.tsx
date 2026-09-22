@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Metric, Department, Rock } from "@/types";
 import {
   X,
@@ -14,8 +14,10 @@ import {
   Calendar,
   Layers,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ArrowRight
 } from "lucide-react";
+import ConvertTargetForm from "@/components/convert/ConvertTargetForm";
 
 interface ScoreboardDetailModalProps {
   isOpen: boolean;
@@ -64,6 +66,15 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
   onConvert,
   onComplete
 }) => {
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Reset convert mode whenever modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsConverting(false);
+    }
+  }, [isOpen]);
+
   // Lock background scroll when modal is open & Close on Escape
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +82,11 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
-          onClose();
+          if (isConverting) {
+            setIsConverting(false);
+          } else {
+            onClose();
+          }
         }
       };
       document.addEventListener("keydown", handleKeyDown);
@@ -80,7 +95,7 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
         document.removeEventListener("keydown", handleKeyDown);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isConverting]);
 
   if (!isOpen || !metric) return null;
 
@@ -190,11 +205,36 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
       }}
     >
       <div
-        className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] relative z-10"
-        onClick={(e) => e.stopPropagation()}
+        className={`w-full transition-all duration-300 ease-out flex flex-col lg:flex-row items-center justify-center gap-3 sm:gap-4 ${
+          isConverting ? "max-w-6xl" : "max-w-2xl"
+        }`}
       >
-        {/* Header Modal - Clean without badges above title */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40">
+        {/* Left Card: Scoreboard Detail */}
+        <div
+          className={`bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 transition-all duration-300 ease-out ${
+            isConverting ? "lg:w-[560px] shrink-0 ring-2 ring-blue-500/30" : "max-w-2xl"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Active Conversion Reference Header */}
+          {isConverting && (
+            <div className="px-5 py-2.5 bg-blue-50 dark:bg-blue-950/60 border-b border-blue-100 dark:border-blue-900/60 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-in fade-in duration-200">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Referensi Asal (Mode Konversi Aktif)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConverting(false)}
+                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                Kembali ke Normal
+              </button>
+            </div>
+          )}
+
+          {/* Header Modal - Clean without badges above title */}
+          <div className="px-6 py-5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1 flex-1 min-w-0">
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-snug">
@@ -430,15 +470,16 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onConvert(metric);
-              }}
+              onClick={() => setIsConverting(!isConverting)}
               title="Konversi Metrik Ke Modul Lain"
-              className="px-3 py-1.5 bg-white hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className={`px-3 py-1.5 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                isConverting
+                  ? "bg-blue-600 text-white border border-blue-600 shadow-blue-500/20"
+                  : "bg-white hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
+              }`}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Konversi</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isConverting ? "animate-spin" : ""}`} />
+              <span>{isConverting ? "Batal Konversi" : "Konversi"}</span>
             </button>
 
             <button
@@ -494,6 +535,57 @@ export const ScoreboardDetailModal: React.FC<ScoreboardDetailModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Middle Connector Arrow */}
+      {isConverting && (
+        <>
+          {/* Desktop Arrow */}
+          <div className="hidden lg:flex flex-col items-center justify-center shrink-0 z-20 animate-in zoom-in-75 fade-in duration-300">
+            <div className="w-10 h-10 rounded-full bg-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center border-2 border-white dark:border-zinc-900 animate-pulse">
+              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-wider">
+              Konversi
+            </span>
+          </div>
+
+          {/* Mobile Arrow */}
+          <div className="flex lg:hidden items-center justify-center py-1 text-blue-600 dark:text-blue-400 font-bold text-xs gap-1.5 animate-in fade-in duration-200">
+            <ArrowDown className="w-4 h-4" />
+            <span>Konversi Ke Modul Baru</span>
+          </div>
+        </>
+      )}
+
+      {/* Right Card: Convert Target Form */}
+      {isConverting && (
+        <div
+          className="w-full lg:w-[480px] shrink-0 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-10 animate-in fade-in slide-in-from-right-8 duration-300 ring-2 ring-blue-500/20"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ConvertTargetForm
+            sourceType="metric"
+            sourceItem={{
+              id: metric.id,
+              title: metric.name,
+              description: metric.keterangan,
+              departmentId: metric.departmentId,
+              picName: metric.picName,
+              picId: metric.picId,
+              target: metric.target,
+              unit: metric.unit,
+              createdAt: metric.createdAt,
+              deadline: metric.deadline
+            }}
+            onCancel={() => setIsConverting(false)}
+            onSuccess={() => {
+              setIsConverting(false);
+              onClose();
+            }}
+          />
+        </div>
+      )}
     </div>
+  </div>
   );
 };
