@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useApp, Todo, Metric, Profile } from "@/context/AppContext";
-import { Plus, CheckSquare, Calendar, Trash2, ArrowUpRight, HelpCircle, Filter, FileText, Paperclip, Edit3, RefreshCw, Link as LinkIcon, ExternalLink, Check, Archive, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Plus, CheckSquare, Calendar, Trash2, ArrowUpRight, HelpCircle, FileText, Paperclip, Edit3, RefreshCw, Link as LinkIcon, ExternalLink, Check, Archive, Loader2 } from "lucide-react";
 import { AttachmentInfo } from "@/context/AppContext";
 import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
 import CustomSelect from "@/components/CustomSelect";
@@ -205,9 +205,17 @@ export default function TodoPage() {
     return true;
   });
 
-  // Sorting State
+  // Sorting State (Matching Scoreboard Unified Sort Filter)
+  const [sortOption, setSortOption] = useState<string>("status_asc");
   const [sortBy, setSortBy] = useState<string>("status");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSortChange = (val: string) => {
+    setSortOption(val);
+    const [field, order] = val.split("_");
+    setSortBy(field);
+    setSortOrder(order as "asc" | "desc");
+  };
 
   const todoStatusRank: Record<string, number> = { pending: 1, completed: 2, cancel: 3 };
   const priorityRank: Record<string, number> = { high: 3, medium: 2, low: 1 };
@@ -350,13 +358,15 @@ export default function TodoPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 dark:border-zinc-800 pb-5">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            {language === "id" ? "Agenda Kerja" : "To-do List"}
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {language === "id" ? "To-do List" : "To-do List"}
           </h2>
-          <p className="text-slate-500 font-medium mt-1">
-            {canViewAll ? "Owner View: Seluruh Agenda Kerja" : `${getDeptName(currentProfile.departmentId)} Division`}
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Kelola komitmen tugas mingguan dan rencana aksi operasional tim secara terstruktur."
+              : "Manage weekly action items, operational task commitments, and team deliverables."}
           </p>
         </div>
 
@@ -371,92 +381,75 @@ export default function TodoPage() {
         </button>
       </div>
 
-      {/* Filter Row */}
-      <div className="bg-white dark:bg-zinc-900/90 p-3.5 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 min-w-0 max-w-full">
-        <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
-          <div className="flex items-center gap-2 mr-1">
-            <Filter className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
-            <span className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-              FILTER:
-            </span>
-          </div>
+      {/* Filter Row (Scoreboard Parity Design) */}
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* Division Filter Dropdown (First, matching Scoreboard) */}
+          {canViewAll && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
+              <CustomSelect
+                value={selectedDeptFilter}
+                onChange={(val) => setSelectedDeptFilter(val)}
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+                options={[
+                  { value: "all", label: "Semua Divisi" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
+                ]}
+              />
+            </div>
+          )}
 
           {/* Status Filter Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">STATUS:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Status :</span>
             <CustomSelect
               value={statusFilter}
               onChange={(val) => setStatusFilter(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "all", label: "SEMUA STATUS" },
-                { value: "pending", label: "PENDING", icon: <span>🟡</span> },
-                { value: "completed", label: "COMPLETED", icon: <span>🟢</span> },
-                { value: "cancel", label: "CANCEL", icon: <span>🔴</span> },
+                { value: "all", label: "Semua Status" },
+                { value: "pending", label: "Pending" },
+                { value: "completed", label: "Selesai" },
+                { value: "cancel", label: "Dibatalkan" },
               ]}
             />
           </div>
 
-          {/* Division Filter Dropdown */}
-          {canViewAll && (
-            <>
-              <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">DIVISI:</span>
-                <CustomSelect
-                  value={selectedDeptFilter}
-                  onChange={(val) => setSelectedDeptFilter(val)}
-                  triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
-                  options={[
-                    { value: "all", label: "SEMUA DIVISI" },
-                    ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
-                  ]}
-                />
-              </div>
-            </>
-          )}
-
           {/* Priority Filter Dropdown */}
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">PRIORITAS:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Prioritas :</span>
             <CustomSelect
               value={priorityFilter}
               onChange={(val) => setPriorityFilter(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "all", label: "SEMUA PRIORITAS" },
-                { value: "low", label: "LOW", icon: <span>🟢</span> },
-                { value: "medium", label: "MEDIUM", icon: <span>🟡</span> },
-                { value: "high", label: "HIGH", icon: <span>🔴</span> },
+                { value: "all", label: "Semua Prioritas" },
+                { value: "low", label: "Rendah (Low)" },
+                { value: "medium", label: "Sedang (Medium)" },
+                { value: "high", label: "Tinggi (High)" },
               ]}
             />
           </div>
 
-          {/* Sort Controls (URUTKAN + ASC/DESC Toggle) */}
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
+          {/* Urutan Dropdown (Scoreboard Unified Format) */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">URUTKAN:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Urutan :</span>
             <CustomSelect
-              value={sortBy}
-              onChange={(val) => setSortBy(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              value={sortOption}
+              onChange={handleSortChange}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "status", label: "⚡ STATUS" },
-                { value: "dept", label: "🏢 DIVISI" },
-                { value: "priority", label: "🔥 PRIORITAS" },
-                { value: "title", label: "📝 JUDUL" }
+                { value: "status_asc", label: "Status ↑" },
+                { value: "status_desc", label: "Status ↓" },
+                { value: "dept_asc", label: "Divisi ↑" },
+                { value: "dept_desc", label: "Divisi ↓" },
+                { value: "priority_asc", label: "Prioritas ↑" },
+                { value: "priority_desc", label: "Prioritas ↓" },
+                { value: "title_asc", label: "Judul Agenda ↑" },
+                { value: "title_desc", label: "Judul Agenda ↓" },
               ]}
             />
-            <button
-              type="button"
-              onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-              title={sortOrder === "asc" ? "Urutkan Ascending (A-Z / Low-High)" : "Urutkan Descending (Z-A / High-Low)"}
-              className="p-1.5 bg-slate-100 dark:bg-zinc-950/90 border border-slate-200/80 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
-            >
-              {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-red-500" />}
-              <span className="uppercase">{sortOrder}</span>
-            </button>
           </div>
         </div>
 
@@ -469,7 +462,7 @@ export default function TodoPage() {
               setSelectedDeptFilter("all");
               setPriorityFilter("all");
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
           >
             Reset Filter
           </button>
@@ -477,7 +470,7 @@ export default function TodoPage() {
       </div>
 
       {/* Todo List Card container */}
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm divide-y divide-slate-100 overflow-hidden">
+      <div className="bg-white border border-slate-100 rounded-xl shadow-sm divide-y divide-slate-100 overflow-hidden">
         {sortedTodos.map((todo) => {
           const dept = departments.find(d => d.id === todo.departmentId);
           const isCompleted = todo.status === "completed";

@@ -34,7 +34,7 @@
   --danger: #18181b;
   --info: #52525b;
 
-  --radius: 0.75rem;
+  --radius: 0.375rem;
 }
 
 .dark {
@@ -93,11 +93,62 @@
   --color-danger: var(--danger);
   --color-info: var(--info);
 
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-4xl: 0.5rem; /* 8px - Unified Container & Card Radius */
+  --radius-3xl: 0.5rem; /* 8px */
+  --radius-2xl: 0.5rem; /* 8px */
+  --radius-xl: 0.5rem; /* 8px */
+  --radius-lg: 0.375rem; /* 6px - Controls, Buttons, Inputs */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-sm: 0.25rem; /* 4px - Badges, Tags */
+  --radius-xs: 0.125rem; /* 2px */
 
   --font-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  --font-brand: var(--font-brand), "Plus Jakarta Sans", Outfit, system-ui, sans-serif;
+}
+
+.font-brand {
+  font-family: var(--font-brand), "Plus Jakarta Sans", Outfit, system-ui, sans-serif;
+}
+
+/* =====================================================================
+   UNIVERSAL REFINED BORDER RADIUS DESIGN SYSTEM (CONSISTENT ACROSS ALL PAGES)
+   Tier 1: Containers, Cards, Filter Bars, Tables, Modals -> Strictly 8px (0.5rem)
+   Tier 2: Controls, Buttons, Inputs, Dropdown Triggers -> Strictly 6px (0.375rem)
+   Tier 3: Badges, Status Tags, Small Indicators -> Strictly 4px (0.25rem)
+   ===================================================================== */
+:root {
+  --radius: 0.5rem;
+}
+
+/* Tier 1: All top-level containers, cards, dialogs, filter bars, and table wrappers */
+.rounded-4xl,
+.rounded-3xl,
+.rounded-2xl,
+.rounded-xl,
+[class*="rounded-[1"],
+[class*="rounded-[2"],
+[class*="rounded-[3"] {
+  border-radius: 0.5rem !important; /* 8px unified */
+}
+
+/* Tier 2: Controls, buttons, dropdowns, inputs, inner sub-cards */
+.rounded-lg,
+.rounded-md,
+button:not(.rounded-full-icon):not([class*="w-8"][class*="h-8 rounded-full"]):not([class*="w-7"][class*="h-7 rounded-full"]):not([class*="w-6"][class*="h-6 rounded-full"]):not([class*="w-5"][class*="h-5 rounded-full"]):not([class*="w-4"][class*="h-4 rounded-full"]):not([class*="w-2"][class*="h-2 rounded-full"]):not([class*="w-1\.5"][class*="h-1\.5 rounded-full"]):not(.avatar-circle),
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-radius: 0.375rem !important; /* 6px unified */
+}
+
+/* Tier 3: Badges, status tags, indicators */
+.rounded,
+.rounded-sm,
+.badge-glass,
+.tab-active-glass,
+[class*="badge-status-"],
+span.rounded-full:not([class*="w-1"]):not([class*="w-1\.5"]):not([class*="w-2"]):not([class*="w-2\.5"]):not([class*="w-3"]):not([class*="w-4"]):not([class*="h-1"]):not([class*="h-1\.5"]):not([class*="h-2"]):not([class*="h-2\.5"]):not([class*="h-3"]):not([class*="h-4"]) {
+  border-radius: 0.25rem !important; /* 4px unified */
 }
 
 * {

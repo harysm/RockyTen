@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp, Rock, Metric } from "@/context/AppContext";
 import {
   Target,
   Plus,
-  Filter,
   CheckCircle2,
   AlertTriangle,
   Clock,
@@ -16,15 +15,137 @@ import {
   Trash2,
   AlertOctagon,
   ArrowRight,
-  TrendingUp,
   Building2,
   Calendar,
   Layers,
-  Sparkles,
   BarChart3,
-  X
+  X,
+  MoreVertical,
+  RotateCcw,
+  Ban,
+  CheckCheck
 } from "lucide-react";
 import RocksSkeleton from "@/components/skeletons/RocksSkeleton";
+import CustomSelect from "@/components/CustomSelect";
+
+// Helper interface for calculated dynamic health status
+export type RockHealthStatus = "completed" | "dropped" | "review" | "off_track" | "on_track";
+
+interface RockStatusInfo {
+  status: RockHealthStatus;
+  label: string;
+  badgeClass: string;
+  dotClass: string;
+  subtext: string;
+  isOffTrack: boolean;
+  isReadyForReview: boolean;
+  daysRemaining: number;
+  isOverdue: boolean;
+}
+
+// Pure function to calculate dynamic health status
+export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusInfo {
+  // 1. Manually verified completed by leadership
+  if (rock.status === "completed") {
+    return {
+      status: "completed",
+      label: "Selesai",
+      badgeClass: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/60",
+      dotClass: "bg-blue-500",
+      subtext: "Terverifikasi oleh manajemen",
+      isOffTrack: false,
+      isReadyForReview: false,
+      daysRemaining: 0,
+      isOverdue: false
+    };
+  }
+
+  // 2. Officially dropped / cancelled by leadership
+  if (rock.status === "dropped") {
+    return {
+      status: "dropped",
+      label: "Dropped",
+      badgeClass: "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700",
+      dotClass: "bg-zinc-400",
+      subtext: "Dibatalkan resmi oleh direksi",
+      isOffTrack: false,
+      isReadyForReview: false,
+      daysRemaining: 0,
+      isOverdue: false
+    };
+  }
+
+  // Calculate days remaining towards deadline
+  let daysRemaining = 999;
+  let isOverdue = false;
+  if (rock.dueDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(rock.dueDate);
+    due.setHours(0, 0, 0, 0);
+    const diffTime = due.getTime() - today.getTime();
+    daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    isOverdue = daysRemaining < 0;
+  }
+
+  // 3. Technical 100% progress achieved, awaiting leadership sign-off
+  if (progress >= 100) {
+    return {
+      status: "review",
+      label: "Siap Review",
+      badgeClass: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/60",
+      dotClass: "bg-amber-500",
+      subtext: "Progres 100% • Menunggu verifikasi atasan",
+      isOffTrack: false,
+      isReadyForReview: true,
+      daysRemaining,
+      isOverdue: false
+    };
+  }
+
+  // 4. Overdue and incomplete -> Off Track
+  if (isOverdue) {
+    return {
+      status: "off_track",
+      label: "Off Track (Terlambat)",
+      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60",
+      dotClass: "bg-rose-500",
+      subtext: `Lewat batas waktu (${Math.abs(daysRemaining)} hari lalu) • Perlu IDS`,
+      isOffTrack: true,
+      isReadyForReview: false,
+      daysRemaining,
+      isOverdue: true
+    };
+  }
+
+  // 5. Early warning: Sisa <= 14 hari tapi progres < 50%
+  if (daysRemaining <= 14 && progress < 50) {
+    return {
+      status: "off_track",
+      label: "Off Track (Beresiko)",
+      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60",
+      dotClass: "bg-rose-500",
+      subtext: `Sisa ${daysRemaining} hari, progres ${progress}% • Butuh IDS`,
+      isOffTrack: true,
+      isReadyForReview: false,
+      daysRemaining,
+      isOverdue: false
+    };
+  }
+
+  // 6. Healthy Active Progress -> On Track
+  return {
+    status: "on_track",
+    label: "On Track",
+    badgeClass: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/60",
+    dotClass: "bg-emerald-500",
+    subtext: "Berjalan normal sesuai lini masa",
+    isOffTrack: false,
+    isReadyForReview: false,
+    daysRemaining,
+    isOverdue: false
+  };
+}
 
 export default function RocksPage() {
   const {
@@ -56,9 +177,11 @@ export default function RocksPage() {
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>("all");
+  const [sortOption, setSortOption] = useState<string>("quarter_desc");
   const [expandedRockIds, setExpandedRockIds] = useState<Record<string, boolean>>({});
+  const [activeMenuRockId, setActiveMenuRockId] = useState<string | null>(null);
 
-  // Add Rock Modal
+  // Add Rock Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -67,9 +190,19 @@ export default function RocksPage() {
   const [newQuarter, setNewQuarter] = useState<"Q1" | "Q2" | "Q3" | "Q4">("Q3");
   const [newYear, setNewYear] = useState<number>(2026);
   const [newDueDate, setNewDueDate] = useState("2026-09-30");
+  const [newInitialProgress, setNewInitialProgress] = useState<number>(0);
 
-  // Edit Rock Modal
+  // Edit Rock Modal State
   const [editingRock, setEditingRock] = useState<Rock | null>(null);
+
+  // Close kebab dropdown when clicking anywhere outside
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setActiveMenuRockId(null);
+    };
+    window.addEventListener("click", handleGlobalClick);
+    return () => window.removeEventListener("click", handleGlobalClick);
+  }, []);
 
   // Toggle accordion expand
   const toggleExpand = (rockId: string) => {
@@ -82,19 +215,56 @@ export default function RocksPage() {
     return dept ? dept.name : "Divisi";
   };
 
-  // Filtered Rocks
-  const filteredRocks = rocks.filter(rock => {
-    if (selectedQuarter !== "all" && rock.quarter !== selectedQuarter) return false;
-    if (selectedStatus !== "all" && rock.status !== selectedStatus) return false;
-    if (isOwnerOrDev && selectedDeptFilter !== "all" && rock.departmentId !== selectedDeptFilter) return false;
-    return true;
-  });
+  // Filtered & Sorted Rocks
+  const filteredRocks = rocks
+    .filter(rock => {
+      if (selectedQuarter !== "all" && rock.quarter !== selectedQuarter) return false;
+      if (isOwnerOrDev && selectedDeptFilter !== "all" && rock.departmentId !== selectedDeptFilter) return false;
 
-  // Calculate global summary counters
-  const totalRocks = rocks.length;
-  const onTrackRocks = rocks.filter(r => r.status === "on_track").length;
-  const offTrackRocks = rocks.filter(r => r.status === "off_track").length;
-  const completedRocks = rocks.filter(r => r.status === "completed").length;
+      if (selectedStatus !== "all") {
+        const { progress } = getRockProgress(rock.id);
+        const info = getDynamicRockStatus(rock, progress);
+        if (selectedStatus === "on_track" && info.status !== "on_track") return false;
+        if (selectedStatus === "off_track" && info.status !== "off_track") return false;
+        if (selectedStatus === "review" && info.status !== "review") return false;
+        if (selectedStatus === "completed" && info.status !== "completed") return false;
+        if (selectedStatus === "dropped" && info.status !== "dropped") return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOption === "quarter_asc") return a.quarter.localeCompare(b.quarter);
+      if (sortOption === "quarter_desc") return b.quarter.localeCompare(a.quarter);
+      if (sortOption === "title_asc") return a.title.localeCompare(b.title);
+      if (sortOption === "title_desc") return b.title.localeCompare(a.title);
+      if (sortOption === "progress_asc") {
+        const pA = getRockProgress(a.id).progress;
+        const pB = getRockProgress(b.id).progress;
+        return pA - pB;
+      }
+      if (sortOption === "progress_desc") {
+        const pA = getRockProgress(a.id).progress;
+        const pB = getRockProgress(b.id).progress;
+        return pB - pA;
+      }
+      return 0;
+    });
+
+  // Calculate dynamic global counters across active rocks
+  let totalRocks = rocks.length;
+  let dynamicOnTrackCount = 0;
+  let dynamicOffTrackCount = 0;
+  let dynamicReviewCount = 0;
+  let dynamicCompletedCount = 0;
+
+  rocks.forEach(r => {
+    const { progress } = getRockProgress(r.id);
+    const info = getDynamicRockStatus(r, progress);
+    if (info.status === "completed") dynamicCompletedCount++;
+    else if (info.status === "review") dynamicReviewCount++;
+    else if (info.status === "off_track") dynamicOffTrackCount++;
+    else if (info.status === "on_track") dynamicOnTrackCount++;
+  });
 
   // Handle Add Rock
   const handleCreateRock = (e: React.FormEvent) => {
@@ -113,6 +283,7 @@ export default function RocksPage() {
       quarter: newQuarter,
       year: newYear,
       status: "on_track",
+      progress: Math.min(100, Math.max(0, newInitialProgress || 0)),
       picId: pic.id,
       picName: pic.name,
       dueDate: newDueDate
@@ -121,6 +292,8 @@ export default function RocksPage() {
     setIsAddModalOpen(false);
     setNewTitle("");
     setNewDesc("");
+    setNewInitialProgress(0);
+    showToast("Rock prioritas baru berhasil dibuat!", "success");
   };
 
   // Handle Edit Rock
@@ -129,25 +302,72 @@ export default function RocksPage() {
     if (!editingRock || !editingRock.title.trim()) return;
 
     editRock(editingRock.id, {
-      title: editingRock.title,
-      description: editingRock.description,
+      title: editingRock.title.trim(),
+      description: editingRock.description?.trim() || undefined,
       departmentId: editingRock.departmentId,
       picId: editingRock.picId,
       picName: editingRock.picName,
       quarter: editingRock.quarter,
       year: editingRock.year,
       dueDate: editingRock.dueDate,
-      status: editingRock.status
+      status: editingRock.status,
+      progress: editingRock.progress !== undefined ? Math.min(100, Math.max(0, editingRock.progress)) : undefined
     });
 
     setEditingRock(null);
+    showToast("Perubahan Rock berhasil disimpan!", "success");
   };
 
-  // Handle Push Off-Track Rock to Issues (L10 IDS Protocol)
+  // Leader Action: Verify & Mark Completed
+  const handleVerifyComplete = (rock: Rock) => {
+    showConfirm({
+      title: "Verifikasi Selesai (ACC Atasan)",
+      message: `Tandai prioritas Rock "${rock.title}" sebagai SELESAI resmi setelah direview dalam rapat?`,
+      confirmText: "Ya, Verifikasi Selesai",
+      cancelText: "Batal",
+      variant: "info",
+      onConfirm: () => {
+        toggleRockStatus(rock.id, "completed");
+        showToast(`Rock "${rock.title}" resmi diverifikasi selesai! 🎉`, "success");
+      }
+    });
+  };
+
+  // Leader Action: Drop Rock (Strategic Pivot)
+  const handleDropRock = (rock: Rock) => {
+    showConfirm({
+      title: "Batalkan Prioritas Rock (Drop)",
+      message: `Apakah rapat manajemen memutuskan untuk membatalkan (Drop) Rock "${rock.title}" karena perubahan strategi atau alokasi resource?`,
+      confirmText: "Ya, Batalkan (Drop)",
+      cancelText: "Batal",
+      variant: "danger",
+      onConfirm: () => {
+        toggleRockStatus(rock.id, "dropped");
+        showToast(`Rock "${rock.title}" telah diubah statusnya menjadi Dropped.`, "info");
+      }
+    });
+  };
+
+  // Reactivate Rock from Completed / Dropped
+  const handleReactivateRock = (rock: Rock) => {
+    showConfirm({
+      title: "Aktifkan Kembali Rock",
+      message: `Kembalikan Rock "${rock.title}" menjadi aktif berjalan (On Track)?`,
+      confirmText: "Ya, Aktifkan",
+      cancelText: "Batal",
+      variant: "info",
+      onConfirm: () => {
+        toggleRockStatus(rock.id, "on_track");
+        showToast(`Rock "${rock.title}" kembali berstatus aktif.`, "success");
+      }
+    });
+  };
+
+  // Push Off-Track Rock to Issues (L10 IDS Protocol)
   const handlePushToIssue = (rock: Rock) => {
     showConfirm({
       title: "Eskalasi ke Issue (IDS Meeting)",
-      message: `Buat tiket issue otomatis untuk Rock "${rock.title}" agar dibahas pada sesi IDS rapat L10?`,
+      message: `Buat tiket issue otomatis untuk Rock "${rock.title}" agar dibahas pada sesi IDS rapat L10 mingguan?`,
       confirmText: "Ya, Buat Issue",
       cancelText: "Batal",
       variant: "warning",
@@ -189,19 +409,14 @@ export default function RocksPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60">
-              <Target className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                Rocks (Prioritas 90 Hari)
-              </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Target kuartalan strategis Traction L10 — PT Garciafood Nusantara Gemilang
-              </p>
-            </div>
-          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Rocks
+          </h2>
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Prioritas sasaran strategis 90 hari untuk mencapai target kuartalan kunci tim dan perusahaan."
+              : "90-day strategic priorities to achieve key quarterly team and organizational milestones."}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -211,7 +426,7 @@ export default function RocksPage() {
               setNewPicId(currentProfile.id);
               setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold rounded-xl shadow-md shadow-zinc-900/10 transition-all cursor-pointer border border-zinc-900 dark:border-zinc-100"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Rock</span>
@@ -221,7 +436,7 @@ export default function RocksPage() {
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             Total Prioritas
           </span>
@@ -231,105 +446,126 @@ export default function RocksPage() {
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
             On Track
           </span>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{onTrackRocks}</span>
+            <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{dynamicOnTrackCount}</span>
             <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-              {totalRocks > 0 ? `${Math.round((onTrackRocks / totalRocks) * 100)}%` : "0%"}
+              {totalRocks > 0 ? `${Math.round((dynamicOnTrackCount / totalRocks) * 100)}%` : "0%"}
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-          <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+        <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+          <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 uppercase tracking-wider">
             Off Track
           </span>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">{offTrackRocks}</span>
+            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">{dynamicOffTrackCount}</span>
             <span className="text-[11px] font-medium text-rose-500">Perlu IDS</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-            Selesai (Completed)
+            Selesai / Review
           </span>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{completedRocks}</span>
-            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Tercapai</span>
+            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {dynamicCompletedCount + dynamicReviewCount}
+            </span>
+            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+              {dynamicReviewCount > 0 ? `${dynamicReviewCount} Menunggu ACC` : "Tercapai"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Quarter Filter */}
-          <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs">
-            {["all", "Q1", "Q2", "Q3", "Q4"].map(q => (
-              <button
-                key={q}
-                onClick={() => setSelectedQuarter(q)}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                  selectedQuarter === q
-                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-                }`}
-              >
-                {q === "all" ? "Semua Kuartal" : q}
-              </button>
-            ))}
+      {/* Rocks Unified Filter Bar (Matches Scoreboard & Issues Layout) */}
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        {/* Left Side: Filter Dropdowns */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* Divisi Dropdown */}
+          {isOwnerOrDev && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
+              <CustomSelect
+                value={selectedDeptFilter}
+                onChange={(val) => setSelectedDeptFilter(val)}
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+                options={[
+                  { value: "all", label: "Semua Divisi" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
+                ]}
+              />
+            </div>
+          )}
+
+          {/* Kuartal Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Kuartal :</span>
+            <CustomSelect
+              value={selectedQuarter}
+              onChange={(val) => setSelectedQuarter(val)}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+              options={[
+                { value: "all", label: "Semua Kuartal" },
+                { value: "Q1", label: "Q1" },
+                { value: "Q2", label: "Q2" },
+                { value: "Q3", label: "Q3" },
+                { value: "Q4", label: "Q4" },
+              ]}
+            />
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs">
-            {[
-              { id: "all", label: "Semua Status" },
-              { id: "on_track", label: "On Track" },
-              { id: "off_track", label: "Off Track" },
-              { id: "completed", label: "Selesai" }
-            ].map(st => (
-              <button
-                key={st.id}
-                onClick={() => setSelectedStatus(st.id)}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                  selectedStatus === st.id
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-                }`}
-              >
-                {st.label}
-              </button>
-            ))}
+          {/* Status Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Status :</span>
+            <CustomSelect
+              value={selectedStatus}
+              onChange={(val) => setSelectedStatus(val)}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+              options={[
+                { value: "all", label: "Semua Status" },
+                { value: "on_track", label: "🟢 On Track" },
+                { value: "off_track", label: "🔴 Off Track (Perlu IDS)" },
+                { value: "review", label: "🟡 Siap Review (100%)" },
+                { value: "completed", label: "🔵 Selesai" },
+                { value: "dropped", label: "⚪ Dropped" },
+              ]}
+            />
+          </div>
+
+          {/* Urutan Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Urutan :</span>
+            <CustomSelect
+              value={sortOption}
+              onChange={(val) => setSortOption(val)}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+              options={[
+                { value: "quarter_desc", label: "Kuartal ↓" },
+                { value: "quarter_asc", label: "Kuartal ↑" },
+                { value: "title_asc", label: "Judul Rock ↑" },
+                { value: "title_desc", label: "Judul Rock ↓" },
+                { value: "progress_desc", label: "Progres ↓" },
+                { value: "progress_asc", label: "Progres ↑" },
+              ]}
+            />
           </div>
         </div>
 
-        {/* Division Filter for Owner / Developer */}
-        {isOwnerOrDev && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Divisi:</span>
-            <select
-              value={selectedDeptFilter}
-              onChange={e => setSelectedDeptFilter(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="all">Semua Divisi (Global)</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Right Side: Total Counter Badge */}
+        <div className="text-xs font-bold text-slate-500 dark:text-zinc-400 sm:ml-auto">
+          Total: <span className="text-slate-900 dark:text-white font-extrabold">{filteredRocks.length} Rocks</span>
+        </div>
       </div>
 
       {/* Rocks List / Grid */}
       {filteredRocks.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        <div className="text-center py-16 px-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           <Target className="w-10 h-10 mx-auto text-zinc-400 dark:text-zinc-600 mb-3" />
           <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Tidak ada Prioritas Rock ditemukan</h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
@@ -340,71 +576,153 @@ export default function RocksPage() {
         <div className="space-y-4">
           {filteredRocks.map(rock => {
             const { progress, totalMetrics, onTrackMetrics } = getRockProgress(rock.id);
+            const statusInfo = getDynamicRockStatus(rock, progress);
             const linkedMetrics = metrics.filter(m => m.rockId === rock.id);
             const isExpanded = !!expandedRockIds[rock.id];
 
             return (
               <div
                 key={rock.id}
-                className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all p-5"
+                className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all p-5 shadow-xs"
               >
-                {/* Top Row: Department, Quarter, Status */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                {/* Top Row: Division Badge, Quarter Badge, Deadline (Left) & Dynamic Status, Actions (Right) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                  {/* Left: Division Badge & Quarter Badge Adjacent */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                      <Building2 className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      <Building2 className="w-3.5 h-3.5 text-zinc-500" />
                       {getDeptName(rock.departmentId)}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
                       {rock.quarter} {rock.year}
                     </span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Deadline: <strong className="text-zinc-700 dark:text-zinc-300">{rock.dueDate}</strong>
+                    <span className={`inline-flex items-center gap-1 text-xs ${statusInfo.isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-zinc-500 dark:text-zinc-400"}`}>
+                      <Calendar className="w-3.5 h-3.5" />
+                      {statusInfo.isOverdue ? (
+                        <span>Lewat {Math.abs(statusInfo.daysRemaining)} hari ({rock.dueDate})</span>
+                      ) : statusInfo.daysRemaining === 0 ? (
+                        <span>Deadline hari ini! ({rock.dueDate})</span>
+                      ) : (
+                        <span>Sisa {statusInfo.daysRemaining} hari ({rock.dueDate})</span>
+                      )}
                     </span>
                   </div>
 
-                  {/* Status Badges with Quick Toggle */}
+                  {/* Right: Dynamic Status Indicator & Actions Menu */}
                   <div className="flex items-center gap-2">
-                    <select
-                      value={rock.status}
-                      onChange={e => toggleRockStatus(rock.id, e.target.value as Rock["status"])}
-                      className={`text-xs font-semibold px-2.5 py-1 rounded-md border transition-colors cursor-pointer focus:outline-none ${
-                        rock.status === "on_track"
-                          ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
-                          : rock.status === "off_track"
-                          ? "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-800"
-                          : rock.status === "completed"
-                          ? "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800"
-                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700"
-                      }`}
+                    {/* Dynamic Status Badge */}
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${statusInfo.badgeClass}`}
+                      title={statusInfo.subtext}
                     >
-                      <option value="on_track">🟢 On Track</option>
-                      <option value="off_track">🔴 Off Track (Perlu IDS)</option>
-                      <option value="completed">🔵 Selesai</option>
-                      <option value="dropped">⚪ Dropped</option>
-                    </select>
+                      <span className={`w-2 h-2 rounded-full ${statusInfo.dotClass}`} />
+                      <span>{statusInfo.label}</span>
+                    </div>
 
-                    <button
-                      onClick={() => setEditingRock(rock)}
-                      className="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                      title="Edit Rock"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRock(rock)}
-                      className="p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/30 text-zinc-500 hover:text-rose-600 transition-colors"
-                      title="Hapus Rock"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* Action Kebab Menu Popover */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuRockId(activeMenuRockId === rock.id ? null : rock.id);
+                        }}
+                        className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
+                        title="Opsi Menu Rock"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {activeMenuRockId === rock.id && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl z-20 p-1 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <button
+                            onClick={() => {
+                              setActiveMenuRockId(null);
+                              setEditingRock(rock);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-zinc-500" />
+                            <span>Edit Rock</span>
+                          </button>
+
+                          {/* Leader Exclusive Options: Complete / Reactivate / Drop */}
+                          {isOwnerOrDev && (
+                            <>
+                              {rock.status !== "completed" ? (
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuRockId(null);
+                                    handleVerifyComplete(rock);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>Tandai Selesai</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuRockId(null);
+                                    handleReactivateRock(rock);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>Batalkan Selesai</span>
+                                </button>
+                              )}
+
+                              {rock.status !== "dropped" ? (
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuRockId(null);
+                                    handleDropRock(rock);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <Ban className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Batalkan Rock (Drop)</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuRockId(null);
+                                    handleReactivateRock(rock);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
+                                  <span>Aktifkan Kembali</span>
+                                </button>
+                              )}
+                            </>
+                          )}
+
+                          <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1" />
+
+                          <button
+                            onClick={() => {
+                              setActiveMenuRockId(null);
+                              handleDeleteRock(rock);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus Rock</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Main Content: Title, Description, PIC */}
                 <div className="mt-3">
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
                     {rock.title}
                   </h3>
                   {rock.description && (
@@ -422,12 +740,12 @@ export default function RocksPage() {
                   <div className="flex items-center justify-between text-xs mb-1.5">
                     <span className="font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
                       <BarChart3 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      Progres Pencapaian Rock: <strong className="text-zinc-900 dark:text-zinc-100">{progress}%</strong>
+                      Progres Pencapaian: <strong className="text-zinc-900 dark:text-zinc-100">{progress}%</strong>
                     </span>
                     <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       {totalMetrics > 0
                         ? `${onTrackMetrics} dari ${totalMetrics} Sub-Metrik On Track`
-                        : "Belum ada Sub-Metrik Scoreboard"}
+                        : "Target Prioritas Mandiri"}
                     </span>
                   </div>
 
@@ -435,10 +753,12 @@ export default function RocksPage() {
                   <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 rounded-full ${
-                        rock.status === "completed" || progress >= 90
+                        rock.status === "completed" || progress >= 100
                           ? "bg-emerald-500"
-                          : rock.status === "off_track"
+                          : statusInfo.isOffTrack
                           ? "bg-rose-500"
+                          : statusInfo.isReadyForReview
+                          ? "bg-amber-500"
                           : "bg-blue-600"
                       }`}
                       style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -446,11 +766,11 @@ export default function RocksPage() {
                   </div>
                 </div>
 
-                {/* Sub-Metrics Accordion & Action Buttons */}
+                {/* Sub-Metrics Accordion Toggle & Scoreboard Link */}
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                   <button
                     onClick={() => toggleExpand(rock.id)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                   >
                     <Layers className="w-3.5 h-3.5 text-blue-500" />
                     <span>
@@ -459,21 +779,34 @@ export default function RocksPage() {
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
 
-                  <div className="flex items-center gap-2">
-                    {/* If Off Track, show quick button to raise as an Issue for IDS meeting */}
-                    {rock.status === "off_track" && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Quick Action: Leader Verify & Complete Button (when 100% and role is Owner / Developer) */}
+                    {statusInfo.isReadyForReview && isOwnerOrDev && (
+                      <button
+                        onClick={() => handleVerifyComplete(rock)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
+                        title="Verifikasi dan selesaikan Rock ini secara resmi"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Verifikasi Selesai</span>
+                      </button>
+                    )}
+
+                    {/* Quick Action: Eskalasi ke Issue (IDS) if Off Track */}
+                    {statusInfo.isOffTrack && (
                       <button
                         onClick={() => handlePushToIssue(rock)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-900 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                        title="Eskalasi ke Issue untuk dibahas di rapat IDS"
                       >
-                        <AlertOctagon className="w-3.5 h-3.5" />
-                        <span>🚨 Lempar ke Issue (IDS)</span>
+                        <AlertOctagon className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                        <span>Lempar ke Issue</span>
                       </button>
                     )}
 
                     <Link
                       href="/scoreboard"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shadow-2xs transition-colors"
                     >
                       <span>Buka di Scoreboard</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -485,7 +818,7 @@ export default function RocksPage() {
                 {isExpanded && (
                   <div className="mt-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                     <div className="flex items-center justify-between text-xs font-semibold text-zinc-600 dark:text-zinc-400 pb-1 border-b border-zinc-200 dark:border-zinc-800">
-                      <span>Nama Sub-Metrik (Judul Kecil)</span>
+                      <span>Nama Sub-Metrik (Scoreboard KPI)</span>
                       <span>Target & PIC</span>
                     </div>
 
@@ -540,7 +873,7 @@ export default function RocksPage() {
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -549,7 +882,7 @@ export default function RocksPage() {
             <form onSubmit={handleCreateRock} className="p-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Judul Rock (Target Besar 90 Hari) *
+                  Judul Rock (Sasaran 90 Hari) *
                 </label>
                 <input
                   type="text"
@@ -653,17 +986,35 @@ export default function RocksPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Progres Mandiri Awal (%)
+                  <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400 ml-1">
+                    (Jika Rock tidak terhubung ke sub-metrik Scoreboard)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={newInitialProgress}
+                  onChange={e => setNewInitialProgress(Number(e.target.value))}
+                  placeholder="0 - 100"
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
               <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors cursor-pointer"
                 >
                   Simpan Rock
                 </button>
@@ -686,7 +1037,7 @@ export default function RocksPage() {
               </div>
               <button
                 onClick={() => setEditingRock(null)}
-                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -721,17 +1072,16 @@ export default function RocksPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Status
+                    Status Manajemen
                   </label>
                   <select
                     value={editingRock.status}
                     onChange={e => setEditingRock({ ...editingRock, status: e.target.value as any })}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    <option value="on_track">🟢 On Track</option>
-                    <option value="off_track">🔴 Off Track</option>
-                    <option value="completed">🔵 Selesai</option>
-                    <option value="dropped">⚪ Dropped</option>
+                    <option value="on_track">🟢 Aktif (Otomatis)</option>
+                    <option value="completed">🔵 Selesai (ACC Direksi)</option>
+                    <option value="dropped">⚪ Dropped (Dibatalkan)</option>
                   </select>
                 </div>
 
@@ -790,17 +1140,35 @@ export default function RocksPage() {
                 </div>
               </div>
 
+              {/* Progress Override (for rocks without sub-metrics) */}
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Progres Mandiri (%)
+                  <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400 ml-1">
+                    (Hanya digunakan jika tidak ada sub-metrik di Scoreboard)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={editingRock.progress ?? 0}
+                  onChange={e => setEditingRock({ ...editingRock, progress: Number(e.target.value) })}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
               <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingRock(null)}
-                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors cursor-pointer"
                 >
                   Simpan Perubahan
                 </button>

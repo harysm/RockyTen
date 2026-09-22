@@ -30,6 +30,7 @@ export interface Rock {
   quarter: "Q1" | "Q2" | "Q3" | "Q4";
   year: number;
   status: "on_track" | "off_track" | "completed" | "dropped";
+  progress?: number;
   picId: string;
   picName: string;
   dueDate: string; // YYYY-MM-DD

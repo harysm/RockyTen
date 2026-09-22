@@ -321,7 +321,7 @@ export default function RebuiltArchivesPage() {
   return (
     <div className="space-y-6 w-full max-w-full font-sans">
       {/* 1. Header Banner */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-xl shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">
             {language === "id" ? "Arsip Sistem & Rekapitulasi Data" : "System Archives & Data Reports"}
@@ -336,7 +336,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={handleExportExcel}
-          className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-red-600/20 cursor-pointer transition-all active:scale-95 shrink-0"
+          className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-md shadow-red-600/20 cursor-pointer transition-all active:scale-95 shrink-0"
         >
           <Download className="w-4 h-4" />
           <span>{language === "id" ? "Export Excel Laporan (.xlsx)" : "Export Excel Report (.xlsx)"}</span>
@@ -348,7 +348,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("kpi")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "kpi"
+          className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "kpi"
               ? "bg-red-600 text-white shadow-md shadow-red-600/20"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
@@ -360,7 +360,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("todos")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "todos"
+          className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "todos"
               ? "bg-red-600 text-white shadow-md shadow-red-600/20"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
@@ -372,7 +372,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("issues")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "issues"
+          className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "issues"
               ? "bg-red-600 text-white shadow-md shadow-red-600/20"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
@@ -384,7 +384,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("headlines")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "headlines"
+          className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "headlines"
               ? "bg-red-600 text-white shadow-md shadow-red-600/20"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
@@ -395,7 +395,7 @@ export default function RebuiltArchivesPage() {
       </div>
 
       {/* 3. Control Bar (Filter & Layout View Switcher) */}
-      <div className="bg-white dark:bg-zinc-900 p-4 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-4 w-full">
+      <div className="bg-white dark:bg-zinc-900 p-4 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-4 w-full">
         <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-400 shrink-0" />
@@ -408,7 +408,7 @@ export default function RebuiltArchivesPage() {
               <CustomSelect
                 value={selectedDept}
                 onChange={(val: string) => setSelectedDept(val)}
-                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
                 options={[
                   { value: "all", label: "SEMUA DIVISI" },
                   ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
@@ -423,7 +423,7 @@ export default function RebuiltArchivesPage() {
               <CustomSelect
                 value={selectedStatus}
                 onChange={(val: string) => setSelectedStatus(val)}
-                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
                 options={
                   activeTab === "kpi"
                     ? [
@@ -454,7 +454,7 @@ export default function RebuiltArchivesPage() {
             <CustomSelect
               value={sortBy}
               onChange={(val: string) => setSortBy(val)}
-              triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
               options={
                 activeTab === "kpi"
                   ? [
@@ -488,7 +488,7 @@ export default function RebuiltArchivesPage() {
               type="button"
               onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
               title={sortOrder === "asc" ? "Urutkan Ascending (A-Z / 1-9)" : "Urutkan Descending (Z-A / 9-1)"}
-              className="p-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
+              className="p-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
             >
               {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-red-500" />}
               <span className="uppercase">{sortOrder}</span>
@@ -505,12 +505,12 @@ export default function RebuiltArchivesPage() {
               placeholder="Cari data arsip..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-red-500 font-medium"
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-red-500 font-medium"
             />
           </div>
 
           {/* View Mode Toggle: Grid Kartu vs Tabel List */}
-          <div className="flex items-center bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 shrink-0">
+          <div className="flex items-center bg-slate-100 dark:bg-zinc-950 p-1 rounded-lg border border-slate-200 dark:border-zinc-800 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
@@ -565,7 +565,7 @@ export default function RebuiltArchivesPage() {
                 const isMetricActive = m.isActive !== false;
 
                 return (
-                  <div key={m.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-xs flex flex-col justify-between space-y-4 w-full">
+                  <div key={m.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-xl shadow-xs flex flex-col justify-between space-y-4 w-full">
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
@@ -622,7 +622,7 @@ export default function RebuiltArchivesPage() {
             </div>
           ) : (
             /* TABLE MODE */
-            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden w-full">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs overflow-hidden w-full">
               <div className="overflow-x-auto w-full">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -719,7 +719,7 @@ export default function RebuiltArchivesPage() {
             {sortedTodos.map(todo => {
               const deptName = departments.find(d => d.id === todo.departmentId)?.name || "Global";
               return (
-                <div key={todo.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-xs flex flex-col justify-between space-y-3 w-full">
+                <div key={todo.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-xl shadow-xs flex flex-col justify-between space-y-3 w-full">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-400 rounded-full text-[9px] font-extrabold uppercase border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-1">
@@ -747,7 +747,7 @@ export default function RebuiltArchivesPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden w-full">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs overflow-hidden w-full">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -807,7 +807,7 @@ export default function RebuiltArchivesPage() {
             {sortedIssues.map(issue => {
               const deptName = departments.find(d => d.id === issue.departmentId)?.name || "Global";
               return (
-                <div key={issue.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-xs flex flex-col justify-between space-y-3 w-full">
+                <div key={issue.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-xl shadow-xs flex flex-col justify-between space-y-3 w-full">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       {issue.status === "solved" || issue.status === "closed" || (issue.status as string) === "resolved" ? (
@@ -845,7 +845,7 @@ export default function RebuiltArchivesPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden w-full">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs overflow-hidden w-full">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -917,7 +917,7 @@ export default function RebuiltArchivesPage() {
             {sortedHeadlines.map(headline => {
               const deptName = headline.departmentId ? (departments.find(d => d.id === headline.departmentId)?.name || "Global") : "Global";
               return (
-                <div key={headline.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-xs flex flex-col justify-between space-y-3 w-full">
+                <div key={headline.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-xl shadow-xs flex flex-col justify-between space-y-3 w-full">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-400 rounded-full text-[9px] font-extrabold uppercase border border-blue-200 dark:border-blue-900/60">
@@ -943,7 +943,7 @@ export default function RebuiltArchivesPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-xs overflow-hidden w-full">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs overflow-hidden w-full">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse">
                 <thead>

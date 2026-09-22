@@ -14,8 +14,10 @@ import {
   History,
   Archive,
   Settings,
+  HelpCircle,
   X
 } from "lucide-react";
+import { HelpSystemModal } from "@/components/HelpSystemModal";
 
 export interface SidebarProps {
   mobileOpen?: boolean;
@@ -29,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   const pathname = usePathname();
   const { currentProfile, language } = useApp();
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen;
 
@@ -46,10 +49,10 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   const baseNavItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Scoreboard", href: "/scoreboard", icon: Table2 },
-    { name: "Rocks (90 Hari)", href: "/rocks", icon: Milestone },
+    { name: "Rocks", href: "/rocks", icon: Milestone },
     { name: language === "id" ? "Headline" : "Headlines", href: "/headlines", icon: Newspaper },
     { name: language === "id" ? "To Do List" : "To-Do", href: "/todos", icon: CheckSquare },
-    { name: language === "id" ? "Issue (IDS)" : "Issues", href: "/issues", icon: AlertCircle },
+    { name: language === "id" ? "Issue" : "Issues", href: "/issues", icon: AlertCircle },
     { name: language === "id" ? "Histori Log" : "History", href: "/history", icon: History },
   ];
 
@@ -59,19 +62,21 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
 
   const SidebarContent = () => (
     <>
-      {/* Brand Title */}
-      <div className="h-14 sm:h-16 px-5 border-b border-slate-200 dark:border-zinc-800 flex items-center">
+      {/* Brand Logo */}
+      <div className="h-14 sm:h-16 px-4 sm:px-5 border-b border-slate-200/80 dark:border-zinc-850 flex items-center">
         <Link
           href="/"
           onClick={handleClose}
-          className="font-bold text-lg text-slate-900 dark:text-white tracking-tight hover:opacity-85 transition-opacity"
+          className="flex items-center group select-none transition-opacity hover:opacity-90"
         >
-          RockyTen
+          <span className="font-brand font-black text-xl sm:text-[22px] tracking-tight text-slate-900 dark:text-white">
+            Rocky <span className="text-red-600 dark:text-red-500">ten</span>
+          </span>
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Navigation Links (Linear / Raycast Style - Borderless with Red Left Indicator & Micro-interactions) */}
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -80,33 +85,65 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               key={item.name}
               href={item.href}
               onClick={handleClose}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-150 group select-none ${
                 isActive
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 font-bold border border-blue-200/70 dark:border-blue-900/60 shadow-xs"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-100 border border-transparent"
+                  ? "bg-slate-100/90 text-slate-900 dark:bg-zinc-900/90 dark:text-white font-bold"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-900/50 font-medium"
               }`}
             >
-              <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-zinc-500"}`} />
+              {/* Active Indicator Bar (Red vertical accent bar on left) */}
+              {isActive && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-red-600 dark:bg-red-500 shadow-xs" />
+              )}
+
+              <Icon
+                className={`w-4 h-4 flex-shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5 ${
+                  isActive
+                    ? "text-red-600 dark:text-red-500"
+                    : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300"
+                }`}
+              />
               <span className="truncate">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Settings Link */}
-      <div className="p-3 border-t border-slate-100 dark:border-zinc-850">
+      {/* Settings & Help Links */}
+      <div className="p-2.5 border-t border-slate-100 dark:border-zinc-850/80 space-y-0.5">
         <Link
           href="/settings"
           onClick={handleClose}
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-150 ${
+          className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-150 group select-none ${
             pathname === "/settings"
-              ? "bg-slate-100 text-slate-900 dark:bg-zinc-900 dark:text-white font-bold border border-slate-200 dark:border-zinc-800"
-              : "text-slate-600 dark:text-zinc-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-100 border border-transparent"
+              ? "bg-slate-100/90 text-slate-900 dark:bg-zinc-900/90 dark:text-white font-bold"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-900/50 font-medium"
           }`}
         >
-          <Settings className={`w-4 h-4 flex-shrink-0 ${pathname === "/settings" ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-zinc-500"}`} />
-          <span>{language === "id" ? "Pengaturan & RBAC" : "Settings & RBAC"}</span>
+          {pathname === "/settings" && (
+            <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-red-600 dark:bg-red-500 shadow-xs" />
+          )}
+          <Settings
+            className={`w-4 h-4 flex-shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5 ${
+              pathname === "/settings"
+                ? "text-red-600 dark:text-red-500"
+                : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300"
+            }`}
+          />
+          <span>{language === "id" ? "Pengaturan" : "Settings"}</span>
         </Link>
+
+        <button
+          type="button"
+          onClick={() => {
+            handleClose();
+            setIsHelpModalOpen(true);
+          }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-900/50 transition-all duration-150 cursor-pointer text-left group select-none hover:!transform-none"
+        >
+          <HelpCircle className="w-4 h-4 flex-shrink-0 text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+          <span>{language === "id" ? "Bantuan & Sistem" : "Help & System"}</span>
+        </button>
       </div>
     </>
   );
@@ -137,6 +174,12 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       <aside className="hidden lg:flex w-60 bg-white dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 flex-col h-screen fixed left-0 top-0 border-r border-slate-200 dark:border-zinc-850 z-20">
         <SidebarContent />
       </aside>
+
+      {/* Help & System Modal */}
+      <HelpSystemModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
     </>
   );
 });

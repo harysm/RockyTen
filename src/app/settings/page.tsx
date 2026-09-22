@@ -196,11 +196,11 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header section */}
-      <div className="border-b border-slate-100 pb-5">
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+      <div className="border-b border-slate-100 dark:border-zinc-800 pb-5">
+        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           {language === "id" ? "Pengaturan" : "Settings"}
         </h2>
-        <p className="text-slate-500 font-medium mt-1">
+        <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
           {language === "id" 
             ? "Kelola detail akun, simulator pengguna, divisi, dan sistem." 
             : "Manage account details, user simulator, divisions, and system settings."}
@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
         {/* Form Area on Right */}
         <div className="lg:col-span-3">
-          <div className="bg-white border border-slate-100 rounded-[24px] shadow-sm p-6 md:p-8">
+          <div className="bg-white border border-slate-100 rounded-xl shadow-sm p-6 md:p-8">
             
             {/* 1. Tab Profile */}
             {activeTab === "profile" && (

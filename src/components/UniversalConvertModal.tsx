@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useApp, AttachmentInfo } from "@/context/AppContext";
 import { ArrowRight, RefreshCw, Sparkles, Check, AlertTriangle, FileText, X, Paperclip, Link as LinkIcon, ExternalLink, User, Calendar, Loader2 } from "lucide-react";
+import FormDatePicker from "@/components/FormDatePicker";
 
 export type ConvertSourceType = "todo" | "headline" | "issue" | "metric";
 export type ConvertTargetType = "todo" | "headline" | "issue" | "metric";
@@ -581,23 +582,20 @@ export default function UniversalConvertModal({
               {metricCycle === "special" && (
                 <div className="pt-1 space-y-2 border-t border-amber-200/50 dark:border-amber-900/30 mt-2">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1.5 flex items-center gap-1">
                       <span>Tanggal Deadline (Tenggat Waktu) <span className="text-red-500">*</span></span>
                     </label>
-                    <input
-                      type="date"
+                    <FormDatePicker
                       required
                       value={metricDeadline}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) => {
-                        const dl = e.target.value;
+                      minDate={new Date().toISOString().split("T")[0]}
+                      onChange={(dl) => {
                         setMetricDeadline(dl);
                         const today = new Date().toISOString().split("T")[0];
                         const days = getDaysBetween(today, dl);
                         setMetricDurationDays(days);
                       }}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold text-slate-900 dark:text-white dark:[color-scheme:dark] cursor-pointer"
+                      placeholder="Pilih tanggal tenggat waktu..."
                     />
                   </div>
                   {metricDeadline && (

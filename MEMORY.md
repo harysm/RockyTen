@@ -55,8 +55,255 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-22] - Rocks Module Revamp (Automatic Dynamic Health Status, Executive Clean UI & Leader Verification)
+* **Pembaruan Menyeluruh Modul Rocks (`src/app/rocks/page.tsx`, `src/types/index.ts`, `src/context/AppContext.tsx`)**:
+  * **Eliminasi Dropdown Manual Status pada Setiap Kartu**: Menghilangkan elemen `<select>` manual status pada header setiap kartu Rock yang sebelumnya membingungkan dan rawan kontradiksi dengan data riil Scoreboard.
+  * **Sistem Radar Kesehatan Otomatis (Dynamic Health & Early Warning Radar)**:
+    - Status kini dideteksi otomatis berdasarkan parameter progres pencapaian dan batas waktu:
+      - **🔵 Selesai**: Khusus untuk Rock yang telah diverifikasi resmi oleh direksi/atasan (`rock.status === 'completed'`).
+      - **⚪ Dropped**: Khusus untuk prioritas yang dibatalkan secara sadar oleh manajemen karena pivot strategi atau realokasi sumber daya (`rock.status === 'dropped'`).
+      - **🟡 Siap Review**: Progres teknis telah mencapai 100%, sistem mengunci dan menunggu persetujuan/verifikasi atasan pada rapat L10.
+      - **🔴 Off Track (Terlambat)**: Batas waktu (due date) telah lewat dan progres belum 100%. Dilengkapi info jumlah hari keterlambatan (Contoh Demo: `rock-marketing-1`, due date 15 September 2026 / lewat 7 hari).
+      - **🔴 Off Track (Beresiko)**: Peringatan dini (Early Warning) — sisa waktu $\le 14$ hari namun progres masih $< 50\%$, langsung memicu kebutuhan pembahasan di rapat IDS (Contoh Demo: `rock-it-1`, sisa 8 hari, progres 34%).
+      - **🟢 On Track**: Progres berjalan sehat sesuai lini masa.
+  * **Verifikasi Dua Langkah & Pemindahan Tombol Aksi ke Baris Bawah**:
+    - **Tombol 'Verifikasi Selesai'**: Dipindahkan ke baris bawah di sebelah kiri tombol "Buka di Scoreboard". Tampil secara eksklusif hanya untuk peran Super Admin (**Owner**) dan Debug (**Developer**) ketika Rock mencapai progres 100% (*Siap Review*).
+    - **Tombol 'Lempar ke Issue'**: Dipindahkan dari header atas ke baris bawah di sebelah kiri tombol "Buka di Scoreboard". Tampil sebagai tombol interaktif tegas (`rounded-lg`, border rose) dengan satu ikon outline Lucide (`AlertOctagon`) tanpa tumpukan emoji `🚨`.
+    - **Penyederhanaan Menu Kebab 3-Titik Sesuai Peran**:
+      - **PIC**: Menu hanya berisi **Edit Rock** dan **Hapus Rock**.
+      - **Owner / Developer**: Memiliki menu lengkap (**Edit Rock**, **Tandai Selesai / Batalkan Selesai**, **Batalkan Rock (Drop) / Aktifkan Kembali**, dan **Hapus Rock**).
+  * **Executive Clean Card Layout & Standarisasi Desain**:
+    - **Header Kartu Sangat Bersih**: Sisi kanan header kartu kini murni hanya memuat teks status dinamis dan tombol titik tiga (`⋮`), mengeliminasi tampilan tombol yang menyerupai badge status.
+    - **Badge Berdampingan**: Badge Divisi (`Building2`) dan Badge Kuartal (`Q3 2026`) ditempatkan berdampingan di kiri atas kartu, diikuti info tenggat waktu (`Calendar`) dengan indikator sisa hari/keterlambatan.
+    - **Dukungan Progres Mandiri**: Menambahkan field `progress?: number` pada tipe `Rock` dan form Add/Edit untuk mendukung proyek prioritas independen yang tidak memiliki sub-metrik di Scoreboard.
+    - **Stat Counters & Filter Bar Dinamis**: Ringkasan stat di bagian atas dan dropdown filter status menyaring secara dinamis mengikuti status kesehatan riil.
 
-*Catatan: Seluruh tabel telah dinonaktifkan Row Level Security (`DISABLE ROW LEVEL SECURITY`) agar dapat diakses oleh anon key tanpa hambatan.*
+### [2026-09-22] - Issues Table Cleanup (Badge-Free Text & Unified Detail Action Modal)
+* **Pembersihan Kolom Tabel Issue (`src/app/issues/page.tsx`, `src/components/issues/IssueDetailModal.tsx`)**:
+  * **Kolom Divisi & Prioritas Tanpa Badge**: Menghilangkan seluruh badge wrapper (`badge-glass` / border / background container) pada kolom Divisi dan Prioritas. Nilai kini disajikan sebagai teks murni yang bersih dengan warna bobot yang tegas (Low: slate, Medium: amber, High: orange, Critical: rose).
+  * **Kolom Status Tanpa Badge & Dot**: Menghilangkan badge container serta emoji lingkaran dot (`🔴`, `🟡`, `🟢`, `⚫`) pada kolom status. Status disajikan murni sebagai teks tegas (`Open`, `In Progress`, `Solved`, `Closed`) dengan warna tipografi adaptif.
+  * **Penyatuan Aksi ke Tombol 'Detail' Tunggal**: Menggantikan 3 tombol berjejer (`Convert`, `Edit`, `Delete`) dengan 1 tombol **Detail** (`rounded-lg`, Tier 2 token) pada tabel desktop dan kartu mobile.
+  * **Komponen Baru `IssueDetailModal`**:
+    - Membuka modal pop-up elegan di tengah layar yang menampilkan informasi kendala komprehensif (Judul, Divisi, Prioritas, Status, PIC, Deskripsi Masalah, serta Lampiran file/link/gambar).
+    - Footer modal menyediakan 3 tombol aksi di sisi kiri: **Konversi**, **Edit**, dan **Hapus** (dengan konfirmasi keamanan), serta tombol **Tutup** di sisi kanan.
+
+### [2026-09-22] - Headlines Card Header Revamp (Outline Lucide Icons, Unified Badges & Kebab Actions Dropdown)
+* **Pembaruan Kartu Berita Headline (`src/app/headlines/page.tsx`)**:
+  * **Integrasi Outline / Line Icons Lucide**: Menggantikan raw emoji pada badge kategori dengan outline Lucide line icons yang tajam dan selaras dengan sistem desain RockyTen:
+    - **Achievement**: `Trophy` (aksen amber)
+    - **Good News**: `Sparkles` (aksen emerald)
+    - **Bad News**: `AlertTriangle` (aksen rose)
+    - **Reminder**: `Bell` (aksen indigo)
+    - **Announcement**: `Megaphone` (aksen blue)
+  * **Penyatuan Badge Kategori & Divisi**: Memindahkan badge divisi ke sebelah kanan badge kategori pada sisi kiri atas header kartu, menciptakan satu fokus baca (*single focal point*) yang terpadu.
+  * **Kebab Menu Dropdown 3 Titik (`MoreVertical`)**:
+    - Menggantikan 3 tombol berjejer (`Convert`, `Edit`, `Delete`) dengan 1 tombol titik tiga (`⋮`).
+    - Memunculkan menu dropdown melayang (*floating popover*) ber-border radius Tier 2 (6px), lengkap dengan opsi `Konversi Modul`, `Edit Headline`, dan `Hapus Headline`.
+    - Dilengkapi proteksi *click-outside* global untuk menutup menu otomatis saat mengklik area di luar dropdown.
+  * **Perbaikan Hover Menu Kebab & Penstabilan Animasi**:
+    - **Penyelarasan Warna Hover**: Menghilangkan warna kuning/amber terisolasi pada tombol edit; item umum kini seragam menggunakan highlight netral `hover:bg-slate-100 dark:hover:bg-zinc-900` dan teks `hover:text-slate-900 dark:hover:text-white`.
+    - **Sinkronisasi Ikon & Teks**: Menambahkan class `group` sehingga warna ikon ikut bertransisi selaras dengan teks saat kursor diarahkan.
+    - **Pemberian Padding Kontainer & Rounded Item**: Mengubah kontainer menjadi `p-1 rounded-xl` dan item menjadi `px-2.5 py-1.5 rounded-lg`, mengeliminasi efek hover kotak kaku yang menabrak tepi kontainer.
+    - **Penonaktifan `hover-lift` Saat Menu Terbuka**: Menonaktifkan animasi naik-turun kartu (`translateY(-2px)`) ketika dropdown sedang aktif agar kartu tidak berguncang/bergetar saat kursor bergerak di atas opsi menu.
+  * **Pembersihan Modal Form**: Menghilangkan emoji pada pilihan `<select>` kategori di modal Tambah dan Edit Headline.
+
+### [2026-09-21] - Custom FormDatePicker & Modern Calendar Dropdown Upgrade
+* **Penggantian `<input type="date">` Native dengan Custom `FormDatePicker` (`src/components/FormDatePicker.tsx`, `src/app/scoreboard/page.tsx`, `src/components/UniversalConvertModal.tsx`)**:
+  * **Komponen Baru `FormDatePicker`**: Menggantikan date picker bawaan browser (Chromium native popup) yang kaku dan tidak konsisten dengan kalender dropdown kustom modern yang terintegrasi penuh ke dalam sistem desain RockyTen.
+  * **Fitur & Interaktivitas Kalender**:
+    - **Tampilan Tanggal Format Indonesia**: Menampilkan hari dan bulan dalam bahasa Indonesia (`Sen, 21 Sep 2026`).
+    - **Header Kalender Interaktif**: Navigasi bulan (`<` dan `>`) yang mulus, teks bulan & tahun tegas, serta tombol cepat "Hari Ini" untuk kembali ke bulan sekarang.
+    - **Grid Hari Senin–Minggu**: Header 7 hari (`Sen`, `Sel`, `Rab`, `Kam`, `Jum`, `Sab`, `Min`) dengan trailing & leading days antar bulan.
+    - **Indikator Status**: Titik merah (`bg-red-500`) menandai hari ini, state tanggal terpilih berlatar kontras hitam (`bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950`), dan penonaktifan tanggal masa lalu (`minDate`) otomatis.
+    - **Tombol Pintasan Cepat (Quick Presets)**: Tombol shortcut `Hari Ini`, `+3 Hari`, `+7 Hari`, dan `+14 Hari` untuk mempercepat pengisian tenggat waktu metrik khusus/ad-hoc.
+    - **Tombol Hapus (Clear)**: Tombol ikon `X` untuk mereset tanggal secara instan.
+    - **Validasi Form**: Menggunakan hidden input terselubung untuk menjamin validasi `required` form bawaan HTML5 tetap bekerja sempurna saat submit.
+
+### [2026-09-21] - Dropdown Hover Jitter & Vibration Fix (Stable Transition Optimization)
+* **Perbaikan Efek Hover & Animasi Gemetar Dropdown (`src/components/FormSelect.tsx`, `src/components/CustomSelect.tsx`)**:
+  * **Akar Masalah (Root Cause)**: Penggunaan class transformasi spasial `hover:translate-x-1` (geser 4px ke kanan saat hover) pada item opsi dropdown menyebabkan kursor mouse keluar-masuk batas elemen secara berulang dengan frekuensi tinggi (hover oscillation loop / flickering 60Hz) ketika kursor berada di dekat tepi kiri/kanan. Ditambah dengan animasi popover `zoom-in-95` yang melakukan font-scaling subpixel, dropdown terasa bergetar dan tidak stabil.
+  * **Solusi & Optimasi**:
+    - **Eliminasi Translasi Spasial**: Menghapus seluruh transformasi spasial `hover:translate-x-1` pada opsi dropdown. Menu interaktif kini mengandalkan highlight warna latar dan teks yang bersih (`transition-colors duration-100`).
+    - **Transisi Performa Tinggi**: Mengganti `transition-all duration-150` menjadi `transition-colors duration-100`, mengeliminasi recalculate layout lag dari browser rendering engine.
+    - **Stabilisasi Entry Popover**: Mengubah animasi popover dari scale-based `zoom-in-95` menjadi slide vertikal mikro `slide-in-from-top-1 duration-100` untuk transisi buka-tutup yang instan, crisp, dan tidak mengaburkan teks subpixel.
+    - **Koreksi Utility Tailwind**: Memperbaiki class border non-standar `hover:border-slate-350` menjadi `hover:border-slate-300`.
+    - **Penyelarasan ke `CustomSelect`**: Menerapkan kestabilan transisi serupa pada filter dropdown `CustomSelect.tsx`.
+
+### [2026-09-21] - Custom Modern FormSelect & Rich Options Upgrade
+* **Modernisasi Pilihan Dropdown & Efek Hover Form Metrik (`src/components/FormSelect.tsx`, `src/app/scoreboard/page.tsx`)**:
+  * **Pembuatan Komponen `FormSelect`**: Menggantikan elemen `<select>` native yang kaku dengan dropdown kustom modern berlatar glassmorphism (`backdrop-blur-md`), transisi halus, border adaptif dark/light mode, dan chevron rotasi 180°.
+  * **Pilihan Dropdown Kaya (Rich Options)**:
+    - **Target Divisi**: Menampilkan ikon gedung/divisi (`Building2`) dan nama divisi yang rapi.
+    - **Hubungkan ke Prioritas Rock**: Menampilkan opsi metrik mandiri dengan keterangan bantuan, serta list Rock dengan badge kuartal (`Q3 2026`), ikon target (`Target`), dan nama divisi.
+    - **Unit Satuan**: Menyajikan setiap satuan dengan ikon representatif (`Hash`, `Percent`, `Coins`, `CheckSquare`), judul tegas, serta contoh pengisian (misal `Contoh: Rp 500rb, Rp 1.500rb`).
+  * **Efek Hover & Micro-Animations**:
+    - Trigger memiliki efek hover halus (`hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/80 hover:shadow-xs`).
+    - Pilihan dropdown memiliki transisi pergeseran mikro (`hover:translate-x-1`) dan highlight kontras.
+    - Opsi aktif ditandai dengan kontras tegas dan ikon `Check`.
+    - Seluruh input form (`Nama Metrik`, `Target Angka`, dan `Keterangan`) diselaraskan dengan efek hover dan focus ring yang senada.
+
+### [2026-09-21] - Scoreboard Metric Modals Header & Body Icons Modernization (Line Icons Upgrade)
+* **Pembersihan Header & Penyelarasan Ikon Body Modal Metrik (`src/app/scoreboard/page.tsx`)**:
+  * **Pembersihan Header Modal**: Menghapus badge container ikon di header modal "Tambah Metrik Baru" (sebelumnya kotak pink dengan emoji target `🎯`) dan "Edit Metrik KPI" (sebelumnya kotak amber dengan `Edit3`), sehingga header tampil bersih, minimalis, dan elegan dengan judul dan deskripsi saja.
+  * **Upgrade Ikon Body ke Lucide Line Icons**:
+    - **Metode Akumulasi Harian ke Mingguan**: Mengganti dropdown teks mentah dengan 2 segmented choice button interaktif berikon Lucide: `Plus` (Total Penjumlahan SUM) dan `BarChart2` (Rata-Rata AVG).
+    - **Siklus & Periode Metrik**: Mengganti raw emoji `📅` dan `⚡` dengan ikon Lucide `Calendar` dan `Zap` dalam kontainer ikon bersudut halus.
+    - **Arah Evaluasi Target**: Mengganti raw emoji `📈` dan `📉` dengan ikon Lucide `TrendingUp` dan `TrendingDown` dalam kontainer aksen warna (emerald/rose).
+    - **Pembersihan Opsi Rock & Tombol Submit**: Menghilangkan emoji `🎯` pada dropdown opsi Rock kuartalan, serta mengganti emoji `✨` dan `💾` pada tombol submit dengan ikon Lucide `Plus` dan `Check`.
+
+### [2026-09-21] - Scoreboard Tab Switcher Pill Color Update (Black Theme Alignment)
+* **Pembaruan Warna Pill Indikator Tab Scoreboard (`src/app/scoreboard/page.tsx`)**:
+  * Mengubah warna background pill geser tab aktif (Bulanan vs Harian/Khusus) dari warna merah terang (`bg-red-600`) menjadi warna hitam elegan modern (`bg-zinc-900 dark:bg-zinc-100`) dengan bayangan halus (`shadow-zinc-900/20`), serta teks aktif yang otomatis adaptif (`text-white dark:text-zinc-950`).
+
+### [2026-09-21] - Filter Sequence & Unified Sort Filter Harmonization (Scoreboard Parity for Todos & Issues)
+* **Penyelarasan Urutan Filter & Desain Dropdown Urutan (`src/app/todos/page.tsx`, `src/app/issues/page.tsx`)**:
+  * **Standarisasi Urutan Filter di Filter Bar**:
+    - Menyelaraskan urutan dropdown filter agar diawali oleh **`Divisi :`** (jika memiliki hak akses semua divisi), diikuti oleh **`Status :`**, **`Prioritas :`**, dan **`Urutan :`** (mengikuti hierarki Scoreboard & Rocks di mana Divisi selalu berada di posisi terdepan).
+  * **Unifikasi Dropdown "Urutan :" (Scoreboard Parity)**:
+    - Mengeliminasi tombol toggle split `<button>` ASC/DESC terpisah yang canggung.
+    - Mengintegrasikan indikator arah langsung ke dalam pilihan dropdown `CustomSelect` dengan format ringkas dan bersih (`Status ↑`, `Status ↓`, `Divisi ↑`, `Divisi ↓`, `Prioritas ↑`, `Prioritas ↓`, `Judul ↑`, `Judul ↓`), identik 100% dengan filter urutan Scoreboard dan Rocks.
+  * **Membersihkan Dependensi Ikon Unused**: Menghapus import `ArrowUp, ArrowDown` dari `lucide-react` di kedua modul.
+
+### [2026-09-21] - Scoreboard Modal Weekday & Date Dynamic Alignment (Monday-Sunday Work-Week Standardization)
+* **Perbaikan Kalender Kerja & Kalkulasi Nama Hari Scoreboard (`src/components/scoreboard/ScoreboardDetailModal.tsx`)**:
+  * **Akar Masalah**: Sebelumnya, hari mingguan dihitung dengan menambahkan kelipatan 7 hari (`(week - 1) * 7`) dari tanggal `createdAt` (1 Juli 2026, hari Rabu). Karena penambahan 7 hari secara matematika selalu jatuh pada hari yang sama, setiap minggu (W1–W4) selalu berawal pada hari Rabu (`Rab`) dan berakhir di hari Selasa (`Sel`), menimbulkan persepsi bahwa nama hari bersifat "hardcoded"/statis. Selain itu, metrik siklus khusus (`cycleType === "special"`) mengabaikan tanggal `deadline` dan selalu menggunakan `createdAt`.
+  * **Standarisasi Kalender Kerja Senin–Minggu (Monday to Sunday)**:
+    - Seluruh kolom input harian untuk metrik bulanan kini mengikuti standar siklus kerja Indonesia & ISO: dimulai dari **Senin (Sen)** hingga **Minggu (Min)**: `Sen`, `Sel`, `Rab`, `Kam`, `Jum`, `Sab`, `Min`.
+    - Untuk Week 4 (20–26 Juli 2026): kolom 0 adalah `Sen 20 Jul`, kolom 1 `Sel 21 Jul`, kolom 2 `Rab 22 Jul`, kolom 3 `Kam 23 Jul`, dst.
+    - Menghilangkan kebingungan penanggalan: 22 Juli berada tepat di bawah kolom `Rab`, dan 23 Juli di bawah kolom `Kam`.
+  * **Kalkulasi Dinamis Metrik Khusus / Ad-Hoc**: Jika metrik memiliki `deadline`, tanggal dihitung mundur secara dinamis dari tanggal tenggat waktu (`deadline - duration + 1`), sehingga urutan hari dan tanggal beradaptasi presisi sesuai jadwal tugas khusus.
+  * **Dukungan Multi-bahasa**: Nama hari dan bulan mendukung bahasa Indonesia (`id-ID`) dan Inggris (`en-US`) secara dinamis.
+
+### [2026-09-21] - Filter Bar Design Harmonization (Scoreboard Parity for Headlines, Todos & Issues)
+* **Penyelarasan Desain Filter Bar Sama Persis dengan Scoreboard (`headlines/page.tsx`, `todos/page.tsx`, `issues/page.tsx`)**:
+  * **Eliminasi Elemen Kaku & Clutter**: Menghapus teks dan ikon prefix `FILTER:` serta garis pembatas vertikal (`h-4 w-[1px]`) di seluruh modul.
+  * **Format Label Bersih & Elegan**: Mengganti label uppercase berteriak (`STATUS:`, `DIVISI:`, `PRIORITAS:`, `KATEGORI:`, `URUTKAN:`) menjadi format tipografi bersih Scoreboard (`text-xs font-bold text-slate-500 dark:text-zinc-400`), yaitu: `Status :`, `Divisi :`, `Prioritas :`, `Kategori :`, dan `Urutan :`.
+  * **Standarisasi Trigger Dropdown**: Menggunakan `bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold`.
+  * **Opsi Dropdown Title Case**: Menata seluruh teks pilihan opsi menjadi Title Case yang rapi dan profesional ("Semua Status", "Pending", "Selesai", "Semua Prioritas", "Rendah", "Sedang", "Tinggi", "Kritis", "Semua Kategori", dsb.).
+  * **Preservasi 100% Susunan & Fungsi**: Tidak ada urutan filter yang diubah; tombol toggle arah pengurutan (Asc/Desc) dan tombol Reset Filter tetap berada di posisinya dengan penyesuaian desain senada.
+
+### [2026-09-21] - Universal Border Radius Design System Unification (Strict 3-Tier System)
+* **Penertiban Tuntas & Harmonisasi Border Radius di Seluruh Halaman (`globals.css`, `rocks/page.tsx`, `scoreboard/page.tsx`, `ScoreboardSummaryCards.tsx`, `todos/page.tsx`, `issues/page.tsx`, `headlines/page.tsx`, `archives/page.tsx`)**:
+  * **Akar Masalah**: Sebelumnya, kelengkungan sudut kontainer dan kartu berbeda-beda di setiap modul (Scoreboard & Todos memakai `rounded-2xl` [8px], Dashboard memakai `rounded-xl` [6px], Stat Card Rocks memakai `rounded-lg` [4px], dan modal memakai `rounded-3xl` [10px]), menimbulkan ketidakkonsistenan visual antar halaman.
+  * **Standarisasi Sistem 3-Tier Ketat**:
+    1. **Tier 1 (Kontainer Utama, Kartu Analitik/Stat, Filter Bar, Wrapper Tabel, & Dialog Modal)**: Dikunci presisi pada **`0.5rem` (8px)**. Di CSS, `--radius-4xl`, `--radius-3xl`, `--radius-2xl`, `--radius-xl` serta selector `.rounded-4xl`, `.rounded-3xl`, `.rounded-2xl`, `.rounded-xl`, dan `[class*="rounded-[1/2/3"]` dipaksa seragam ke `0.5rem !important`.
+    2. **Tier 2 (Kontrol Form, Tombol / Buttons, Input Teks/Angka, Trigger Dropdown, & Sub-card Interaktif)**: Dikunci presisi pada **`0.375rem` (6px)**. Seluruh tag `button`, `input`, `select`, `textarea`, `.rounded-lg`, dan `.rounded-md` terstandarisasi seragam ke `0.375rem !important`.
+    3. **Tier 3 (Badge Status, Tag Kategori, & Indikator Mini)**: Dikunci presisi pada **`0.25rem` (4px)**. Seluruh `.rounded`, `.rounded-sm`, `.badge-glass`, dan `span.rounded-full` ber-teks dipaksa seragam ke `0.25rem !important`.
+  * **Penyelarasan Kode JSX**:
+    - `src/app/rocks/page.tsx`: Mengubah stat cards dan empty state container dari `rounded-lg` ke `rounded-xl` (8px), serta trigger dropdown dari `rounded-xl` ke `rounded-lg` (6px).
+    - `src/components/scoreboard/ScoreboardSummaryCards.tsx`: Mengubah kartu ringkasan dari `rounded-2xl` ke `rounded-xl` (8px) dan ikon dari `rounded-xl` ke `rounded-lg` (6px).
+    - `src/app/scoreboard/page.tsx`: Mengubah filter bar dan kontainer master table dari `rounded-2xl` ke `rounded-xl` (8px), serta dropdown trigger ke `rounded-lg` (6px).
+    - `src/app/todos/page.tsx`, `src/app/issues/page.tsx`, `src/app/headlines/page.tsx`, `src/app/archives/page.tsx`: Mengubah filter bar, table wrapper, dan kartu item dari `rounded-2xl` ke `rounded-xl` (8px), serta trigger select dan tombol reset ke `rounded-lg` (6px).
+
+### [2026-09-21] - Rocks Filter Bar Revamp (Scoreboard Parity & CustomSelect Integration)
+* **Penyelarasan Desain Filter Bar Rocks Sama Persis dengan Scoreboard (`src/app/rocks/page.tsx`)**:
+  * **Eliminasi Segmented Button Clutter**: Menghapus barisan tombol segmented kaku warna biru/hitam (`Semua Kuartal | Q1 | Q2...` dan `Semua Status | On Track...`) serta dropdown select bawaan browser.
+  * **Integrasi CustomSelect & Format Label Scoreboard**:
+    - Kontainer: `bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4`.
+    - Dropdown Divisi: `Divisi :` + `CustomSelect` (Semua Divisi / opsi per divisi).
+    - Dropdown Kuartal: `Kuartal :` + `CustomSelect` (Semua Kuartal, Q1, Q2, Q3, Q4).
+    - Dropdown Status: `Status :` + `CustomSelect` (Semua Status, On Track, Off Track, Selesai).
+    - Dropdown Urutan Baru: `Urutan :` + `CustomSelect` (Kuartal ↓, Kuartal ↑, Judul Rock ↑, Judul Rock ↓, Progres ↓, Progres ↑).
+    - Badge Counter Kanan: `Total: [N] Rocks` di sisi paling kanan (`sm:ml-auto`).
+
+### [2026-09-21] - Sidebar Redesign: Minimalist Linear / Raycast Style (Option A)
+* **Redesain Antarmuka Sidebar Modern (`src/components/Sidebar.tsx`)**:
+  * **Eliminasi 100% Border Kotak**: Menghapus seluruh border kotak individual abu-abu di sekeliling item menu navigasi dan tombol pengaturan/bantuan sehingga sidebar tampil lapang, bersih, dan menyatu (borderless list).
+  * **Active Indicator Bar Vertikal Merah (Signature Accent)**: Item aktif kini memiliki indikator bar vertikal ramping warna merah (`w-[3px] rounded-r-full bg-red-600 dark:bg-red-500`) di sisi kiri item dengan background abu-abu transparan matte (`bg-slate-100/90 dark:bg-zinc-900/90`), teks tebal hitam/putih, dan ikon aktif beraksen merah senada dengan brand wordmark *Rocky ten*.
+  * **Micro-Interactions & Hover Smoothness**: Menambahkan transisi `group-hover:translate-x-0.5` pada setiap ikon navigasi (bergeser 1px ke kanan secara halus saat di-hover), transisi warna teks, dan background hover `bg-slate-100/60 dark:bg-zinc-900/50`.
+  * **Bottom Utilities Dock**: Menyelaraskan menu Pengaturan dan Bantuan & Sistem agar konsisten dengan gaya borderless dan micro-interaksi yang sama tanpa melompat/jitter.
+
+### [2026-09-21] - Universal Header Standardization & Descriptive Subtitles (Elimination of 'Owner View' and Header Icons)
+* **Pembersihan Header & Deskripsi Bermakna di Seluruh Modul (`rocks/page.tsx`, `todos/page.tsx`, `issues/page.tsx`, `headlines/page.tsx`, `history/page.tsx`, `settings/page.tsx`)**:
+  * **Halaman Rocks (`src/app/rocks/page.tsx`)**:
+    - Menghapus wadah ikon target (`<Target className="w-5 h-5" />`) dari header atas.
+    - Menghapus teks akhiran `(Prioritas 90 Hari)` sehingga judul murni dan tegas: **`Rocks`**.
+    - Mengganti deskripsi korporat lama (*"Target kuartalan strategis Traction L10 — PT Garciafood Nusantara Gemilang"*) menjadi penjelasan peran Rocks: *"Prioritas sasaran strategis 90 hari untuk mencapai target kuartalan kunci tim dan perusahaan."*
+  * **Pemberantasan Teks Placeholder 'Owner View: bla bla bla'**:
+    - **To-do List (`src/app/todos/page.tsx`)**: Mengganti `Owner View: Seluruh Agenda Kerja` menjadi *"Kelola komitmen tugas mingguan dan rencana aksi operasional tim secara terstruktur."*
+    - **Issue (`src/app/issues/page.tsx`)**: Mengganti `Owner View: Seluruh Issue Kendala` menjadi *"Identifikasi, diskusikan, dan tuntaskan kendala serta hambatan operasional (IDS) tim."*
+    - **Headlines (`src/app/headlines/page.tsx`)**: Mengganti `Owner View: Seluruh Headline` menjadi *"Pusat pengumuman penting, berita internal divisi, dan informasi operasional tim."*
+    - **Histori (`src/app/history/page.tsx`)**: Mengganti `Owner View: Seluruh History Sistem` menjadi *"Rekam jejak kronologis setiap aksi, perubahan data, dan aktivitas pengguna di seluruh sistem."*
+  * **Penyelarasan Tipografi & Dark Mode**: Menyelaraskan seluruh tag judul halaman menjadi `text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white` dengan deskripsi `text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1`.
+
+### [2026-09-21] - RockyTen Wordmark Typography (Logo Removal & Modern Brand Font)
+* **Transformasi Brand Logo Menjadi Pure Wordmark (`src/components/Sidebar.tsx`, `src/components/TopBar.tsx`, `src/app/layout.tsx`, `src/app/globals.css`)**:
+  * **Penghapusan Ikon/Image Logo**: Menghapus container gambar logo `/rockyten-logo.svg` dari Sidebar desktop/mobile dan TopBar mobile.
+  * **Penerapan Tipografi Brand Modern (Plus Jakarta Sans)**: Mengimpor `Plus_Jakarta_Sans` dari `next/font/google` ke `layout.tsx` dan mendaftarkannya sebagai `--font-brand` di `globals.css`.
+  * **Styling Wordmark "Rocky ten"**: Mengganti teks brand menjadi `Rocky ten` dengan bobot ultra-bold/black (`font-black tracking-tight text-xl`), di mana kata *"Rocky"* bernuansa solid dark/white dan *"ten"* beraksen merah tajam (`text-red-600 dark:text-red-500`).
+
+### [2026-09-21] - Comprehensive Border Radius Cleanup & Elimination of Arbitrary `rounded-[...]`
+* **Pembersihan Tuntas Lengkungan Sudut di Seluruh Halaman (`src/app/page.tsx`, `settings/page.tsx`, `scoreboard/page.tsx`, `issues/page.tsx`, `history/page.tsx`, `auth/page.tsx`, `MaintenanceScreen.tsx`, `globals.css`)**:
+  * **Akar Masalah**: Sebelumnya, elemen-elemen kartu besar di Dashboard (`Tren Ketercapaian Metrik Mingguan`, `Kesehatan Status Metrik`, `Rocks`, dan `Issue List`) menggunakan kelas arbitrary Tailwind hardcoded `rounded-[24px]` yang mengabaikan aturan override `--radius-3xl` dan `.rounded-3xl` di `globals.css`.
+  * **Refactor ke Skala Semantic**: Mengganti seluruh instance `rounded-[20px]`, `rounded-[24px]`, dan `rounded-[32px]` di seluruh kode JSX dengan kelas semantik terstandarisasi (`rounded-xl` / `rounded-lg`).
+  * **Penyelarasan Dashboard (`src/app/page.tsx`)**:
+    - Kartu Analitik Utama & Action Radar (AreaChart, Donut, Rocks, Issue List): `rounded-xl` (6px).
+    - Kartu KPI Atas (Rocks, Scoreboard, Issue, To-do): `rounded-xl` (6px) dengan ikon `rounded-lg` (4px).
+    - Legend Donut Chart & Sub-kartu item: `rounded-md` / `rounded-lg`.
+    - Badge status, badge prioritas, dan label pekan: `rounded` (2px-3px) tegas dan modern, meniadakan bentuk kapsul lonjong.
+  * **Jaring Pengaman Universal CSS (`globals.css`)**: Menambahkan selector wildcard `[class*="rounded-\[1"], [class*="rounded-\[2"], [class*="rounded-\[3"] { border-radius: 0.375rem !important; }` sehingga ke depannya tidak ada lagi kelas arbitrary bernilai besar yang bisa merusak konsistensi desain.
+
+### [2026-09-21] - Scoreboard Detail Modal Revamp: W1-W4 Strict Clamp, Dynamic Day/Date Inputs, Divisi Box & Background Lock
+* **Pemberantasan Week 5 & Pembatasan Ketat W1-W4 (`src/context/AppContext.tsx`, `ScoreboardDetailModal.tsx`, `src/app/page.tsx`)**:
+  * **Siklus Bulanan Maksimal 4 Pekan**: Memperbaiki fungsi `getMetricActiveWeek` di `AppContext.tsx` agar secara tegas mengembalikan nilai maksimal `4` (`Math.min(Math.max(activeWeek, 1), 4)`), mengeliminasi kemunculan Week 5.
+  * **Pembersihan W5 di Dashboard**: Memperbarui deskripsi tren performa di `src/app/page.tsx` dari `(W1 - W5)` menjadi `(W1 - W4)`.
+* **Penyederhanaan & Redesain Modal Detail Scoreboard (`ScoreboardDetailModal.tsx`)**:
+  * **Peniadaan Badge Dekoratif Atas Judul**: Menghapus seluruh deretan badge di atas judul metrik (`FINANCE`, `🎯 Rock...`, `📅 SIKLUS BULANAN`) untuk header yang lapang, bersih, dan langsung fokus pada nama dan keterangan metrik.
+  * **Penggantian PIC Divisi Menjadi DIVISI**: Mengubah kotak ke-4 pada ringkasan target dari `PIC DIVISI` menjadi `DIVISI` (menampilkan nama divisi operasional, misal `Finance`, dan meniadakan nama PIC).
+  * **Pembaruan Label & Peniadaan Dot Hijau**: Mengganti teks `PILIH PERIODE MINGGU (W1 - W4)` menjadi **"Periode Mingguan"** dan menghapus titik hijau berdenyut (*pulsating dot*) di samping `Minggu Aktif: W4`.
+  * **Kalkulasi Otomatis Nama Hari & Tanggal Riil**: Menghapus label statis `(H1 s.d H7)` dan mengganti label setiap kolom hari dengan perhitungan dinamis tanggal & nama hari Indonesia (`Rab 22 Jul`, `Kam 23 Jul`, dst.) berdasarkan tanggal pembuatan metrik (`createdAt`) serta pekan terpilih.
+  * **Redesain Kartu Input Harian**: Menghilangkan desain kaku/bersarang lama; menggantinya dengan kartu vertikal modern berisikan label hari tebal, tanggal sekunder, dan field input angka bersih dengan feedback tersimpan otomatis.
+  * **Background Lock (Anti-Scroll & Anti-Click)**: Mengunci `document.body.style.overflow = "hidden"` saat modal aktif dan menyelimuti latar dengan `backdrop-blur-sm bg-slate-950/70` agar background tidak dapat di-scroll atau di-klik secara tidak sengaja.
+
+### [2026-09-21] - Dashboard Visual Analytics & Card Header Cleanup
+* **Penyederhanaan Header Dashboard (`src/app/page.tsx`)**:
+  * **Peniadaan Ikon Header Grafik**: Menghapus ikon pada header grafik *"Tren Ketercapaian Metrik Mingguan"* dan *"Kesehatan Status Metrik"* untuk tampilan tipografi yang rapi dan serasi.
+  * **Pembaruan Judul Rocks**: Mengubah judul *"Prioritas Rocks (90 Hari)"* menjadi lebih ringkas: **"Rocks"**, serta menghapus wadah ikon di sampingnya.
+  * **Pembaruan Judul Issue List**: Mengubah judul *"Radar Kendala Kritis"* menjadi **"Issue List"**, serta menghapus wadah ikon dan memperbarui tautan menjadi *"Buka Issue"*.
+
+### [2026-09-21] - Scoreboard Table Cleanup & Typography Simplification
+* **Penyederhanaan Tampilan Tabel Scoreboard (`src/app/scoreboard/page.tsx`)**:
+  * **Peniadaan Ikon Banner Tabel**: Menghilangkan ikon emoji pada banner header tabel (`Target & Progress KPI Bulanan (W1 - W4)`).
+  * **Format Subtitle Metrik Ramping**: Menghapus seluruh badge Rock, badge Mandiri, dan badge Divisi yang menempel di judul metrik. Menggantinya dengan teks rapi: `"Dibuat: (tanggal) oleh (Divisi)"`.
+  * **Badge Status Dotless**: Menghilangkan titik indikator lingkaran (dot) di sebelah kiri status badge, menyisakan teks status murni ber-outline halus.
+  * **Tombol Detail Minimalis**: Menghapus ikon mata (`Eye`) dari tombol aksi `Detail`.
+
+### [2026-09-21] - Scoreboard Header Simplification & Definition Description
+* **Penyederhanaan Header Scoreboard (`src/app/scoreboard/page.tsx`)**:
+  * **Peniadaan Tombol Export Excel**: Menghapus tombol export excel pada header atas agar layout tombol lebih terfokus pada aksi inti (`Panduan Siklus` & `Tambah Metrik Baru`).
+  * **Deskripsi Definisi Scoreboard**: Mengganti teks kaku *(Owner/PIC View: Seluruh Divisi)* dengan kalimat penjelasan peran Scoreboard: *"Pantau target, ketercapaian, dan performa metrik KPI operasional secara terukur dan transparan."*
+  * **Penghapusan Badge Siklus di Sebelah Deskripsi**: Menghilangkan badge siklus yang menempel di sebelah teks deskripsi utama untuk tampilan minimalis dan rapi.
+
+### [2026-09-21] - Scoreboard Filter Bar Unified & Animated Sliding Tab Switcher
+* **Penyatuan Filter Bar & Animated Sliding Switcher (`src/app/scoreboard/page.tsx`, `CustomSelect.tsx`)**:
+  * **Integrasi Switch Tab Bulanan / Harian ke Filter Bar**: Memindahkan tombol switch tab dari posisi melayang di atas menjadi terintegrasi di sisi paling kanan (`sm:ml-auto`) dalam satu kontainer filter bar.
+  * **Sliding Animation Mulus**: Mengimplementasikan background indicator pill merah berbasis CSS transform (`transition-transform duration-300 ease-out`) yang meluncur secara halus antara "Bulanan" (`translate-x-0`) dan "Harian / Khusus" (`translate-x-full`).
+  * **Pembersihan Ikon Filter**: Menghapus seluruh ikon dekoratif (funnel filter, ikon emoji gedung, target, catatan, kalender, petir) sehingga antarmuka filter bar tampil bersih, rapi, dan modern.
+  * **Dropdown Divisi**: Label bersih `Divisi :` dengan dropdown pilihan semua divisi atau divisi spesifik.
+  * **Dropdown Urutan Terpadu**: Label `Urutan :` dengan dropdown kombinasi kriteria dan arah panah (`Divisi ↑`, `Divisi ↓`, `Target ↑`, `Target ↓`, `Nama Metrik ↑`, `Nama Metrik ↓`), mengeliminasi tombol toggle arah terpisah.
+  * **Dropdown Metrik**: Label `Metrik :` menggantikan tombol segmented lama, dengan opsi: `Semua Metrik`, `Rocks Metrik`, dan `Metrik Mandiri`.
+  * **Peniadaan Tombol Reset**: Menghilangkan tombol reset sesuai preferensi pengguna agar filter bar tetap ramping dan minimalis.
+  * **Penyempurnaan `CustomSelect.tsx`**: Memperbaiki fleksibilitas kelas trigger button dan meningkatkan ukuran tipografi menu dropdown menjadi `text-xs font-semibold` yang nyaman dibaca di desktop dan mobile.
+
+### [2026-09-21] - Scoreboard UI/UX Rebuild (Center Detail Modal & Single "Detail" Action Button)
+* **Penyederhanaan Kolom Aksi & Center Modal Dialog (`src/app/scoreboard/page.tsx`, `ScoreboardDetailModal.tsx`)**:
+  * **Tombol Tunggal "Detail"**: Mengganti 5 tombol bertumpuk (Isi Data, Konversi, Edit, Hapus, Selesai) pada baris tabel menjadi HANYA 1 tombol ringkas `"Detail"` (`Eye` icon). Lebar kolom Aksi menyusut menjadi `110px`, memberikan tampilan tabel yang lapang dan bersih.
+  * **Center Popup Modal (`ScoreboardDetailModal.tsx`)**: Mengubah tampilan drawer samping menjadi modal dialog yang muncul tepat dari **tengah layar** (*pop up dari tengah*) dengan latar belakang `backdrop-blur-sm` dan animasi `zoom-in-95`.
+  * **Isi Lengkap Modal Detail**:
+    1. Info metrik & badges (divisi, Rock terkait, siklus).
+    2. Ringkasan target, evaluasi arah (📈/📉), metode akumulasi (SUM/AVG), tanggal dibuat, dan PIC.
+    3. Selector periode minggu (W1 s.d W4) dengan indikator status (Aktif/Selesai/Terkunci).
+    4. Grid input data harian (H1–H7 / H1–HN) dengan auto-save badge "✓" instan.
+    5. Rekap realisasi live (tercapai / belum tercapai).
+    6. Action buttons terpusat: `[Konversi]`, `[Edit]`, `[Hapus]`, `[Selesai]` (jika owner/dev), dan `[Tutup]`.
+  * **Unified Master Table**: Mengeliminasi tabel harian bawah raksasa (legacy lines 1502–1800) yang sebelumnya menduplikasi seluruh daftar metrik dan memakan ruang vertikal berlebih.
+  * **Executive KPI Summary Cards (`ScoreboardSummaryCards.tsx`)**: 3 kartu ringkasan eksekutif di bagian atas (*Total Metrik Aktif & Komposisi Rock, Ketercapaian Target & On-Track Rate, serta Perhatian & Evaluasi*) untuk visibilitas cepat.
+  * **Modal Panduan Siklus Dialog**: Mengubah banner teks panduan siklus yang panjang menjadi modal dialog elegan (*Panduan Siklus Scoreboard*) yang dapat diakses melalui tombol bantuan di header.
+* **Penyempurnaan Navigasi, Branding & TopBar Global**:
+  * **Label Menu Sederhana**: `"Rocks (90 Hari)"` ➔ `"Rocks"`, `"Issue (IDS)"` ➔ `"Issue"` pada sidebar dan navigasi.
+  * **Logo Monogram Modern**: Mengganti logo teks dengan monogram geometris modern 'R' SVG berkilau di `public/rockyten-logo.svg` dan `src/app/icon.svg`.
+  * **Sidebar Footer**: Menyelaraskan teks *"Pengaturan & RBAC"* menjadi *"Pengaturan"*, serta menambahkan menu modal *"Bantuan & Sistem"* (`HelpSystemModal.tsx`).
+  * **TopBar Universal Calendar**: Tanggal kalender kini berlaku universal di seluruh rute antarmuka.
 
 ### [2026-09-17] - 100% Local-First Architecture (Supabase Database Disconnected)
 * **Pelepasan Koneksi Database Cloud Supabase (`.env.local`, `supabase.ts`, `AppContext.tsx`)**:
@@ -625,7 +872,28 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
   * Mengimplementasikan grafik **Tren Ketercapaian Metrik Mingguan (Recharts AreaChart)** dengan kurva gradien halus memetakan W1 - W5.
   * Mengimplementasikan diagram **Kesehatan Status Metrik (Recharts Donut/PieChart)** dengan indikator persentase ketercapaian di tengah dan legend status (Tercapai, Berjalan, Gagal Target).
   * Mengatur tata letak bawah menjadi 2 kolom seimbang: *Prioritas Rocks (90 Hari - Traction L10)* di sisi kiri dan *Radar Kendala Kritis (Urgent Issues Only)* di sisi kanan.
-  * Menghapus widget tanggal di sisi kanan salam pembuka Dashboard, dan memindahkannya ke bilah TopBar menggantikan teks "Dashboard" saat berada di halaman utama.
-  * Menghapus strip banner *Headline Terkini* dari halaman Dashboard agar tampilan langsung fokus pada 4 Stat Cards dan Grafik Analitik Recharts.
+### [2026-09-21] - Simplifikasi Label Navigasi Sidebar & Dashboard Card
+* **Penyederhanaan Penamaan Menu Navigasi (`Sidebar.tsx`, `page.tsx`)**:
+  * Mengubah label menu navigasi **"Rocks (90 Hari)"** menjadi ringkas **"Rocks"** pada sidebar navigasi utama serta kartu statistik dashboard.
+  * Mengubah label menu navigasi **"Issue (IDS)"** menjadi ringkas **"Issue"** pada sidebar navigasi utama serta kartu statistik dashboard.
+* **Transformasi Brand Logo Sidebar & TopBar (`Sidebar.tsx`, `TopBar.tsx`)**:
+  * Mengganti teks polos `RockyTen` di bagian atas sidebar menjadi tampilan logo modern yang memadukan icon emblem resmi (`/rockyten-logo.svg`) dengan styling rounded-lg, shadow halus, dan tipografi dual-tone `Rocky` (tebal kontras) + `Ten` (aksen biru `text-blue-600 dark:text-blue-400`).
+  * Menyelaraskan tipografi logo mobile pada `TopBar.tsx` agar identitas visual konsisten di desktop maupun mobile.
+* **Pembaruan Footer Sidebar: Pengaturan & Bantuan Sistem (`Sidebar.tsx`, `HelpSystemModal.tsx`)**:
+  * Mengubah label tautan menu bawah dari **"Pengaturan & RBAC"** menjadi ringkas **"Pengaturan"**.
+  * Menambahkan tombol aksi baru **"Bantuan & Sistem"** tepat di bawah menu Pengaturan dengan icon `HelpCircle`.
+  * Mengintegrasikan modal interaktif modern [HelpSystemModal.tsx](file:///d:/Kerjaan/RockyTen/src/components/HelpSystemModal.tsx) yang menampilkan dua tab: **Panduan Modul** (Scoreboard, Rocks L10, Issue IDS, To-Do) dan **Informasi Sistem** (Versi v2.4, status data local-first, engine Turbopack, dan shortcut ke pengaturan lengkap).
+* **Eliminasi Redundansi Badge Role Profil TopBar (`TopBar.tsx`)**:
+  * Menghapus badge role duplikat (`[DEVELOPER]`) di sebelah kanan nama divisi pada tombol pemicu menu profil akun.
+  * Tampilan kini hanya menampilkan nama pengguna di baris atas dan nama divisi/role ringkas di bawahnya tanpa badge redundan.
+* **Redesign Logo Monogram 'R' Futuristik (Opsi 1) (`public/rockyten-logo.svg`, `src/app/icon.svg`)**:
+  * Mengganti logo gunung generik lama dengan logo **Monogram 'R' Geometris Minimalis** bergaya modern SaaS (Linear/Raycast).
+  * Menampilkan pilar vertikal tegas, lengkungan loop atas presisi dengan gradien electric blue ke indigo (`#38BDF8` ke `#4F46E5`), kaki diagonal dinamis, dan aksen dot presisi pada background deep slate `#0F172A`.
+  * Memperbarui favicon browser tab (`src/app/icon.svg`) agar selaras dengan identitas brand baru.
+* **Penerapan Tanggal Universal di TopBar (`TopBar.tsx`)**:
+  * Menghapus pembatasan rute `pathname === "/"` pada bilah atas.
+  * Tampilan tanggal kalender lengkap (misal: *Senin, 21 September 2026*) dengan icon `Calendar` kini tampil konsisten di seluruh halaman aplikasi (`/scoreboard`, `/rocks`, `/todos`, `/issues`, `/headlines`, `/history`, `/archives`, `/settings`), menggantikan pengulangan nama halaman yang redundan.
+
+
 
 

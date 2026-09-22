@@ -486,7 +486,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (savedRocks) {
             try {
               const parsed = JSON.parse(savedRocks);
-              if (Array.isArray(parsed) && parsed.length > 0) setRocks(parsed);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const synced = parsed.map((r: Rock) => {
+                  if (r.id === "rock-marketing-1" && r.dueDate === "2026-09-30") {
+                    return { ...r, dueDate: "2026-09-15" };
+                  }
+                  return r;
+                });
+                setRocks(synced);
+              }
             } catch (e) { }
           }
         } catch (e) { }
@@ -1053,7 +1061,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getMetricActiveWeek = (metric: Metric): number => {
-    if (!metric.isActive) return 5;
+    if (!metric.isActive) return 4;
 
     const createdDate = new Date(metric.createdAt);
     const currentDate = new Date();
@@ -1064,7 +1072,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const activeWeek = Math.floor(diffDays / 7) + 1;
 
-    return Math.min(Math.max(activeWeek, 1), 5);
+    return Math.min(Math.max(activeWeek, 1), 4);
   };
 
   const getWeekString = (date: Date): number => {
@@ -1981,8 +1989,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const subMetrics = metrics.filter(m => m.rockId === rockId && m.isActive);
     if (subMetrics.length === 0) {
       const rock = rocks.find(r => r.id === rockId);
+      if (rock?.status === "completed") {
+        return { progress: 100, totalMetrics: 0, onTrackMetrics: 0 };
+      }
+      if (rock?.status === "dropped") {
+        return { progress: 0, totalMetrics: 0, onTrackMetrics: 0 };
+      }
       return {
-        progress: rock?.status === "completed" ? 100 : (rock?.status === "on_track" ? 60 : 25),
+        progress: rock?.progress ?? 0,
         totalMetrics: 0,
         onTrackMetrics: 0
       };

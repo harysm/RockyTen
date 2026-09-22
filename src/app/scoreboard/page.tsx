@@ -30,11 +30,23 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  BarChart2,
+  Check,
+  Building2,
+  Target,
+  Hash,
+  Percent,
+  Coins
 } from "lucide-react";
 import CustomSelect from "@/components/CustomSelect";
+import FormSelect from "@/components/FormSelect";
+import FormDatePicker from "@/components/FormDatePicker";
 import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
 import ScoreboardSkeleton from "@/components/skeletons/ScoreboardSkeleton";
+import { ScoreboardSummaryCards } from "@/components/scoreboard/ScoreboardSummaryCards";
+import { ScoreboardDetailModal } from "@/components/scoreboard/ScoreboardDetailModal";
 
 export default function ScoreboardPage() {
   const {
@@ -81,6 +93,19 @@ export default function ScoreboardPage() {
 
   // History Cycle Filter Selection ("all" | "monthly" | "special")
   const [historyCycleFilter, setHistoryCycleFilter] = useState<"all" | "monthly" | "special">("all");
+
+  // Drawer State for Option A (Focus Side Drawer)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerMetric, setDrawerMetric] = useState<Metric | null>(null);
+  const [drawerWeek, setDrawerWeek] = useState<number>(currentWeek);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  const handleOpenDrawer = (metric: Metric, week?: number) => {
+    setDrawerMetric(metric);
+    const activeW = metric.cycleType === "special" ? 1 : getMetricActiveWeek(metric);
+    setDrawerWeek(week !== undefined ? week : activeW);
+    setIsDrawerOpen(true);
+  };
 
   // Modal Add Metric state
   const [isAddMetricOpen, setIsAddMetricOpen] = useState(false);
@@ -251,8 +276,16 @@ export default function ScoreboardPage() {
   });
 
   // Sorting State
+  const [sortOption, setSortOption] = useState<string>("dept_asc");
   const [sortBy, setSortBy] = useState<string>("dept");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSortChange = (val: string) => {
+    setSortOption(val);
+    const [field, order] = val.split("_");
+    setSortBy(field);
+    setSortOrder(order as "asc" | "desc");
+  };
 
   const sortedActiveMetrics = [...activeMetrics].sort((a, b) => {
     let res = 0;
@@ -458,12 +491,12 @@ export default function ScoreboardPage() {
 
 
 
-  const formatUnitValue = (val: number | null, unit: Metric["unit"]) => {
+  const formatUnitValue = (val: number | null, unit: Metric["unit"]): string => {
     if (val === null) return "-";
     if (unit === "percentage") return `${val}%`;
     if (unit === "currency") return `Rp ${val}rb`;
     if (unit === "boolean") return val === 1 ? "YA" : "TIDAK";
-    return val;
+    return String(val);
   };
 
   const renderAccumulatedValue = (metric: Metric, valuesList: (number | null)[]) => {
@@ -633,28 +666,27 @@ export default function ScoreboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 dark:border-zinc-800 pb-5">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Scoreboard KPI
           </h2>
-          <p className="text-slate-500 font-medium mt-1 flex flex-wrap items-center gap-2">
-            <span>{canViewAll ? "Owner View: Seluruh Divisi" : `${getDeptName(currentProfile.departmentId)}`}</span>
-            <span className="text-[11px] font-extrabold badge-glass px-3 py-1 rounded-full shadow-2xs">
-              {scoreboardTab === "special"
-                ? "*Metrik khusus berjalan jangka pendek dengan siklus hari dinamis"
-                : "*Setiap metrik memiliki siklus 4 minggu (W1-W4) terhitung sejak tanggal dibuat"}
-            </span>
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Pantau target, ketercapaian, dan performa metrik KPI operasional secara terukur dan transparan."
+              : "Track operational KPI targets, achievements, and team performance metrics transparently."}
           </p>
         </div>
 
-        <div className="flex gap-3">
-          {/* Export Button */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Panduan Siklus Button */}
           <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 shadow-sm transition-all"
+            onClick={() => setIsGuideOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-800"
+            title="Buka Panduan Siklus Scoreboard"
           >
-            <Download className="w-4 h-4" /> Export Excel
+            <HelpCircle className="w-4 h-4 text-blue-500 shrink-0" />
+            <span className="hidden sm:inline">Panduan Siklus</span>
           </button>
 
           <button
@@ -670,136 +702,116 @@ export default function ScoreboardPage() {
         </div>
       </div>
 
-      {/* Scoreboard Tab Switcher (Segmented Button Control) */}
-      <div className="inline-flex p-1.5 bg-slate-200/60 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-800 rounded-2xl gap-2 shadow-inner">
-        <button
-          onClick={() => {
-            setScoreboardTab("monthly");
-            setSelectedWeekTab(currentWeek);
-          }}
-          className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
-            scoreboardTab === "monthly"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20 border border-red-500 scale-[1.02]"
-              : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-zinc-700/80 hover:bg-slate-50 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <span className="text-sm">📅</span>
-          <span>{language === "id" ? "Bulanan" : "Monthly"}</span>
-        </button>
-        <button
-          onClick={() => {
-            setScoreboardTab("special");
-            setSelectedWeekTab(1);
-          }}
-          className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2.5 cursor-pointer ${
-            scoreboardTab === "special"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20 border border-red-500 scale-[1.02]"
-              : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-zinc-700/80 hover:bg-slate-50 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <span className="text-sm">⚡</span>
-          <span>{language === "id" ? "Harian / Khusus" : "Daily / Special"}</span>
-        </button>
-      </div>
+      {/* Executive KPI Summary Cards */}
+      <ScoreboardSummaryCards
+        activeMetrics={activeMetrics}
+        rocks={rocks}
+        getMetricProgress={getMetricProgress}
+        language={language}
+      />
 
-      {/* Scoreboard Control & Filter Bar */}
-      <div className="bg-white dark:bg-zinc-900/80 p-4 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
+      {/* Scoreboard Unified Filter & Tab Switch Bar */}
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        {/* Left Side: Filter Dropdowns */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* Divisi Dropdown */}
           {canViewAll && (
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
               <CustomSelect
                 value={selectedDeptFilter}
                 onChange={(val) => setSelectedDeptFilter(val)}
-                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase"
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
                 options={[
-                  { value: "all", label: "SEMUA DIVISI" },
-                  ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
+                  { value: "all", label: "Semua Divisi" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
                 ]}
               />
             </div>
           )}
 
-          {/* SORT CONTROLS */}
+          {/* Urutan Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">URUTKAN:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Urutan :</span>
             <CustomSelect
-              value={sortBy}
-              onChange={(val) => setSortBy(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase"
+              value={sortOption}
+              onChange={handleSortChange}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "dept", label: "🏢 DIVISI" },
-                { value: "target", label: "🎯 TARGET" },
-                { value: "name", label: "📝 NAMA METRIK" }
+                { value: "dept_asc", label: "Divisi ↑" },
+                { value: "dept_desc", label: "Divisi ↓" },
+                { value: "target_asc", label: "Target ↑" },
+                { value: "target_desc", label: "Target ↓" },
+                { value: "name_asc", label: "Nama Metrik ↑" },
+                { value: "name_desc", label: "Nama Metrik ↓" },
               ]}
             />
-            <button
-              type="button"
-              onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-              title={sortOrder === "asc" ? "Urutkan Ascending (A-Z / Low-High)" : "Urutkan Descending (Z-A / High-Low)"}
-              className="p-1.5 bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
-            >
-              {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-red-500" />}
-              <span className="uppercase">{sortOrder}</span>
-            </button>
           </div>
 
-          {/* Rock Hierarchy Filter */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs">
-            <button
-              type="button"
-              onClick={() => setRockFilter("all")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                rockFilter === "all"
-                  ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
-              }`}
-            >
-              Semua
-            </button>
-            <button
-              type="button"
-              onClick={() => setRockFilter("submetric")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                rockFilter === "submetric"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
-              }`}
-            >
-              <span>🎯 Sub-Metrik Rock</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRockFilter("standalone")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                rockFilter === "standalone"
-                  ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs"
-                  : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
-              }`}
-            >
-              <span>📋 Metrik Mandiri</span>
-            </button>
+          {/* Metrik Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Metrik :</span>
+            <CustomSelect
+              value={rockFilter}
+              onChange={(val) => setRockFilter(val as "all" | "submetric" | "standalone")}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+              options={[
+                { value: "all", label: "Semua Metrik" },
+                { value: "submetric", label: "Rocks Metrik" },
+                { value: "standalone", label: "Metrik Mandiri" },
+              ]}
+            />
           </div>
         </div>
 
-        {selectedDeptFilter !== "all" && (
+        {/* Right Side: Animated Sliding Tab Switcher */}
+        <div className="relative grid grid-cols-2 p-1 bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl w-full sm:w-auto min-w-[260px] sm:ml-auto">
+          {/* Animated Sliding Pill Indicator */}
+          <div
+            className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-lg bg-zinc-900 dark:bg-zinc-100 shadow-sm shadow-zinc-900/20 dark:shadow-none transition-transform duration-300 ease-out pointer-events-none ${
+              scoreboardTab === "special" ? "translate-x-full" : "translate-x-0"
+            }`}
+          />
+
           <button
             type="button"
-            onClick={() => setSelectedDeptFilter("all")}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
+            onClick={() => {
+              setScoreboardTab("monthly");
+              setSelectedWeekTab(currentWeek);
+            }}
+            className={`relative z-10 px-3.5 py-1.5 text-xs font-bold text-center rounded-lg transition-colors duration-200 cursor-pointer select-none ${
+              scoreboardTab === "monthly"
+                ? "text-white dark:text-zinc-950 font-extrabold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
           >
-            Reset Filter
+            {language === "id" ? "Bulanan" : "Monthly"}
           </button>
-        )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setScoreboardTab("special");
+              setSelectedWeekTab(1);
+            }}
+            className={`relative z-10 px-3.5 py-1.5 text-xs font-bold text-center rounded-lg transition-colors duration-200 cursor-pointer select-none ${
+              scoreboardTab === "special"
+                ? "text-white dark:text-zinc-950 font-extrabold"
+                : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            {language === "id" ? "Harian / Khusus" : "Daily / Special"}
+          </button>
+        </div>
       </div>
 
       {/* Main Scoreboard Table */}
-      <div className="hidden md:block bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden space-y-0">
+      <div className="hidden md:block bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden space-y-0">
         {/* Title Header Banner */}
         <div className="px-6 py-4 bg-slate-50/80 dark:bg-zinc-900/60 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center">
           <div>
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              {scoreboardTab === "monthly" ? "📊 Target & Progress KPI Bulanan (W1 - W4)" : "⚡ Target & Progress KPI Harian / Khusus"}
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              {scoreboardTab === "monthly" ? "Target & Progress KPI Bulanan (W1 - W4)" : "Target & Progress KPI Harian / Khusus"}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               {scoreboardTab === "monthly" 
@@ -821,13 +833,15 @@ export default function ScoreboardPage() {
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">W3</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">W4</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[100px]">Status</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[120px]">Aksi</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[110px]">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {sortedActiveMetrics.map((metric) => {
                   const { statusColor, statusText } = getMetricProgress(metric);
                   const isHigherBetter = metric.targetType === "higher_better";
+                  const dept = departments.find(d => d.id === metric.departmentId);
+                  const deptName = dept?.name || "Semua Divisi";
 
                   return (
                     <tr
@@ -837,33 +851,11 @@ export default function ScoreboardPage() {
                       {/* Metric Name & Info */}
                       <td className="p-4">
                         <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                             {metric.name}
-                            {canViewAll && (() => {
-                              const dept = departments.find(d => d.id === metric.departmentId);
-                              const name = (dept?.name || "").toUpperCase();
-
-                              return (
-                                <span className="px-2 py-0.5 text-[8px] font-extrabold rounded-full uppercase badge-glass shadow-2xs">
-                                  {name}
-                                </span>
-                              );
-                            })()}
-                            {metric.rockId ? (() => {
-                              const linkedRock = rocks.find(r => r.id === metric.rockId);
-                              return (
-                                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
-                                  🎯 Rock: {linkedRock?.title ? (linkedRock.title.length > 20 ? linkedRock.title.slice(0, 20) + '...' : linkedRock.title) : "Sub-Metrik"}
-                                </span>
-                              );
-                            })() : (
-                              <span className="px-1.5 py-0.5 text-[8px] font-semibold rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-                                📋 Mandiri
-                              </span>
-                            )}
                           </h4>
-                          <span className="text-[10px] text-slate-450 font-medium block">
-                            Dibuat: {formatDateSimple(metric.createdAt)}
+                          <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium block">
+                            Dibuat: {formatDateSimple(metric.createdAt)} oleh {deptName}
                           </span>
                         </div>
                       </td>
@@ -903,19 +895,21 @@ export default function ScoreboardPage() {
                         return (
                           <td
                             key={w}
-                            onClick={() => {
-                              if (!isOwner) {
-                                handleCellClick(metric, w);
-                              }
-                            }}
-                            className={`p-4 text-center ${!isOwner ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all" : ""
-                              } ${isCurrentWeekCell ? "bg-slate-50/50 dark:bg-slate-800/10 font-bold border-x border-slate-100 dark:border-slate-800" : ""
-                              }`}
+                            onClick={() => handleOpenDrawer(metric, w)}
+                            title={`Klik untuk buka input data W${w}`}
+                            className={`p-3 text-center cursor-pointer transition-all group hover:bg-red-500/10 dark:hover:bg-red-500/15 ${
+                              isCurrentWeekCell ? "bg-slate-50/70 dark:bg-zinc-900/50 font-bold border-x border-slate-100 dark:border-zinc-800" : ""
+                            }`}
                           >
-                            <div className="flex items-center justify-center min-h-[28px]">
+                            <div className="flex flex-col items-center justify-center min-h-[30px] rounded-lg p-1 group-hover:bg-white/80 dark:group-hover:bg-zinc-800/80 transition-all">
                               <span className={`text-xs ${textClass}`}>
                                 {formatUnitValue(val, metric.unit)}
                               </span>
+                              {isCurrentWeekCell && (
+                                <span className="text-[7.5px] font-extrabold text-red-600 dark:text-red-400 mt-0.5 uppercase tracking-wider">
+                                  Aktif
+                                </span>
+                              )}
                             </div>
                           </td>
                         );
@@ -930,22 +924,17 @@ export default function ScoreboardPage() {
                             const isBerjalan = statusText === "Berjalan" || statusText === "Running";
 
                             let badgeClass = "badge-glass";
-                            let dotClass = "bg-slate-400";
 
                             if (isSelesai) {
                               badgeClass = "badge-status-selesai";
-                              dotClass = "bg-emerald-500 dark:bg-emerald-400";
                             } else if (isGagal) {
                               badgeClass = "badge-status-gagal";
-                              dotClass = "bg-rose-500 dark:bg-rose-400";
                             } else if (isBerjalan) {
                               badgeClass = "badge-status-berjalan";
-                              dotClass = "bg-amber-500 dark:bg-amber-400";
                             }
 
                             return (
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full border ${badgeClass}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                              <span className={`inline-flex items-center px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md border ${badgeClass}`}>
                                 {statusText}
                               </span>
                             );
@@ -953,57 +942,14 @@ export default function ScoreboardPage() {
                         </div>
                       </td>
                       <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setConvertItem({ id: metric.id, title: metric.name, description: metric.keterangan, departmentId: metric.departmentId, picName: metric.picName })}
-                            title="Konversi Metrik Ke Modul Lain"
-                            className="p-1.5 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEditMetric(metric)}
-                            title="Edit Metrik"
-                            className="p-1.5 bg-transparent hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl transition-all shadow-2xs"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              showConfirm({
-                                title: "Hapus Metrik KPI",
-                                message: `Apakah Anda yakin ingin menghapus metrik "${metric.name}" secara permanen?`,
-                                variant: "danger",
-                                confirmText: "Ya, Hapus",
-                                onConfirm: () => deleteMetric(metric.id)
-                              });
-                            }}
-                            title="Hapus Metrik"
-                            className="p-1.5 bg-transparent hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl transition-all shadow-2xs"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          {canViewAll && (
-                            metric.isActive ? (
-                              <button
-                                onClick={() => {
-                                  showConfirm({
-                                    title: "Selesaikan Metrik",
-                                    message: `Apakah Anda yakin ingin menyelesaikan metrik "${metric.name}" secara manual?`,
-                                    variant: "warning",
-                                    confirmText: "Ya, Selesaikan",
-                                    onConfirm: () => completeMetric(metric.id)
-                                  });
-                                }}
-                                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-950 border border-zinc-900 dark:border-white text-[10px] font-bold rounded-lg transition-all shadow-xs cursor-pointer"
-                              >
-                                Selesai
-                              </button>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 font-bold">Selesai</span>
-                            )
-                          )}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDrawer(metric, getMetricActiveWeek(metric))}
+                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs hover:shadow-xs cursor-pointer border border-slate-200/80 dark:border-zinc-700"
+                          title="Lihat Detail & Input Data Scoreboard"
+                        >
+                          Detail
+                        </button>
                       </td>
                     </tr>
                   );
@@ -1029,7 +975,7 @@ export default function ScoreboardPage() {
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[80px]">Target</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[100px]">Realisasi</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[100px]">Status</th>
-                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[100px]">Aksi</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[110px]">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -1047,31 +993,12 @@ export default function ScoreboardPage() {
                       {/* Metric Name */}
                       <td className="p-4">
                         <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                             {metric.name}
-                            {canViewAll && (() => {
-                              const dept = departments.find(d => d.id === metric.departmentId);
-                              const name = (dept?.name || "").toUpperCase();
-
-                              return (
-                                <span className="px-2 py-0.5 text-[8px] font-extrabold rounded-full uppercase badge-glass shadow-2xs">
-                                  {name}
-                                </span>
-                              );
-                            })()}
-                            {metric.rockId ? (() => {
-                              const linkedRock = rocks.find(r => r.id === metric.rockId);
-                              return (
-                                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
-                                  🎯 Rock: {linkedRock?.title ? (linkedRock.title.length > 20 ? linkedRock.title.slice(0, 20) + '...' : linkedRock.title) : "Sub-Metrik"}
-                                </span>
-                              );
-                            })() : (
-                              <span className="px-1.5 py-0.5 text-[8px] font-semibold rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-                                📋 Mandiri
-                              </span>
-                            )}
                           </h4>
+                          <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium block">
+                            Dibuat: {formatDateSimple(metric.createdAt)} oleh {departments.find(d => d.id === metric.departmentId)?.name || "Semua Divisi"}
+                          </span>
                         </div>
                       </td>
 
@@ -1104,7 +1031,11 @@ export default function ScoreboardPage() {
                       </td>
 
                       {/* Realisasi */}
-                      <td className="p-4 text-center">
+                      <td
+                        onClick={() => handleOpenDrawer(metric, 1)}
+                        title="Klik untuk buka input data harian"
+                        className="p-4 text-center cursor-pointer group hover:bg-red-500/10 dark:hover:bg-red-500/15 transition-all"
+                      >
                         <span className={`text-xs font-extrabold ${hasValue
                             ? (metric.targetType === "higher_better" ? (value ?? 0) >= metric.target : (value ?? 0) <= metric.target)
                               ? "text-emerald-600 dark:text-emerald-450"
@@ -1117,7 +1048,7 @@ export default function ScoreboardPage() {
 
                       {/* Status */}
                       <td className="p-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full border ${statusText === "Tercapai" || statusText === "Selesai"
+                        <span className={`inline-flex items-center px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md border ${statusText === "Tercapai" || statusText === "Selesai"
                             ? "badge-status-selesai"
                             : (statusText === "Gagal" || statusText === "Gagal Target")
                               ? "badge-status-gagal"
@@ -1125,64 +1056,19 @@ export default function ScoreboardPage() {
                                 ? "badge-status-berjalan"
                                 : "badge-glass"
                           }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />
                           {statusText}
                         </span>
                       </td>
 
-                      {/* Aksi */}
                       <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setConvertItem({ id: metric.id, title: metric.name, description: metric.keterangan, departmentId: metric.departmentId, picName: metric.picName })}
-                            title="Konversi Metrik Ke Modul Lain"
-                            className="p-1.5 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEditMetric(metric)}
-                            title="Edit Metrik"
-                            className="p-1.5 bg-transparent hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl transition-all shadow-2xs"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              showConfirm({
-                                title: "Hapus Metrik KPI",
-                                message: `Apakah Anda yakin ingin menghapus metrik "${metric.name}" secara permanen?`,
-                                variant: "danger",
-                                confirmText: "Ya, Hapus",
-                                onConfirm: () => deleteMetric(metric.id)
-                              });
-                            }}
-                            title="Hapus Metrik"
-                            className="p-1.5 bg-transparent hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl transition-all shadow-2xs"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          {canViewAll && (
-                            metric.isActive ? (
-                              <button
-                                onClick={() => {
-                                  showConfirm({
-                                    title: "Selesaikan Metrik",
-                                    message: `Apakah Anda yakin ingin menyelesaikan metrik "${metric.name}" secara manual?`,
-                                    variant: "warning",
-                                    confirmText: "Ya, Selesaikan",
-                                    onConfirm: () => completeMetric(metric.id)
-                                  });
-                                }}
-                                className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-950 border border-zinc-900 dark:border-white text-[10px] font-bold rounded-lg transition-all shadow-xs cursor-pointer"
-                              >
-                                Selesai
-                              </button>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 font-bold">Selesai</span>
-                            )
-                          )}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDrawer(metric, 1)}
+                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs hover:shadow-xs cursor-pointer border border-slate-200/80 dark:border-zinc-700"
+                          title="Lihat Detail & Input Data Scoreboard"
+                        >
+                          Detail
+                        </button>
                       </td>
                     </tr>
                   );
@@ -1208,27 +1094,18 @@ export default function ScoreboardPage() {
             const dept = departments.find(d => d.id === metric.departmentId);
 
             return (
-              <div key={metric.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px] p-5 shadow-sm space-y-4">
+              <div key={metric.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-xl p-5 shadow-sm space-y-4">
                 {/* Card Title, Department & Target */}
                 <div className="flex justify-between items-start gap-3">
                   <div className="space-y-1 flex-1">
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                       {metric.name}
                     </h4>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {canViewAll && dept && (
-                        <span className="px-1.5 py-0.5 text-[8px] font-extrabold rounded uppercase bg-slate-50 dark:bg-zinc-900 text-slate-650 dark:text-slate-400 border border-slate-200 dark:border-zinc-800">
-                          {dept.name}
-                        </span>
-                      )}
-                      {metric.rockId && (
-                        <span className="px-1.5 py-0.5 text-[8px] font-bold rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
-                          🎯 {rocks.find(r => r.id === metric.rockId)?.title || "Rock"}
-                        </span>
-                      )}
-                      <span className="text-[10px] text-slate-450 font-semibold">
-                        Target: <span className="text-slate-800 dark:text-slate-200 font-bold">{metric.target}{metric.unit === "percentage" ? "%" : ""}</span>
-                      </span>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium block">
+                      Dibuat: {formatDateSimple(metric.createdAt)} oleh {dept?.name || "Semua Divisi"}
+                    </span>
+                    <div className="text-[10px] text-slate-450 font-semibold pt-1">
+                      Target: <span className="text-slate-800 dark:text-slate-200 font-bold">{metric.target}{metric.unit === "percentage" ? "%" : ""}</span>
                     </div>
                   </div>
 
@@ -1280,9 +1157,8 @@ export default function ScoreboardPage() {
                       return (
                         <button
                           key={w}
-                          disabled={isOwner}
-                          onClick={() => handleCellClick(metric, w)}
-                          className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 ${bgClass} ${borderClass} ${!isOwner ? "active:scale-95 cursor-pointer" : "cursor-default"}`}
+                          onClick={() => handleOpenDrawer(metric, w)}
+                          className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 ${bgClass} ${borderClass} active:scale-95 cursor-pointer`}
                         >
                           <span className="text-[8px] font-extrabold uppercase tracking-wider opacity-60">W{w}</span>
                           <span className={`text-[11px] font-bold ${textClass}`}>
@@ -1295,62 +1171,14 @@ export default function ScoreboardPage() {
                 </div>
 
                 {/* Mobile Action Bar Footer */}
-                <div className="pt-3 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setConvertItem({ id: metric.id, title: metric.name, description: metric.keterangan, departmentId: metric.departmentId, picName: metric.picName })}
-                      title="Konversi Metrik Ke Modul Lain"
-                      className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-zinc-800 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Konversi</span>
-                    </button>
-                    <button
-                      onClick={() => handleOpenEditMetric(metric)}
-                      title="Edit Metrik"
-                      className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        showConfirm({
-                          title: "Hapus Metrik KPI",
-                          message: `Apakah Anda yakin ingin menghapus metrik "${metric.name}" secara permanen?`,
-                          variant: "danger",
-                          confirmText: "Ya, Hapus",
-                          onConfirm: () => deleteMetric(metric.id)
-                        });
-                      }}
-                      title="Hapus Metrik"
-                      className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-900/60 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Hapus</span>
-                    </button>
-                  </div>
-
-                  {canViewAll && (
-                    metric.isActive ? (
-                      <button
-                        onClick={() => {
-                          showConfirm({
-                            title: "Selesaikan Metrik",
-                            message: `Apakah Anda yakin ingin menyelesaikan metrik "${metric.name}" secara manual?`,
-                            variant: "warning",
-                            confirmText: "Ya, Selesaikan",
-                            onConfirm: () => completeMetric(metric.id)
-                          });
-                        }}
-                        className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-950 text-[10px] font-extrabold rounded-xl transition-all shadow-xs cursor-pointer"
-                      >
-                        Selesai
-                      </button>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 font-bold">Selesai</span>
-                    )
-                  )}
+                <div className="pt-3 border-t border-slate-100 dark:border-zinc-855">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDrawer(metric, getMetricActiveWeek(metric))}
+                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-750 rounded-xl text-xs font-bold flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                  >
+                    Detail
+                  </button>
                 </div>
               </div>
             );
@@ -1364,43 +1192,29 @@ export default function ScoreboardPage() {
             const dept = departments.find(d => d.id === metric.departmentId);
 
             return (
-              <div key={metric.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px] p-5 shadow-sm space-y-4">
+              <div key={metric.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-xl p-5 shadow-sm space-y-4">
                 {/* Header info */}
                 <div className="flex justify-between items-start gap-3">
                   <div className="space-y-1.5 flex-1">
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                       {metric.name}
                     </h4>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {canViewAll && dept && (
-                        <span className="px-1.5 py-0.5 text-[8px] font-extrabold rounded uppercase bg-slate-50 dark:bg-zinc-900 text-slate-650 dark:text-slate-450 border border-slate-200 dark:border-zinc-800">
-                          {dept.name}
-                        </span>
-                      )}
-                      {metric.rockId && (
-                        <span className="px-1.5 py-0.5 text-[8px] font-bold rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50">
-                          🎯 {rocks.find(r => r.id === metric.rockId)?.title || "Rock"}
-                        </span>
-                      )}
-                      <span className="px-1.5 py-0.5 text-[8px] font-extrabold rounded uppercase bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-100/40">
-                        ⚡ {getMetricDurationDays(metric)} Hari
-                      </span>
-                    </div>
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium block">
+                      Dibuat: {formatDateSimple(metric.createdAt)} oleh {dept?.name || "Semua Divisi"}
+                    </span>
                     <div className="text-[10px] text-slate-450 font-semibold space-y-0.5">
-                      <div>Dibuat: <span className="text-slate-800 dark:text-slate-200">{formatDateSimple(metric.createdAt)}</span></div>
                       {metric.deadline && <div>Deadline: <span className="text-red-550 font-bold">{formatDateSimple(metric.deadline)}</span></div>}
                     </div>
                   </div>
 
                   {/* Status Badge */}
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full border ${statusText === "Tercapai" || statusText === "Selesai"
+                    <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded border ${statusText === "Tercapai" || statusText === "Selesai"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-255 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-900"
                         : (statusText === "Gagal" || statusText === "Gagal Target")
                           ? "bg-rose-50 text-rose-700 border-rose-255 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900"
                           : "bg-slate-50 text-slate-650 border-slate-200 dark:bg-zinc-900 dark:text-slate-450 dark:border-zinc-800"
                       }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />
                       {statusText}
                     </span>
                   </div>
@@ -1428,62 +1242,14 @@ export default function ScoreboardPage() {
                 </div>
 
                 {/* Mobile Action Bar Footer */}
-                <div className="pt-3 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setConvertItem({ id: metric.id, title: metric.name, description: metric.keterangan, departmentId: metric.departmentId, picName: metric.picName })}
-                      title="Konversi Metrik Ke Modul Lain"
-                      className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-zinc-800 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Konversi</span>
-                    </button>
-                    <button
-                      onClick={() => handleOpenEditMetric(metric)}
-                      title="Edit Metrik"
-                      className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        showConfirm({
-                          title: "Hapus Metrik KPI",
-                          message: `Apakah Anda yakin ingin menghapus metrik "${metric.name}" secara permanen?`,
-                          variant: "danger",
-                          confirmText: "Ya, Hapus",
-                          onConfirm: () => deleteMetric(metric.id)
-                        });
-                      }}
-                      title="Hapus Metrik"
-                      className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-900/60 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Hapus</span>
-                    </button>
-                  </div>
-
-                  {canViewAll && (
-                    metric.isActive ? (
-                      <button
-                        onClick={() => {
-                          showConfirm({
-                            title: "Selesaikan Metrik",
-                            message: `Apakah Anda yakin ingin menyelesaikan metrik "${metric.name}" secara manual?`,
-                            variant: "warning",
-                            confirmText: "Ya, Selesaikan",
-                            onConfirm: () => completeMetric(metric.id)
-                          });
-                        }}
-                        className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-950 text-[10px] font-extrabold rounded-xl transition-all shadow-xs cursor-pointer"
-                      >
-                        Selesai
-                      </button>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 font-bold">Selesai</span>
-                    )
-                  )}
+                <div className="pt-3 border-t border-slate-100 dark:border-zinc-855">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDrawer(metric, 1)}
+                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-750 rounded-xl text-xs font-bold flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                  >
+                    Detail
+                  </button>
                 </div>
               </div>
             );
@@ -1491,313 +1257,13 @@ export default function ScoreboardPage() {
         )}
 
         {activeMetrics.length === 0 && (
-          <div className="p-8 text-center text-xs text-slate-400 font-medium bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px]">
+          <div className="p-8 text-center text-xs text-slate-400 font-medium bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-xl">
             {scoreboardTab === "monthly"
               ? "Belum ada metrik bulanan aktif untuk divisi ini."
               : "Belum ada metrik khusus aktif untuk divisi ini."}
           </div>
         )}
       </div>
-
-      {/* Rincian Input Harian Section */}
-      {!isOwner && (
-        <div className="bg-white border border-slate-100 p-6 rounded-[24px] shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                {scoreboardTab === "special"
-                  ? "⚡ Rincian Input Harian Metrik Khusus (H1 s.d H[Durasi])"
-                  : "📅 Rincian Input Harian (Tabel Mingguan W1 - W4)"}
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                {scoreboardTab === "special"
-                  ? "Masukkan data harian metrik khusus secara berurutan. Data tersimpan kontinu tanpa terpengaruh pergantian minggu."
-                  : "Masukkan data harian untuk otomatis mengakumulasikan nilai mingguan di atas. Klik sel W1-W4 di atas untuk beralih minggu secara cepat."}
-              </p>
-            </div>
-
-            {/* Week Selector Tabs (Only for Monthly view) */}
-            {scoreboardTab === "monthly" && (
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                {[1, 2, 3, 4].map((w) => {
-                  const isCurrentSimWeek = w === currentWeek;
-                  const isSel = selectedWeekTab === w;
-                  return (
-                    <button
-                      key={w}
-                      onClick={() => setSelectedWeekTab(w)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isSel
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                        }`}
-                    >
-                      Week {w}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Relative Cycle Guide Banner */}
-          {scoreboardTab === "monthly" ? (
-            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-[20px] text-xs leading-relaxed text-slate-600 space-y-2">
-              <p className="font-bold text-slate-900 flex items-center gap-1.5">
-                ℹ️ Panduan Pengisian Data Relatif (Siklus 1 Bulan):
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600">
-                <li>Setiap metrik berjalan selama **4 minggu penuh (W1 s.d W4)** terhitung sejak tanggal metrik tersebut dibuat.</li>
-                <li>Kolom pengisian harian menggunakan format **H1 s.d H7** (Hari ke-1 s.d Hari ke-7 pada minggu berjalan) karena hari pengisian menyesuaikan tanggal pembuatan metrik.</li>
-                <li>Anda hanya dapat mengisi data harian pada minggu yang berwarna hijau 🟢 <strong className="text-emerald-700 font-bold">W[X]</strong> untuk masing-masing metrik di bawah.</li>
-                <li>Minggu yang berlabel <strong className="text-slate-700 font-bold">Selesai</strong> (minggu lalu) atau <strong className="text-amber-700 font-bold">Belum Mulai</strong> (minggu depan) akan otomatis dikunci untuk menjaga integritas data harian.</li>
-              </ul>
-            </div>
-          ) : (
-            <div className="p-4 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-[20px] text-xs leading-relaxed text-blue-900 dark:text-blue-200 space-y-1.5">
-              <p className="font-bold flex items-center gap-1.5 text-blue-800 dark:text-blue-300">
-                ⚡ Panduan Timeline Mandiri Metrik Khusus / Ad-Hoc:
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-blue-800 dark:text-blue-300">
-                <li>Metrik Khusus bersifat <strong>1 Timeline Kontinyu</strong> dari tanggal dibuat s.d deadline (misal **H1 s.d H12**).</li>
-                <li>Tabel ini <strong>tidak menggunakan sistem minggu W1-W4</strong> sehingga data Anda 100% aman dan tidak akan berpindah/hilang saat pergantian minggu kalender.</li>
-              </ul>
-            </div>
-          )}
-
-          {/* Daily Input Table (Desktop only) */}
-          <div className="hidden md:block overflow-x-auto">
-            {(() => {
-              const maxDuration = scoreboardTab === "special"
-                ? activeMetrics.reduce((max, m) => Math.max(max, getMetricDurationDays(m)), 0)
-                : 7;
-              const dayIndexes = Array.from({ length: maxDuration }, (_, i) => i);
-
-              return (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                      <th className="p-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider w-[200px]">Metrik</th>
-                      {dayIndexes.map((dayIdx) => (
-                        <th key={dayIdx} className="p-3.5 text-xs font-bold text-slate-450 uppercase text-center">H{dayIdx + 1}</th>
-                      ))}
-                      <th className="p-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[120px]">Akumulasi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {activeMetrics.map((metric) => {
-                      const targetWeek = metric.cycleType === "special" ? 1 : selectedWeekTab;
-                      const valObj = getWeeklyValueObj(metric.id, targetWeek);
-                      const isCurrentWeek = metric.cycleType === "special" ? true : (selectedWeekTab === getMetricActiveWeek(metric));
-                      const isPastWeek = metric.cycleType === "special" ? false : (selectedWeekTab < getMetricActiveWeek(metric));
-
-                      const daysCount = metric.cycleType === "special" ? getMetricDurationDays(metric) : 7;
-                      const dailyVals = valObj?.dailyValues ?? Array(daysCount).fill(null);
-                      const weeklyAccum = valObj?.value ?? null;
-
-                      return (
-                        <tr
-                          key={metric.id}
-                          className="hover:bg-slate-50/30 transition-colors"
-                        >
-                          <td className="p-3.5">
-                            <div className="space-y-1">
-                              <span className="text-xs font-bold text-slate-900 block leading-tight">
-                                {metric.name}
-                              </span>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded uppercase ${metric.cycleType === "special"
-                                    ? "bg-blue-50 text-blue-650 border border-blue-100"
-                                    : isCurrentWeek
-                                      ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                                      : isPastWeek
-                                        ? "bg-slate-100 text-slate-500"
-                                        : "bg-amber-50 text-amber-600 border border-amber-100"
-                                  }`}>
-                                  {metric.cycleType === "special" ? "Khusus" : isCurrentWeek ? `w${selectedWeekTab}` : isPastWeek ? "Lewat" : "Belum Mulai"}
-                                </span>
-                                <span className="text-[9px] text-slate-400 font-bold">
-                                  TARGET: {metric.target}{metric.unit === "percentage" ? "%" : ""}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Daily values inputs */}
-                          {dayIndexes.map((dayIdx) => {
-                            if (dayIdx >= daysCount) {
-                              return (
-                                <td key={dayIdx} className="p-2 text-center text-slate-300 dark:text-zinc-800 font-bold text-xs">-</td>
-                              );
-                            }
-
-                            const val = dailyVals[dayIdx];
-                            const isDisabled = !isCurrentWeek;
-                            const cellKey = `${metric.id}-${targetWeek}-${dayIdx}`;
-                            const isJustSaved = !!savedCellKeys[cellKey];
-
-                            return (
-                              <td key={dayIdx} className="p-2 text-center relative">
-                                <div className="flex items-center justify-center gap-1 relative">
-                                  <input
-                                    type="number"
-                                    step="any"
-                                    disabled={isDisabled}
-                                    value={(val !== null && val !== undefined) ? val : ""}
-                                    onChange={(e) => handleDailyValChange(metric.id, targetWeek, dayIdx, e.target.value)}
-                                    placeholder="-"
-                                    className={`w-14 px-2 py-1.5 rounded-lg text-xs font-bold text-center focus:outline-none focus:ring-1 focus:ring-red-500 text-slate-800 dark:text-slate-100 disabled:opacity-40 disabled:bg-slate-100/50 disabled:cursor-not-allowed transition-all ${
-                                      isJustSaved
-                                        ? "bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-extrabold"
-                                        : "bg-slate-50/50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
-                                    }`}
-                                  />
-                                  {isJustSaved && (
-                                    <span className="absolute -top-2.5 -right-1 flex items-center gap-0.5 bg-emerald-600 text-white text-[8px] font-extrabold px-1 py-0.5 rounded-md shadow-xs animate-in zoom-in-75 duration-150 z-20 pointer-events-none">
-                                      <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                                      <span>OK</span>
-                                    </span>
-                                  )}
-                                  {metric.unit === "percentage" && val !== null && !isJustSaved && (
-                                    <span className="text-[9px] font-extrabold text-slate-400">%</span>
-                                  )}
-                                </div>
-                              </td>
-                            );
-                          })}
-
-                          {/* Weekly Accumulation Column */}
-                          <td className="p-3.5 text-center">
-                            <span className={`text-xs font-extrabold ${weeklyAccum !== null
-                                ? (metric.targetType === "higher_better" ? weeklyAccum >= metric.target : weeklyAccum <= metric.target)
-                                  ? "text-emerald-600 font-extrabold"
-                                  : "text-rose-600 font-extrabold"
-                                : "text-slate-400"
-                              }`}>
-                              {formatUnitValue(weeklyAccum, metric.unit)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-
-                    {activeMetrics.length === 0 && (
-                      <tr>
-                        <td colSpan={maxDuration + 2} className="p-8 text-center text-xs text-slate-450 font-medium">
-                          Belum ada metrik aktif.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              );
-            })()}
-          </div>
-
-          {/* Mobile view: Daily Input Cards */}
-          <div className="block md:hidden space-y-4">
-            {activeMetrics.map((metric) => {
-              const targetWeek = metric.cycleType === "special" ? 1 : selectedWeekTab;
-              const valObj = getWeeklyValueObj(metric.id, targetWeek);
-              const isCurrentWeek = metric.cycleType === "special" ? true : (selectedWeekTab === getMetricActiveWeek(metric));
-              const isPastWeek = metric.cycleType === "special" ? false : (selectedWeekTab < getMetricActiveWeek(metric));
-
-              const daysCount = metric.cycleType === "special" ? getMetricDurationDays(metric) : 7;
-              const dailyVals = valObj?.dailyValues ?? Array(daysCount).fill(null);
-              const weeklyAccum = valObj?.value ?? null;
-
-              const loopArray = Array.from({ length: daysCount }, (_, i) => i);
-
-              return (
-                <div key={metric.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px] p-5 shadow-sm space-y-4">
-                  {/* Header: Title and Week Info */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                        {metric.name}
-                      </h4>
-                      <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded uppercase flex-shrink-0 ${metric.cycleType === "special"
-                          ? "bg-blue-50 text-blue-650 border border-blue-100"
-                          : isCurrentWeek
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                            : isPastWeek
-                              ? "bg-slate-100 text-slate-500"
-                              : "bg-amber-50 text-amber-600 border border-amber-100"
-                        }`}>
-                        {metric.cycleType === "special" ? "Khusus" : isCurrentWeek ? `w${selectedWeekTab}` : isPastWeek ? "Lewat" : "Belum Mulai"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-400 font-bold">
-                        Target: <span className="text-slate-800 dark:text-slate-200">{metric.target}{metric.unit === "percentage" ? "%" : ""}</span>
-                      </span>
-                      <span className="text-blue-500 font-bold flex items-center gap-0.5">
-                        📅 {getMetricWeekDateRange(metric, selectedWeekTab)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* H1-H7 Inputs Grid */}
-                  <div className="space-y-2 pt-2 border-t border-slate-50 dark:border-zinc-900">
-                    <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Input Data Harian</span>
-                    <div className="grid grid-cols-4 gap-3">
-                      {loopArray.map((dayIdx) => {
-                        const val = dailyVals[dayIdx];
-                        const isDisabled = !isCurrentWeek;
-                        const cellKey = `${metric.id}-${targetWeek}-${dayIdx}`;
-                        const isJustSaved = !!savedCellKeys[cellKey];
-
-                        return (
-                          <div key={dayIdx} className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border relative transition-all ${
-                            isJustSaved
-                              ? "bg-emerald-500/10 border-emerald-500/60 ring-1 ring-emerald-500/30"
-                              : "bg-slate-50/50 dark:bg-zinc-900/30 border-slate-100 dark:border-zinc-900"
-                          }`}>
-                            <div className="flex items-center justify-between w-full px-0.5">
-                              <span className="text-[8px] font-extrabold text-slate-400">H{dayIdx + 1}</span>
-                              {isJustSaved && (
-                                <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 animate-in zoom-in-75 duration-150">
-                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-0.5 justify-center w-full">
-                              <input
-                                type="number"
-                                step="any"
-                                disabled={isDisabled}
-                                value={(val !== null && val !== undefined) ? val : ""}
-                                onChange={(e) => handleDailyValChange(metric.id, targetWeek, dayIdx, e.target.value)}
-                                placeholder="-"
-                                className="w-full bg-transparent text-xs font-bold text-center focus:outline-none text-slate-800 dark:text-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                              />
-                              {metric.unit === "percentage" && val !== null && (
-                                <span className="text-[8px] font-extrabold text-slate-400">%</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Accumulation block inside the grid */}
-                      <div className="flex flex-col items-center justify-center gap-0.5 bg-slate-50 dark:bg-zinc-900/50 p-1.5 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 col-span-1">
-                        <span className="text-[8px] font-extrabold text-slate-400">Total</span>
-                        <span className={`text-[10px] font-extrabold ${weeklyAccum !== null
-                            ? (metric.targetType === "higher_better" ? weeklyAccum >= metric.target : weeklyAccum <= metric.target)
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-rose-600 dark:text-rose-400"
-                            : "text-slate-400"
-                          }`}>
-                          {formatUnitValue(weeklyAccum, metric.unit)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Modal Dialog: Add Metric */}
       {isAddMetricOpen && (
@@ -1806,18 +1272,14 @@ export default function ScoreboardPage() {
 
             {/* Modal Header */}
             <div className="flex justify-between items-center px-6 sm:px-8 py-5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center font-bold text-lg">
-                  🎯
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Tambah Metrik Baru</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Buat metrik target KPI bulanan atau ad-hoc untuk divisi.</p>
-                </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Tambah Metrik Baru</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Buat metrik target KPI bulanan atau ad-hoc untuk divisi.</p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddMetricOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-all text-sm font-bold"
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-all text-sm font-bold cursor-pointer"
               >
                 ✕
               </button>
@@ -1838,7 +1300,7 @@ export default function ScoreboardPage() {
                     value={newMetricName}
                     onChange={(e) => setNewMetricName(e.target.value)}
                     placeholder="Contoh: Website Uptime, Food Quality Rating, Sales Revenue..."
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white shadow-xs transition-all"
+                    className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/15 focus:border-zinc-400 dark:focus:border-zinc-600 text-slate-900 dark:text-white shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                   />
                 </div>
 
@@ -1847,17 +1309,16 @@ export default function ScoreboardPage() {
                     <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                       Target Divisi <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      required
+                    <FormSelect
                       value={newMetricDept}
-                      onChange={(e) => setNewMetricDept(e.target.value)}
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white shadow-xs transition-all"
-                    >
-                      <option value="">Pilih Divisi Penanggung Jawab...</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.id}>{d.name} Division</option>
-                      ))}
-                    </select>
+                      onChange={(val) => setNewMetricDept(val)}
+                      placeholder="Pilih Divisi Penanggung Jawab..."
+                      options={departments.map((d) => ({
+                        value: d.id,
+                        label: `${d.name} Division`,
+                        icon: <Building2 className="w-3.5 h-3.5" />
+                      }))}
+                    />
                   </div>
                 )}
 
@@ -1866,21 +1327,28 @@ export default function ScoreboardPage() {
                   <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Hubungkan ke Prioritas Rock (90 Hari) <span className="text-slate-400 font-normal">(Opsional)</span>
                   </label>
-                  <select
+                  <FormSelect
                     value={newMetricRockId}
-                    onChange={(e) => setNewMetricRockId(e.target.value)}
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer"
-                  >
-                    <option value="">— Metrik Mandiri (Bukan bagian dari Rock) —</option>
-                    {rocks
-                      .filter(r => canViewAll ? (newMetricDept ? r.departmentId === newMetricDept : true) : r.departmentId === currentProfile.departmentId)
-                      .map((r) => (
-                        <option key={r.id} value={r.id}>
-                          🎯 [{r.quarter} {r.year}] {r.title} ({getDeptName(r.departmentId)})
-                        </option>
-                      ))}
-                  </select>
-                  <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                    onChange={(val) => setNewMetricRockId(val)}
+                    placeholder="— Metrik Mandiri (Bukan bagian dari Rock) —"
+                    options={[
+                      {
+                        value: "",
+                        label: "— Metrik Mandiri (Bukan bagian dari Rock) —",
+                        sublabel: "Metrik mandiri tanpa keterkaitan target kuartalan"
+                      },
+                      ...rocks
+                        .filter(r => canViewAll ? (newMetricDept ? r.departmentId === newMetricDept : true) : r.departmentId === currentProfile.departmentId)
+                        .map((r) => ({
+                          value: r.id,
+                          label: r.title,
+                          badge: `${r.quarter} ${r.year}`,
+                          sublabel: `${getDeptName(r.departmentId)} Division`,
+                          icon: <Target className="w-3.5 h-3.5" />
+                        }))
+                    ]}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
                     Jika dihubungkan, nilai capaian metrik ini akan otomatis mengkalkulasi progres Rock kuartalan.
                   </p>
                 </div>
@@ -1899,7 +1367,7 @@ export default function ScoreboardPage() {
                     value={newMetricTarget}
                     onChange={(e) => setNewMetricTarget(e.target.value)}
                     placeholder="Contoh: 99, 100, 5000..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white font-bold tracking-wide shadow-xs transition-all"
+                    className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/15 focus:border-zinc-400 dark:focus:border-zinc-600 text-slate-900 dark:text-white font-bold tracking-wide shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                   />
                 </div>
 
@@ -1907,33 +1375,90 @@ export default function ScoreboardPage() {
                   <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Unit Satuan <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <FormSelect
                     value={newMetricUnit}
-                    onChange={(e) => setNewMetricUnit(e.target.value as Metric["unit"])}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white shadow-xs transition-all"
-                  >
-                    <option value="number">Number (Angka Murni)</option>
-                    <option value="percentage">Percentage (Persen %)</option>
-                    <option value="currency">Currency (Mata Uang Rp)</option>
-                    <option value="boolean">Boolean (Ya / Tidak)</option>
-                  </select>
+                    onChange={(val) => setNewMetricUnit(val as Metric["unit"])}
+                    options={[
+                      {
+                        value: "number",
+                        label: "Number (Angka Murni)",
+                        sublabel: "Contoh: 10, 50, 100",
+                        icon: <Hash className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "percentage",
+                        label: "Percentage (Persen %)",
+                        sublabel: "Contoh: 85%, 99.5%",
+                        icon: <Percent className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "currency",
+                        label: "Currency (Mata Uang Rp)",
+                        sublabel: "Contoh: Rp 500rb, Rp 1.500rb",
+                        icon: <Coins className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "boolean",
+                        label: "Boolean (Ya / Tidak)",
+                        sublabel: "Contoh: 1 (Ya) atau 0 (Tidak)",
+                        icon: <CheckSquare className="w-3.5 h-3.5" />
+                      }
+                    ]}
+                  />
                 </div>
               </div>
 
               {/* Accumulation Mode selection for number / currency / percentage */}
               {(newMetricUnit === "number" || newMetricUnit === "currency" || newMetricUnit === "percentage") && (
-                <div className="p-3.5 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/60 dark:border-teal-900/40 rounded-2xl space-y-2 animate-in fade-in duration-150">
+                <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/60 dark:border-teal-900/40 rounded-2xl space-y-2.5 animate-in fade-in duration-150">
                   <label className="block text-[11px] font-extrabold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
                     Metode Akumulasi Harian ke Mingguan
                   </label>
-                  <select
-                    value={newMetricAccumulationMode}
-                    onChange={(e) => setNewMetricAccumulationMode(e.target.value as "sum" | "average")}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-teal-300 dark:border-teal-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
-                  >
-                    <option value="sum">➕ Total Penjumlahan (SUM) — Input harian dijumlahkan</option>
-                    <option value="average">📊 Rata-Rata (AVG) — Input harian dirata-ratakan</option>
-                  </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setNewMetricAccumulationMode("sum")}
+                      className={`p-3 border rounded-xl text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+                        newMetricAccumulationMode === "sum"
+                          ? "bg-white dark:bg-zinc-900 border-teal-500 shadow-xs ring-1 ring-teal-500/30 font-bold text-teal-900 dark:text-teal-200"
+                          : "bg-white/60 dark:bg-zinc-950/60 border-teal-200/60 dark:border-teal-900/40 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        newMetricAccumulationMode === "sum"
+                          ? "bg-teal-600 text-white"
+                          : "bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300"
+                      }`}>
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold leading-tight">Total Penjumlahan (SUM)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 truncate">Input harian dijumlahkan</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setNewMetricAccumulationMode("average")}
+                      className={`p-3 border rounded-xl text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+                        newMetricAccumulationMode === "average"
+                          ? "bg-white dark:bg-zinc-900 border-teal-500 shadow-xs ring-1 ring-teal-500/30 font-bold text-teal-900 dark:text-teal-200"
+                          : "bg-white/60 dark:bg-zinc-950/60 border-teal-200/60 dark:border-teal-900/40 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        newMetricAccumulationMode === "average"
+                          ? "bg-teal-600 text-white"
+                          : "bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300"
+                      }`}>
+                        <BarChart2 className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold leading-tight">Rata-Rata (AVG)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 truncate">Input harian dirata-ratakan</p>
+                      </div>
+                    </button>
+                  </div>
                   <p className="text-[10px] text-teal-700 dark:text-teal-400 font-medium">
                     {newMetricAccumulationMode === "sum"
                       ? "PILIHAN TOTAL: Input harian H1 s.d H7 akan dijumlahkan menjadi nilai total sepekan."
@@ -1951,14 +1476,24 @@ export default function ScoreboardPage() {
                   <button
                     type="button"
                     onClick={() => setNewMetricCycleType("monthly")}
-                    className={`p-3.5 border rounded-2xl text-left transition-all flex items-center justify-between ${newMetricCycleType === "monthly"
+                    className={`p-3.5 border rounded-2xl text-left transition-all flex items-center justify-between cursor-pointer ${
+                      newMetricCycleType === "monthly"
                         ? "bg-zinc-900/10 text-zinc-900 border-zinc-900/30 dark:bg-white/15 dark:text-white dark:border-white/40 shadow-sm font-extrabold"
                         : "bg-white text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:text-slate-300 border-slate-200 dark:border-zinc-800"
-                      }`}
+                    }`}
                   >
-                    <div>
-                      <p className="text-xs font-bold">📅 Bulanan (4 Minggu)</p>
-                      <p className="text-[10px] opacity-70 mt-0.5">Metrik rutin bulanan (W1-W4)</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        newMetricCycleType === "monthly"
+                          ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                          : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-300"
+                      }`}>
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">Bulanan (4 Minggu)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Metrik rutin bulanan (W1-W4)</p>
+                      </div>
                     </div>
                     {newMetricCycleType === "monthly" && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
                   </button>
@@ -1966,14 +1501,24 @@ export default function ScoreboardPage() {
                   <button
                     type="button"
                     onClick={() => setNewMetricCycleType("special")}
-                    className={`p-3.5 border rounded-2xl text-left transition-all flex items-center justify-between ${newMetricCycleType === "special"
+                    className={`p-3.5 border rounded-2xl text-left transition-all flex items-center justify-between cursor-pointer ${
+                      newMetricCycleType === "special"
                         ? "bg-zinc-900/10 text-zinc-900 border-zinc-900/30 dark:bg-white/15 dark:text-white dark:border-white/40 shadow-sm font-extrabold"
                         : "bg-white text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:text-slate-300 border-slate-200 dark:border-zinc-800"
-                      }`}
+                    }`}
                   >
-                    <div>
-                      <p className="text-xs font-bold">⚡ Khusus (Ad-Hoc / Short)</p>
-                      <p className="text-[10px] opacity-70 mt-0.5">Target durasi hari tertentu (1-14 Hari)</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        newMetricCycleType === "special"
+                          ? "bg-amber-500 text-white"
+                          : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-300"
+                      }`}>
+                        <Zap className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">Khusus (Ad-Hoc / Short)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Target durasi hari tertentu (1-14 Hari)</p>
+                      </div>
                     </div>
                     {newMetricCycleType === "special" && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
                   </button>
@@ -1982,27 +1527,25 @@ export default function ScoreboardPage() {
                 {newMetricCycleType === "special" && (
                   <div className="pt-2 animate-in slide-in-from-top-2 duration-150 space-y-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                         Tanggal Deadline (Tenggat Waktu) <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
+                      <FormDatePicker
                         required
                         value={newMetricDeadline}
-                        min={new Date().toISOString().split("T")[0]}
-                        onChange={(e) => {
-                          const dl = e.target.value;
+                        minDate={new Date().toISOString().split("T")[0]}
+                        onChange={(dl) => {
                           setNewMetricDeadline(dl);
                           const today = new Date().toISOString().split("T")[0];
                           const days = getDaysBetween(today, dl);
                           setNewMetricDurationDays(days);
                         }}
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white dark:[color-scheme:dark] cursor-pointer"
+                        placeholder="Pilih tanggal tenggat waktu..."
                       />
                     </div>
                     {newMetricDeadline && (
-                      <p className="text-[10px] text-slate-500 font-semibold bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-250/20">
-                        Durasi Terhitung: <strong className="text-red-600">{newMetricDurationDays} Hari</strong> (Dibuat s.d Deadline)
+                      <p className="text-[10px] text-slate-500 font-semibold bg-slate-50 dark:bg-zinc-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800">
+                        Durasi Terhitung: <strong className="text-red-600 dark:text-red-400">{newMetricDurationDays} Hari</strong> (Dibuat s.d Deadline)
                       </p>
                     )}
                   </div>
@@ -2018,15 +1561,19 @@ export default function ScoreboardPage() {
                   <button
                     type="button"
                     onClick={() => setNewMetricTargetType("higher_better")}
-                    className={`p-4 border rounded-2xl text-left transition-all ${newMetricTargetType === "higher_better"
+                    className={`p-4 border rounded-2xl text-left transition-all cursor-pointer ${
+                      newMetricTargetType === "higher_better"
                         ? "border-emerald-500/50 bg-emerald-500/5 text-slate-900 dark:text-white ring-2 ring-emerald-500/20 font-bold"
                         : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
-                      }`}
+                    }`}
                   >
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      📈 Makin Tinggi Makin Baik
+                    <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                      </div>
+                      <span>Makin Tinggi Makin Baik</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed pl-8.5">
                       Contoh: Sales Revenue, Uptime, Rating, Keuntungan.
                     </p>
                   </button>
@@ -2034,15 +1581,19 @@ export default function ScoreboardPage() {
                   <button
                     type="button"
                     onClick={() => setNewMetricTargetType("lower_better")}
-                    className={`p-4 border rounded-2xl text-left transition-all ${newMetricTargetType === "lower_better"
+                    className={`p-4 border rounded-2xl text-left transition-all cursor-pointer ${
+                      newMetricTargetType === "lower_better"
                         ? "border-rose-500/50 bg-rose-500/5 text-slate-900 dark:text-white ring-2 ring-rose-500/20 font-bold"
                         : "border-slate-200 bg-white text-slate-650 hover:bg-slate-50 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
-                      }`}
+                    }`}
                   >
-                    <div className="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400">
-                      📉 Makin Rendah Makin Baik
+                    <div className="flex items-center gap-2.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                      <div className="w-6 h-6 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 flex items-center justify-center shrink-0">
+                        <TrendingDown className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 stroke-[2.5]" />
+                      </div>
+                      <span>Makin Rendah Makin Baik</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed pl-8.5">
                       Contoh: Response Time, Sisa Makanan, Komplain.
                     </p>
                   </button>
@@ -2058,7 +1609,7 @@ export default function ScoreboardPage() {
                   value={newMetricKeterangan}
                   onChange={(e) => setNewMetricKeterangan(e.target.value)}
                   placeholder="Tulis instruksi pengisian atau detail pendukung lainnya..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white h-20 resize-none font-medium leading-relaxed"
+                  className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/15 focus:border-zinc-400 dark:focus:border-zinc-600 text-slate-900 dark:text-white h-20 resize-none font-medium leading-relaxed shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                 />
               </div>
 
@@ -2082,7 +1633,10 @@ export default function ScoreboardPage() {
                       <span>Verifikasi & Memasukkan Data ke Database...</span>
                     </>
                   ) : (
-                    <span>✨ Buat Metrik Baru</span>
+                    <span className="flex items-center gap-1.5">
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                      <span>Buat Metrik Baru</span>
+                    </span>
                   )}
                 </button>
               </div>
@@ -2098,22 +1652,18 @@ export default function ScoreboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
-                  <Edit3 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                    Edit Metrik KPI
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    Perbarui rincian target dan parameter metrik ini.
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  Edit Metrik KPI
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Perbarui rincian target dan parameter metrik ini.
+                </p>
               </div>
               <button
+                type="button"
                 onClick={() => setEditingMetric(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold cursor-pointer"
               >
                 ✕
               </button>
@@ -2131,7 +1681,7 @@ export default function ScoreboardPage() {
                   value={editMetricName}
                   onChange={(e) => setEditMetricName(e.target.value)}
                   placeholder="Contoh: Omset Harian Kasir, Kebersihan Area Dapur..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white"
+                  className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                   required
                 />
               </div>
@@ -2141,15 +1691,15 @@ export default function ScoreboardPage() {
                 <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                   Divisi Terkendala <span className="text-red-500">*</span>
                 </label>
-                <select
+                <FormSelect
                   value={editMetricDept}
-                  onChange={(e) => setEditMetricDept(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white cursor-pointer"
-                >
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name} Division</option>
-                  ))}
-                </select>
+                  onChange={(val) => setEditMetricDept(val)}
+                  options={departments.map(d => ({
+                    value: d.id,
+                    label: `${d.name} Division`,
+                    icon: <Building2 className="w-3.5 h-3.5" />
+                  }))}
+                />
               </div>
 
               {/* Hubungkan ke Prioritas Rock (90 Hari) */}
@@ -2157,21 +1707,28 @@ export default function ScoreboardPage() {
                 <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                   Hubungkan ke Prioritas Rock (90 Hari)
                 </label>
-                <select
+                <FormSelect
                   value={editMetricRockId}
-                  onChange={(e) => setEditMetricRockId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white cursor-pointer"
-                >
-                  <option value="">— Metrik Mandiri (Bukan bagian dari Rock) —</option>
-                  {rocks
-                    .filter(r => canViewAll ? (editMetricDept ? r.departmentId === editMetricDept : true) : r.departmentId === (editMetricDept || editingMetric?.departmentId))
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        🎯 [{r.quarter} {r.year}] {r.title} ({getDeptName(r.departmentId)})
-                      </option>
-                    ))}
-                </select>
-                <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                  onChange={(val) => setEditMetricRockId(val)}
+                  placeholder="— Metrik Mandiri (Bukan bagian dari Rock) —"
+                  options={[
+                    {
+                      value: "",
+                      label: "— Metrik Mandiri (Bukan bagian dari Rock) —",
+                      sublabel: "Metrik mandiri tanpa keterkaitan target kuartalan"
+                    },
+                    ...rocks
+                      .filter(r => canViewAll ? (editMetricDept ? r.departmentId === editMetricDept : true) : r.departmentId === (editMetricDept || editingMetric?.departmentId))
+                      .map((r) => ({
+                        value: r.id,
+                        label: r.title,
+                        badge: `${r.quarter} ${r.year}`,
+                        sublabel: `${getDeptName(r.departmentId)} Division`,
+                        icon: <Target className="w-3.5 h-3.5" />
+                      }))
+                  ]}
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
                   Ubah status keterikatan metrik ini dengan Prioritas Rock kuartalan.
                 </p>
               </div>
@@ -2188,7 +1745,7 @@ export default function ScoreboardPage() {
                     value={editMetricTarget}
                     onChange={(e) => setEditMetricTarget(e.target.value)}
                     placeholder="100, 1500000..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white"
+                    className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                     required
                   />
                 </div>
@@ -2196,33 +1753,90 @@ export default function ScoreboardPage() {
                   <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Satuan Nilai
                   </label>
-                  <select
+                  <FormSelect
                     value={editMetricUnit}
-                    onChange={(e) => setEditMetricUnit(e.target.value as Metric["unit"])}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white cursor-pointer"
-                  >
-                    <option value="number">Angka Murni (10, 50, 100)</option>
-                    <option value="percentage">Persentase (%)</option>
-                    <option value="currency">Mata Uang (Rp)</option>
-                    <option value="boolean">Boolean (Ya / Tidak)</option>
-                  </select>
+                    onChange={(val) => setEditMetricUnit(val as Metric["unit"])}
+                    options={[
+                      {
+                        value: "number",
+                        label: "Number (Angka Murni)",
+                        sublabel: "Contoh: 10, 50, 100",
+                        icon: <Hash className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "percentage",
+                        label: "Percentage (Persen %)",
+                        sublabel: "Contoh: 85%, 99.5%",
+                        icon: <Percent className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "currency",
+                        label: "Currency (Mata Uang Rp)",
+                        sublabel: "Contoh: Rp 500rb, Rp 1.500rb",
+                        icon: <Coins className="w-3.5 h-3.5" />
+                      },
+                      {
+                        value: "boolean",
+                        label: "Boolean (Ya / Tidak)",
+                        sublabel: "Contoh: 1 (Ya) atau 0 (Tidak)",
+                        icon: <CheckSquare className="w-3.5 h-3.5" />
+                      }
+                    ]}
+                  />
                 </div>
               </div>
 
               {/* Accumulation Mode selection for number / currency / percentage */}
               {(editMetricUnit === "number" || editMetricUnit === "currency" || editMetricUnit === "percentage") && (
-                <div className="p-3.5 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl space-y-2 animate-in fade-in duration-150">
+                <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl space-y-2.5 animate-in fade-in duration-150">
                   <label className="block text-[11px] font-extrabold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
                     Metode Akumulasi Harian ke Mingguan
                   </label>
-                  <select
-                    value={editMetricAccumulationMode}
-                    onChange={(e) => setEditMetricAccumulationMode(e.target.value as "sum" | "average")}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer"
-                  >
-                    <option value="sum">➕ Total Penjumlahan (SUM) — Input harian dijumlahkan</option>
-                    <option value="average">📊 Rata-Rata (AVG) — Input harian dirata-ratakan</option>
-                  </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditMetricAccumulationMode("sum")}
+                      className={`p-3 border rounded-xl text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+                        editMetricAccumulationMode === "sum"
+                          ? "bg-white dark:bg-zinc-900 border-amber-500 shadow-xs ring-1 ring-amber-500/30 font-bold text-amber-900 dark:text-amber-200"
+                          : "bg-white/60 dark:bg-zinc-950/60 border-amber-200/60 dark:border-amber-900/40 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        editMetricAccumulationMode === "sum"
+                          ? "bg-amber-600 text-white"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                      }`}>
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold leading-tight">Total Penjumlahan (SUM)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 truncate">Input harian dijumlahkan</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditMetricAccumulationMode("average")}
+                      className={`p-3 border rounded-xl text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+                        editMetricAccumulationMode === "average"
+                          ? "bg-white dark:bg-zinc-900 border-amber-500 shadow-xs ring-1 ring-amber-500/30 font-bold text-amber-900 dark:text-amber-200"
+                          : "bg-white/60 dark:bg-zinc-950/60 border-amber-200/60 dark:border-amber-900/40 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        editMetricAccumulationMode === "average"
+                          ? "bg-amber-600 text-white"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                      }`}>
+                        <BarChart2 className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold leading-tight">Rata-Rata (AVG)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 truncate">Input harian dirata-ratakan</p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -2241,9 +1855,18 @@ export default function ScoreboardPage() {
                         : "bg-white text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:text-slate-300 border-slate-200 dark:border-zinc-800"
                     }`}
                   >
-                    <div>
-                      <p className="text-xs font-bold">📅 Bulanan (4 Minggu)</p>
-                      <p className="text-[10px] opacity-70 mt-0.5">Metrik rutin bulanan (W1-W4)</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        editMetricCycleType === "monthly"
+                          ? "bg-amber-500 text-white"
+                          : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-300"
+                      }`}>
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">Bulanan (4 Minggu)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Metrik rutin bulanan (W1-W4)</p>
+                      </div>
                     </div>
                     {editMetricCycleType === "monthly" && <span className="w-2 h-2 rounded-full bg-amber-500"></span>}
                   </button>
@@ -2257,9 +1880,18 @@ export default function ScoreboardPage() {
                         : "bg-white text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:text-slate-300 border-slate-200 dark:border-zinc-800"
                     }`}
                   >
-                    <div>
-                      <p className="text-xs font-bold">⚡ Khusus (Ad-Hoc / Short)</p>
-                      <p className="text-[10px] opacity-70 mt-0.5">Target durasi hari tertentu (1-14 Hari)</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        editMetricCycleType === "special"
+                          ? "bg-red-500 text-white"
+                          : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-300"
+                      }`}>
+                        <Zap className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">Khusus (Ad-Hoc / Short)</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Target durasi hari tertentu (1-14 Hari)</p>
+                      </div>
                     </div>
                     {editMetricCycleType === "special" && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
                   </button>
@@ -2268,27 +1900,25 @@ export default function ScoreboardPage() {
                 {editMetricCycleType === "special" && (
                   <div className="pt-2 animate-in slide-in-from-top-2 duration-150 space-y-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                         Tanggal Deadline (Tenggat Waktu) <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
+                      <FormDatePicker
                         required
                         value={editMetricDeadline}
-                        min={new Date().toISOString().split("T")[0]}
-                        onChange={(e) => {
-                          const dl = e.target.value;
+                        minDate={new Date().toISOString().split("T")[0]}
+                        onChange={(dl) => {
                           setEditMetricDeadline(dl);
                           const startStr = (editingMetric?.createdAt || (editingMetric as any)?.created_at || new Date().toISOString()).split("T")[0];
                           const days = getDaysBetween(startStr, dl);
                           setEditMetricDurationDays(days > 0 ? days : 1);
                         }}
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white dark:[color-scheme:dark] cursor-pointer"
+                        placeholder="Pilih tanggal tenggat waktu..."
                       />
                     </div>
                     {editMetricDeadline && (
-                      <p className="text-[10px] text-slate-500 font-semibold bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-250/20">
-                        Durasi Terhitung: <strong className="text-red-600">{editMetricDurationDays} Hari</strong> (Dibuat s.d Deadline)
+                      <p className="text-[10px] text-slate-500 font-semibold bg-slate-50 dark:bg-zinc-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800">
+                        Durasi Terhitung: <strong className="text-amber-600 dark:text-amber-400">{editMetricDurationDays} Hari</strong> (Dibuat s.d Deadline)
                       </p>
                     )}
                   </div>
@@ -2310,10 +1940,13 @@ export default function ScoreboardPage() {
                         : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      📈 Makin Tinggi Makin Baik
+                    <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                      </div>
+                      <span>Makin Tinggi Makin Baik</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed pl-8.5">
                       Contoh: Sales Revenue, Uptime, Rating, Keuntungan.
                     </p>
                   </button>
@@ -2327,10 +1960,13 @@ export default function ScoreboardPage() {
                         : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    <div className="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400">
-                      📉 Makin Rendah Makin Baik
+                    <div className="flex items-center gap-2.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                      <div className="w-6 h-6 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 flex items-center justify-center shrink-0">
+                        <TrendingDown className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 stroke-[2.5]" />
+                      </div>
+                      <span>Makin Rendah Makin Baik</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed pl-8.5">
                       Contoh: Response Time, Sisa Makanan, Komplain.
                     </p>
                   </button>
@@ -2346,7 +1982,7 @@ export default function ScoreboardPage() {
                   value={editMetricKeterangan}
                   onChange={(e) => setEditMetricKeterangan(e.target.value)}
                   placeholder="Instruksi pengisian atau detail pendukung..."
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white h-20 resize-none"
+                  className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white h-20 resize-none shadow-2xs hover:border-slate-350 dark:hover:border-zinc-700 hover:bg-slate-50/70 dark:hover:bg-zinc-900/70 transition-all duration-200"
                 />
               </div>
 
@@ -2363,10 +1999,126 @@ export default function ScoreboardPage() {
                   type="submit"
                   className="px-6 py-2.5 text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white rounded-xl transition-all shadow-md shadow-amber-600/20 flex items-center gap-2 cursor-pointer"
                 >
-                  💾 Simpan Perubahan
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                  <span>Simpan Perubahan</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Scoreboard Detail Center Popup Modal */}
+      <ScoreboardDetailModal
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        metric={drawerMetric}
+        departments={departments}
+        rocks={rocks}
+        selectedWeek={drawerWeek}
+        onSelectWeek={(w) => setDrawerWeek(w)}
+        activeWeek={drawerMetric ? getMetricActiveWeek(drawerMetric) : currentWeek}
+        getMetricDurationDays={getMetricDurationDays}
+        dailyValues={
+          drawerMetric
+            ? (getWeeklyValueObj(drawerMetric.id, drawerMetric.cycleType === "special" ? 1 : drawerWeek)?.dailyValues ?? Array(getMetricDurationDays(drawerMetric)).fill(null))
+            : []
+        }
+        currentAccumulationValue={
+          drawerMetric
+            ? (getWeeklyValueObj(drawerMetric.id, drawerMetric.cycleType === "special" ? 1 : drawerWeek)?.value ?? null)
+            : null
+        }
+        onDailyValueChange={handleDailyValChange}
+        savedCellKeys={savedCellKeys}
+        isOwner={isOwner}
+        canViewAll={canViewAll}
+        language={language}
+        formatUnitValue={formatUnitValue}
+        onEdit={handleOpenEditMetric}
+        onDelete={(m) => {
+          showConfirm({
+            title: "Hapus Metrik KPI",
+            message: `Apakah Anda yakin ingin menghapus metrik "${m.name}" secara permanen?`,
+            variant: "danger",
+            confirmText: "Ya, Hapus",
+            onConfirm: () => deleteMetric(m.id)
+          });
+        }}
+        onConvert={(m) => {
+          setConvertItem({
+            id: m.id,
+            title: m.name,
+            description: m.keterangan,
+            departmentId: m.departmentId,
+            picName: m.picName
+          });
+        }}
+        onComplete={(m) => {
+          showConfirm({
+            title: "Selesaikan Metrik",
+            message: `Apakah Anda yakin ingin menyelesaikan metrik "${m.name}" secara manual?`,
+            variant: "warning",
+            confirmText: "Ya, Selesaikan",
+            onConfirm: () => completeMetric(m.id)
+          });
+        }}
+      />
+
+      {/* Panduan Siklus Dialog Modal */}
+      {isGuideOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  ℹ️
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Panduan Siklus Scoreboard</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400">Cara kerja siklus waktu & akumulasi data KPI</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsGuideOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3.5 bg-slate-50 dark:bg-zinc-800/60 rounded-2xl border border-slate-200/60 dark:border-zinc-700/60 space-y-1.5">
+                <p className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  📅 Siklus Metrik Bulanan (W1 s.d W4)
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  <li>Setiap metrik berjalan <strong>4 minggu penuh (W1 - W4)</strong> terhitung sejak tanggal metrik dibuat.</li>
+                  <li>Kolom harian menggunakan format <strong>H1 s.d H7</strong> (Hari ke-1 s.d ke-7 pada minggu berjalan).</li>
+                  <li>Klik tombol <strong>"Isi Data"</strong> atau salah satu sel <strong>W1 - W4</strong> pada tabel untuk membuka panel input harian.</li>
+                  <li>Nilai mingguan otomatis terhitung dan tersimpan secara real-time berdasarkan metode (SUM atau AVG).</li>
+                </ul>
+              </div>
+
+              <div className="p-3.5 bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl border border-blue-200/60 dark:border-blue-900/60 space-y-1.5">
+                <p className="font-extrabold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                  ⚡ Siklus Metrik Khusus (Ad-Hoc / Event)
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-[11px] text-blue-800 dark:text-blue-300">
+                  <li>Metrik Khusus memiliki <strong>1 Timeline Kontinyu</strong> dari tanggal dibuat s.d deadline (misal H1 s.d H14).</li>
+                  <li>Bebas dari pengaruh pergantian minggu kalender, data tersimpan aman secara kontinu.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setIsGuideOpen(false)}
+                className="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Mengerti
+              </button>
+            </div>
           </div>
         </div>
       )}

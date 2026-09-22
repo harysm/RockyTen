@@ -75,7 +75,7 @@ export default function AuthPage() {
           </div>
 
           {/* Card wrapper */}
-          <div className="bg-white border border-slate-200 rounded-[24px] shadow-sm p-8">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
 
           {/* Header text */}
           <div className="mb-7">

@@ -1,5 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="10" fill="#2563EB"/>
-  <path d="M14 34L22 20L27 28L31 22L36 34H14Z" fill="white" fill-opacity="0.95" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="34" cy="15" r="3.5" fill="#60A5FA"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="border" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" stop-opacity="0.4"/>
+      <stop offset="0.5" stop-color="#2563EB" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#6366F1" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="r-stem" x1="13" y1="11" x2="13" y2="37" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="r-loop" x1="20" y1="11" x2="38" y2="26" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="0.6" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="r-leg" x1="23" y1="23" x2="38" y2="37" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#818CF8"/>
+    </linearGradient>
+    <linearGradient id="accent-dot" x1="33" y1="9" x2="39" y2="15" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Container Box -->
+  <rect width="48" height="48" rx="12" fill="url(#bg)"/>
+  <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="11.25" stroke="url(#border)" stroke-width="1.5"/>
+
+  <!-- Left Stem Pillar -->
+  <rect x="12" y="11" width="5.5" height="26" rx="2.75" fill="url(#r-stem)"/>
+
+  <!-- Upper Loop -->
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M20.5 11H29.5C34.1944 11 38 14.5817 38 19C38 23.4183 34.1944 27 29.5 27H20.5V11ZM26 16.5H29C30.3807 16.5 31.5 17.6193 31.5 19C31.5 20.3807 30.3807 21.5 29 21.5H26V16.5Z" fill="url(#r-loop)"/>
+
+  <!-- Dynamic Diagonal Leg -->
+  <path d="M24 24.5H29.8C30.6 24.5 31.4 24.9 31.9 25.6L37.4 34.8C38.2 36.1 37.2 37 35.8 37H31C30.2 37 29.5 36.6 29 35.9L24.2 28.5L24 24.5Z" fill="url(#r-leg)"/>
+
+  <!-- Subtle Apex Dot -->
+  <circle cx="36.5" cy="11.5" r="2" fill="url(#accent-dot)"/>
 </svg>

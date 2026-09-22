@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp, Headline, AttachmentInfo } from "@/context/AppContext";
-import { Plus, Newspaper, Calendar, User, Tag, HelpCircle, FileText, Paperclip, Edit3, Trash2, RefreshCw, Link as LinkIcon, ExternalLink, Filter, Loader2 } from "lucide-react";
+import { Plus, Newspaper, Calendar, User, Tag, HelpCircle, FileText, Paperclip, Edit3, Trash2, RefreshCw, Link as LinkIcon, ExternalLink, Loader2, Trophy, Sparkles, AlertTriangle, Bell, Megaphone, MoreVertical } from "lucide-react";
 import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
 import CustomSelect from "@/components/CustomSelect";
 import HeadlinesSkeleton from "@/components/skeletons/HeadlinesSkeleton";
@@ -42,6 +42,18 @@ export default function HeadlinesPage() {
 
   // Universal Convert state
   const [convertItem, setConvertItem] = useState<UniversalConvertItem | null>(null);
+
+  // Card Kebab Menu Dropdown state
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Close card kebab menu on click outside
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      if (openMenuId) setOpenMenuId(null);
+    };
+    document.addEventListener("click", handleGlobalClick);
+    return () => document.removeEventListener("click", handleGlobalClick);
+  }, [openMenuId]);
 
   // Modal Edit Headline state
   const [editingHeadline, setEditingHeadline] = useState<Headline | null>(null);
@@ -223,20 +235,38 @@ export default function HeadlinesPage() {
   };
 
   const getCategoryStyles = (category: string) => {
-    return "badge-glass rounded-full px-2.5 py-0.5 font-extrabold shadow-2xs";
+    switch (category) {
+      case "good_news":
+        return "badge-glass text-emerald-700 dark:text-emerald-300 border-emerald-500/25";
+      case "bad_news":
+        return "badge-glass text-rose-700 dark:text-rose-300 border-rose-500/25";
+      case "reminder":
+        return "badge-glass text-indigo-700 dark:text-indigo-300 border-indigo-500/25";
+      case "announcement":
+        return "badge-glass text-blue-700 dark:text-blue-300 border-blue-500/25";
+      case "achievement":
+      default:
+        return "badge-glass text-amber-700 dark:text-amber-300 border-amber-500/25";
+    }
   };
 
   const getCategoryLabel = (category: string) => {
     return category.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   };
 
-  const getHeadlineIcon = (cat: string) => {
+  const renderCategoryIcon = (cat: string) => {
     switch (cat) {
-      case "good_news": return "🎉";
-      case "bad_news": return "⚠️";
-      case "reminder": return "📌";
-      case "announcement": return "📢";
-      default: return "🏆";
+      case "good_news":
+        return <Sparkles className="w-3 h-3 text-emerald-500 shrink-0" strokeWidth={2.2} />;
+      case "bad_news":
+        return <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" strokeWidth={2.2} />;
+      case "reminder":
+        return <Bell className="w-3 h-3 text-indigo-500 shrink-0" strokeWidth={2.2} />;
+      case "announcement":
+        return <Megaphone className="w-3 h-3 text-blue-500 shrink-0" strokeWidth={2.2} />;
+      case "achievement":
+      default:
+        return <Trophy className="w-3 h-3 text-amber-500 shrink-0" strokeWidth={2.2} />;
     }
   };
 
@@ -299,11 +329,13 @@ export default function HeadlinesPage() {
       {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            {language === "id" ? "Berita" : "Headlines"}
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {language === "id" ? "Headlines" : "Headlines"}
           </h2>
-          <p className="text-slate-500 font-medium mt-1">
-            {canViewAll ? "Owner View: Seluruh Headline" : `${getDeptName(currentProfile.departmentId)} Division`}
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Pusat pengumuman penting, berita internal divisi, dan informasi operasional tim."
+              : "Broadcast key company news, divisional updates, and operational announcements."}
           </p>
         </div>
 
@@ -320,52 +352,42 @@ export default function HeadlinesPage() {
         </button>
       </div>
 
-      {/* Filter Row */}
-      <div className="bg-white dark:bg-zinc-900/90 p-3.5 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 min-w-0 max-w-full">
-        <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
-          <div className="flex items-center gap-2 mr-1">
-            <Filter className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
-            <span className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-              FILTER:
-            </span>
-          </div>
-
+      {/* Filter Row (Scoreboard Parity Design) */}
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Category Filter Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">KATEGORI:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Kategori :</span>
             <CustomSelect
               value={activeTab}
               onChange={(val) => setActiveTab(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "all", label: "SEMUA KATEGORI" },
-                { value: "good_news", label: "GOOD NEWS", icon: <span>🎉</span> },
-                { value: "bad_news", label: "BAD NEWS", icon: <span>⚠️</span> },
-                { value: "reminder", label: "REMINDER", icon: <span>📌</span> },
-                { value: "announcement", label: "ANNOUNCEMENT", icon: <span>📢</span> },
-                { value: "achievement", label: "ACHIEVEMENT", icon: <span>🏆</span> },
+                { value: "all", label: "Semua Kategori" },
+                { value: "good_news", label: "Good News" },
+                { value: "bad_news", label: "Bad News" },
+                { value: "reminder", label: "Reminder" },
+                { value: "announcement", label: "Announcement" },
+                { value: "achievement", label: "Achievement" },
               ]}
             />
           </div>
 
           {/* Division Filter Dropdown */}
           {canViewAll && (
-            <>
-              <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">DIVISI:</span>
-                <CustomSelect
-                  value={selectedDeptFilter}
-                  onChange={(val) => setSelectedDeptFilter(val)}
-                  triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
-                  options={[
-                    { value: "all", label: "SEMUA DIVISI" },
-                    { value: "global", label: "GLOBAL (MANAGEMENT)" },
-                    ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
-                  ]}
-                />
-              </div>
-            </>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
+              <CustomSelect
+                value={selectedDeptFilter}
+                onChange={(val) => setSelectedDeptFilter(val)}
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+                options={[
+                  { value: "all", label: "Semua Divisi" },
+                  { value: "global", label: "Global (Management)" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
+                ]}
+              />
+            </div>
           )}
         </div>
 
@@ -377,7 +399,7 @@ export default function HeadlinesPage() {
               setActiveTab("all");
               setSelectedDeptFilter("all");
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
           >
             Reset Filter
           </button>
@@ -389,60 +411,98 @@ export default function HeadlinesPage() {
         {displayedHeadlines.map((hl) => (
           <div 
             key={hl.id} 
-            className="bg-white border border-slate-100 rounded-2xl shadow-sm hover-lift flex flex-col h-full overflow-hidden"
+            className={`bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-col h-full ${
+              openMenuId === hl.id ? "z-20 relative shadow-md" : "hover-lift z-0"
+            }`}
           >
             {/* Card Header Tag & Actions */}
-            <div className="p-6 pb-0 flex justify-between items-center">
-              <span className={`px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full border ${getCategoryStyles(hl.category)} flex items-center gap-1`}>
-                <span>{getHeadlineIcon(hl.category)}</span>
-                {getCategoryLabel(hl.category)}
-              </span>
+            <div className="p-6 pb-0 flex justify-between items-center relative">
+              {/* Left Group: Category Badge + Division Badge */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full border ${getCategoryStyles(hl.category)} flex items-center gap-1.5 shadow-2xs`}>
+                  {renderCategoryIcon(hl.category)}
+                  <span>{getCategoryLabel(hl.category)}</span>
+                </span>
 
-              <div className="flex items-center gap-1.5">
                 {(() => {
                   const scope = hl.departmentId ? getDeptName(hl.departmentId).replace(" Division", "").toUpperCase() : "GLOBAL";
-                  
                   return (
                     <span className="px-2.5 py-0.5 text-[9px] font-extrabold rounded-full uppercase badge-glass shadow-2xs">
                       {scope}
                     </span>
                   );
                 })()}
+              </div>
 
-                {/* Convert Button */}
+              {/* Right: Kebab Menu Dropdown (More Actions) */}
+              <div className="relative">
                 <button
-                  onClick={() => setConvertItem(hl)}
-                  title="Konversi Headline Ke Modul Lain"
-                  className="p-1 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Edit Button */}
-                <button
-                  onClick={() => handleOpenEditHeadline(hl)}
-                  title="Edit Headline"
-                  className="p-1 bg-transparent hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl transition-all shadow-2xs"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Delete Button */}
-                <button
-                  onClick={() => {
-                    showConfirm({
-                      title: "Hapus Headline",
-                      message: `Apakah Anda yakin ingin menghapus headline "${hl.title}" secara permanen?`,
-                      variant: "danger",
-                      confirmText: "Ya, Hapus",
-                      onConfirm: () => deleteHeadline(hl.id)
-                    });
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenMenuId(openMenuId === hl.id ? null : hl.id);
                   }}
-                  title="Hapus Headline Permanent"
-                  className="p-1 bg-transparent hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl transition-all shadow-2xs"
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer shadow-2xs ${
+                    openMenuId === hl.id
+                      ? "bg-slate-100 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white"
+                      : "bg-transparent hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700"
+                  }`}
+                  title="Opsi Aksi Headline"
+                  aria-label="Opsi Aksi Headline"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <MoreVertical className="w-3.5 h-3.5" />
                 </button>
+
+                {openMenuId === hl.id && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xl p-1 z-30 animate-in fade-in-0 slide-in-from-top-1 duration-100 space-y-0.5"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        setConvertItem(hl);
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-white flex items-center gap-2.5 transition-colors duration-100 cursor-pointer group"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 dark:text-zinc-500 dark:group-hover:text-zinc-200 shrink-0 transition-colors" />
+                      <span>Konversi Modul</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        handleOpenEditHeadline(hl);
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-white flex items-center gap-2.5 transition-colors duration-100 cursor-pointer group"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 dark:text-zinc-500 dark:group-hover:text-zinc-200 shrink-0 transition-colors" />
+                      <span>Edit Headline</span>
+                    </button>
+
+                    <div className="my-1 border-t border-slate-100 dark:border-zinc-800/80" />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        showConfirm({
+                          title: "Hapus Headline",
+                          message: `Apakah Anda yakin ingin menghapus headline "${hl.title}" secara permanen?`,
+                          variant: "danger",
+                          confirmText: "Ya, Hapus",
+                          onConfirm: () => deleteHeadline(hl.id)
+                        });
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-2.5 transition-colors duration-100 cursor-pointer group"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-500 group-hover:text-rose-600 dark:text-rose-400 dark:group-hover:text-rose-300 shrink-0 transition-colors" />
+                      <span>Hapus Headline</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -518,7 +578,7 @@ export default function HeadlinesPage() {
             </div>
 
             {/* Card Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-semibold bg-slate-50/30">
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-zinc-800 flex justify-between items-center text-[10px] text-slate-400 dark:text-zinc-500 font-semibold bg-slate-50/30 dark:bg-zinc-900/40 rounded-b-xl">
               <span className="flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" />
                 {hl.authorName}
@@ -588,11 +648,11 @@ export default function HeadlinesPage() {
                   onChange={(e) => setNewCategory(e.target.value as Headline["category"])}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-900 dark:text-white"
                 >
-                  <option value="good_news">Good News 🎉</option>
-                  <option value="bad_news">Bad News ⚠️</option>
-                  <option value="reminder">Reminder 📌</option>
-                  <option value="announcement">Announcement 📢</option>
-                  <option value="achievement">Achievement 🏆</option>
+                  <option value="good_news">Good News</option>
+                  <option value="bad_news">Bad News</option>
+                  <option value="reminder">Reminder</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="achievement">Achievement</option>
                 </select>
               </div>
 
@@ -806,11 +866,11 @@ export default function HeadlinesPage() {
                   onChange={(e) => setEditCategory(e.target.value as Headline["category"])}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-900 dark:text-white"
                 >
-                  <option value="good_news">🎉 Good News</option>
-                  <option value="bad_news">⚠️ Bad News</option>
-                  <option value="reminder">📌 Reminder</option>
-                  <option value="announcement">📢 Announcement</option>
-                  <option value="achievement">🏆 Achievement</option>
+                  <option value="good_news">Good News</option>
+                  <option value="bad_news">Bad News</option>
+                  <option value="reminder">Reminder</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="achievement">Achievement</option>
                 </select>
               </div>
 

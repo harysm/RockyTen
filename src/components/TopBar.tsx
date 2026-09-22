@@ -102,31 +102,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
     return dept ? dept.name : "PIC";
   };
 
-  // Resolve current page title (uses formatted date for Dashboard)
-  const getPageTitle = () => {
-    switch (pathname) {
-      case "/":
-        return formattedDate || (language === "id" ? "Dashboard" : "Dashboard");
-      case "/scoreboard":
-        return language === "id" ? "Scoreboard KPI" : "KPI Scoreboard";
-      case "/rocks":
-        return language === "id" ? "Rocks (Prioritas 90 Hari)" : "Rocks (90-Day Priorities)";
-      case "/headlines":
-        return language === "id" ? "Berita & Pengumuman" : "Headlines";
-      case "/todos":
-        return language === "id" ? "Agenda Kerja (To-Do)" : "To-Do List";
-      case "/issues":
-        return language === "id" ? "Masalah & Kendala (IDS)" : "Issues (IDS)";
-      case "/history":
-        return language === "id" ? "Riwayat Aktivitas" : "Activity Log";
-      case "/archives":
-        return language === "id" ? "Arsip Sistem" : "System Archives";
-      case "/settings":
-        return language === "id" ? "Pengaturan Sistem & RBAC" : "Settings & RBAC";
-      default:
-        return "RockyTen";
-    }
-  };
+
 
   return (
     <header className="sticky top-0 z-30 h-14 sm:h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800 px-4 sm:px-6 flex items-center justify-between transition-colors">
@@ -143,27 +119,16 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
 
         {/* Mobile Brand (visible only on small screens) */}
         <div className="flex items-center gap-2 lg:hidden">
-          <img
-            src="/rockyten-logo.svg"
-            className="w-6 h-6 object-contain rounded-md"
-            alt="RockyTen"
-          />
-          <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white uppercase">
-            RockyTen
+          <span className="font-brand text-sm font-black tracking-tight text-slate-900 dark:text-white">
+            Rocky <span className="text-red-600 dark:text-red-500">ten</span>
           </span>
         </div>
 
-        {/* Desktop Breadcrumb / Title (Shows Date on Dashboard) */}
+        {/* Desktop Date Display (Applies to all pages) */}
         <div className="hidden lg:flex items-center gap-2 min-w-0">
-          {pathname === "/" && (
-            <Calendar className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
-          )}
-          <h1 className={`text-sm sm:text-base tracking-tight truncate ${
-            pathname === "/"
-              ? "font-semibold text-slate-700 dark:text-zinc-300"
-              : "font-bold text-slate-900 dark:text-white"
-          }`}>
-            {getPageTitle()}
+          <Calendar className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
+          <h1 className="text-sm sm:text-base font-semibold text-slate-700 dark:text-zinc-300 tracking-tight truncate">
+            {formattedDate}
           </h1>
         </div>
       </div>
@@ -224,14 +189,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
                 {currentProfile.name}
               </p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 truncate">
-                  {getDeptName(currentProfile.departmentId)}
-                </span>
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                  {currentProfile.role || "User"}
-                </span>
-              </div>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+                {getDeptName(currentProfile.departmentId)}
+              </p>
             </div>
 
             {/* Subtle Chevron */}

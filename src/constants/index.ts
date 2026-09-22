@@ -140,7 +140,7 @@ export const INITIAL_ROCKS: Rock[] = [
     status: "off_track",
     picId: "prof-pic-marketing",
     picName: "Dewi Lestari",
-    dueDate: "2026-09-30",
+    dueDate: "2026-09-15",
     createdAt: "2026-07-01T08:00:00.000Z"
   }
 ];

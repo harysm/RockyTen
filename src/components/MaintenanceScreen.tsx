@@ -28,7 +28,7 @@ export const MaintenanceScreen: React.FC<{ onBypass?: () => void }> = ({ onBypas
       <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-amber-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Main Container Card */}
-      <div className="max-w-2xl w-full bg-zinc-900/80 border border-zinc-800 backdrop-blur-2xl rounded-[32px] p-6 sm:p-10 shadow-2xl relative z-10 space-y-8 animate-in fade-in zoom-in-95 duration-500">
+      <div className="max-w-2xl w-full bg-zinc-900/80 border border-zinc-800 backdrop-blur-2xl rounded-2xl p-6 sm:p-10 shadow-2xl relative z-10 space-y-8 animate-in fade-in zoom-in-95 duration-500">
         
         {/* Header Badge & Brand */}
         <div className="flex flex-col items-center text-center space-y-4">

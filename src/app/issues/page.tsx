@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useApp, Issue, AttachmentInfo } from "@/context/AppContext";
-import { Plus, AlertCircle, Calendar, User, FileText, Filter, AlertOctagon, HelpCircle, Paperclip, Edit3, Trash2, RefreshCw, Link as LinkIcon, ExternalLink, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Plus, AlertCircle, Calendar, User, FileText, AlertOctagon, HelpCircle, Paperclip, Edit3, Trash2, RefreshCw, Link as LinkIcon, ExternalLink, Loader2 } from "lucide-react";
 import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
+import IssueDetailModal from "@/components/issues/IssueDetailModal";
 import CustomSelect from "@/components/CustomSelect";
 import IssuesSkeleton from "@/components/skeletons/IssuesSkeleton";
 import { compressImageFile } from "@/lib/imageCompressor";
@@ -85,6 +86,9 @@ export default function IssuesPage() {
 
   // Universal Convert state
   const [convertItem, setConvertItem] = useState<UniversalConvertItem | null>(null);
+
+  // Detail Issue Modal state
+  const [detailIssue, setDetailIssue] = useState<Issue | null>(null);
 
   const handleFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -200,9 +204,17 @@ export default function IssuesPage() {
     return true;
   });
 
-  // Sorting State
+  // Sorting State (Matching Scoreboard Unified Sort Filter)
+  const [sortOption, setSortOption] = useState<string>("status_asc");
   const [sortBy, setSortBy] = useState<string>("status");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSortChange = (val: string) => {
+    setSortOption(val);
+    const [field, order] = val.split("_");
+    setSortBy(field);
+    setSortOrder(order as "asc" | "desc");
+  };
 
   const issueStatusRank: Record<string, number> = { open: 1, in_progress: 2, solved: 3, closed: 3, resolved: 3 };
   const priorityRank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -244,6 +256,51 @@ export default function IssuesPage() {
       case "in_progress": return "bg-amber-100/60 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400";
       case "solved": return "bg-emerald-100/60 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400";
       default: return "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400";
+    }
+  };
+
+  const getPriorityTextColor = (priority: Issue["priority"]) => {
+    switch (priority) {
+      case "low":
+        return "text-slate-500 dark:text-zinc-400";
+      case "medium":
+        return "text-amber-600 dark:text-amber-400";
+      case "high":
+        return "text-orange-600 dark:text-orange-400";
+      case "critical":
+        return "text-rose-600 dark:text-rose-400 font-extrabold";
+      default:
+        return "text-slate-700 dark:text-zinc-300";
+    }
+  };
+
+  const getStatusTextColor = (status: Issue["status"]) => {
+    switch (status) {
+      case "open":
+        return "text-rose-600 dark:text-rose-400";
+      case "in_progress":
+        return "text-amber-600 dark:text-amber-400";
+      case "solved":
+        return "text-emerald-600 dark:text-emerald-400";
+      case "closed":
+        return "text-slate-500 dark:text-zinc-400";
+      default:
+        return "text-slate-700 dark:text-zinc-300";
+    }
+  };
+
+  const getStatusLabel = (status: Issue["status"]) => {
+    switch (status) {
+      case "open":
+        return "Open";
+      case "in_progress":
+        return "In Progress";
+      case "solved":
+        return "Solved";
+      case "closed":
+        return "Closed";
+      default:
+        return status;
     }
   };
 
@@ -319,10 +376,12 @@ export default function IssuesPage() {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            {language === "id" ? "Masalah" : "Issues"}
+            {language === "id" ? "Issue" : "Issues"}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
-            {canViewAll ? "Owner View: Seluruh Issue Kendala" : `${getDeptName(currentProfile.departmentId)} Division`}
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Identifikasi, diskusikan, dan tuntaskan kendala serta hambatan operasional (IDS) tim."
+              : "Identify, discuss, and solve operational roadblocks and cross-functional challenges."}
           </p>
         </div>
 
@@ -337,94 +396,77 @@ export default function IssuesPage() {
         </button>
       </div>
 
-      {/* Filter Row */}
-      <div className="bg-white dark:bg-zinc-900/90 p-3.5 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 min-w-0 max-w-full">
-        <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
-          <div className="flex items-center gap-2 mr-1">
-            <Filter className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
-            <span className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-              FILTER:
-            </span>
-          </div>
+      {/* Filter Row (Scoreboard Parity Design) */}
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* Division Filter Dropdown (First, matching Scoreboard) */}
+          {canViewAll && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
+              <CustomSelect
+                value={selectedDeptFilter}
+                onChange={(val) => setSelectedDeptFilter(val)}
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
+                options={[
+                  { value: "all", label: "Semua Divisi" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
+                ]}
+              />
+            </div>
+          )}
 
           {/* Status Filter Dropdown */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">STATUS:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Status :</span>
             <CustomSelect
               value={statusFilter}
               onChange={(val) => setStatusFilter(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "all", label: "SEMUA STATUS" },
-                { value: "open", label: "OPEN", icon: <span>🔴</span> },
-                { value: "in_progress", label: "IN PROGRESS", icon: <span>🟡</span> },
-                { value: "solved", label: "SOLVED", icon: <span>🟢</span> },
-                { value: "closed", label: "CLOSED", icon: <span>⚫</span> },
+                { value: "all", label: "Semua Status" },
+                { value: "open", label: "Terbuka (Open)" },
+                { value: "in_progress", label: "Dalam Proses" },
+                { value: "solved", label: "Tuntas (Solved)" },
+                { value: "closed", label: "Ditutup (Closed)" },
               ]}
             />
           </div>
 
-          {/* Division Filter Dropdown */}
-          {canViewAll && (
-            <>
-              <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">DIVISI:</span>
-                <CustomSelect
-                  value={selectedDeptFilter}
-                  onChange={(val) => setSelectedDeptFilter(val)}
-                  triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
-                  options={[
-                    { value: "all", label: "SEMUA DIVISI" },
-                    ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
-                  ]}
-                />
-              </div>
-            </>
-          )}
-
           {/* Priority Filter Dropdown */}
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">PRIORITAS:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Prioritas :</span>
             <CustomSelect
               value={priorityFilter}
               onChange={(val) => setPriorityFilter(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "all", label: "SEMUA PRIORITAS" },
-                { value: "low", label: "LOW", icon: <span>🟢</span> },
-                { value: "medium", label: "MEDIUM", icon: <span>🟡</span> },
-                { value: "high", label: "HIGH", icon: <span>🔴</span> },
-                { value: "critical", label: "CRITICAL", icon: <span>🚨</span> },
+                { value: "all", label: "Semua Prioritas" },
+                { value: "low", label: "Rendah (Low)" },
+                { value: "medium", label: "Sedang (Medium)" },
+                { value: "high", label: "Tinggi (High)" },
+                { value: "critical", label: "Kritis (Critical)" },
               ]}
             />
           </div>
 
-          {/* Sort Controls (URUTKAN + ASC/DESC Toggle) */}
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800 hidden sm:block" />
+          {/* Urutan Dropdown (Scoreboard Unified Format) */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">URUTKAN:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Urutan :</span>
             <CustomSelect
-              value={sortBy}
-              onChange={(val) => setSortBy(val)}
-              triggerClass="bg-slate-100 dark:bg-zinc-950/90 border-slate-200/80 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold uppercase"
+              value={sortOption}
+              onChange={handleSortChange}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
-                { value: "status", label: "⚡ STATUS" },
-                { value: "dept", label: "🏢 DIVISI" },
-                { value: "priority", label: "🔥 PRIORITAS" },
-                { value: "title", label: "📝 JUDUL" }
+                { value: "status_asc", label: "Status ↑" },
+                { value: "status_desc", label: "Status ↓" },
+                { value: "dept_asc", label: "Divisi ↑" },
+                { value: "dept_desc", label: "Divisi ↓" },
+                { value: "priority_asc", label: "Prioritas ↑" },
+                { value: "priority_desc", label: "Prioritas ↓" },
+                { value: "title_asc", label: "Judul Kendala ↑" },
+                { value: "title_desc", label: "Judul Kendala ↓" },
               ]}
             />
-            <button
-              type="button"
-              onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-              title={sortOrder === "asc" ? "Urutkan Ascending (A-Z / Low-High)" : "Urutkan Descending (Z-A / High-Low)"}
-              className="p-1.5 bg-slate-100 dark:bg-zinc-950/90 border border-slate-200/80 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
-            >
-              {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-red-500" />}
-              <span className="uppercase">{sortOrder}</span>
-            </button>
           </div>
         </div>
 
@@ -437,7 +479,7 @@ export default function IssuesPage() {
               setSelectedDeptFilter("all");
               setPriorityFilter("all");
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
           >
             Reset Filter
           </button>
@@ -445,7 +487,7 @@ export default function IssuesPage() {
       </div>
 
       {/* Issues Table Card (Desktop only) */}
-      <div className="hidden md:block bg-white border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -545,54 +587,23 @@ export default function IssuesPage() {
 
                     {/* Division */}
                     <td className="p-4 text-center">
-                      <span className="px-2.5 py-0.5 text-[9px] font-extrabold rounded-full uppercase badge-glass">
-                        {dept?.name}
+                      <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                        {dept?.name || "Global"}
                       </span>
                     </td>
 
                     {/* Priority */}
                     <td className="p-4 text-center">
-                      {isOwner ? (
-                        <CustomSelect
-                          value={issue.priority}
-                          onChange={(val) => updateIssuePriority(issue.id, val as Issue["priority"])}
-                          triggerClass={getPriorityStyles(issue.priority)}
-                          options={[
-                            { value: "low", label: "Low" },
-                            { value: "medium", label: "Medium" },
-                            { value: "high", label: "High" },
-                            { value: "critical", label: "Critical" },
-                          ]}
-                        />
-                      ) : (
-                        <span className={`px-2.5 py-0.5 text-[9px] font-extrabold uppercase rounded-full border ${getPriorityStyles(issue.priority)}`}>
-                          {issue.priority}
-                        </span>
-                      )}
+                      <span className={`text-xs font-bold capitalize ${getPriorityTextColor(issue.priority)}`}>
+                        {issue.priority}
+                      </span>
                     </td>
 
-                    {/* Status selection dropdown / badge */}
+                    {/* Status */}
                     <td className="p-4 text-center">
-                      {isOwner ? (
-                        <CustomSelect
-                          value={issue.status}
-                          onChange={(val) => updateIssueStatus(issue.id, val as Issue["status"])}
-                          triggerClass={getStatusStyles(issue.status)}
-                          options={[
-                            { value: "open", label: "Open", icon: <span>🔴</span> },
-                            { value: "in_progress", label: "In Progress", icon: <span>🟡</span> },
-                            { value: "solved", label: "Solved", icon: <span>🟢</span> },
-                            { value: "closed", label: "Closed", icon: <span>⚫</span> },
-                          ]}
-                        />
-                      ) : (
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border border-transparent shadow-sm inline-block ${getStatusStyles(issue.status)}`}>
-                          {issue.status === "open" && "🔴 Open"}
-                          {issue.status === "in_progress" && "🟡 In Progress"}
-                          {issue.status === "solved" && "🟢 Solved"}
-                          {issue.status === "closed" && "⚫ Closed"}
-                        </span>
-                      )}
+                      <span className={`text-xs font-bold ${getStatusTextColor(issue.status)}`}>
+                        {getStatusLabel(issue.status)}
+                      </span>
                     </td>
 
                     {/* PIC */}
@@ -607,37 +618,14 @@ export default function IssuesPage() {
 
                     {/* Aksi */}
                     <td className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => setConvertItem(issue)}
-                          title="Konversi Issue Ke Modul Lain"
-                          className="p-1.5 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditIssue(issue)}
-                          title="Edit Issue"
-                          className="p-1.5 bg-transparent hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl transition-all shadow-2xs"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            showConfirm({
-                              title: "Hapus Masalah / Issue",
-                              message: `Apakah Anda yakin ingin menghapus issue "${issue.title}" secara permanen?`,
-                              variant: "danger",
-                              confirmText: "Ya, Hapus",
-                              onConfirm: () => deleteIssue(issue.id)
-                            });
-                          }}
-                          title="Hapus Issue Permanent"
-                          className="p-1.5 bg-transparent hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl transition-all shadow-2xs"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDetailIssue(issue)}
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs hover:shadow-xs cursor-pointer border border-slate-200/80 dark:border-zinc-700"
+                        title="Lihat Detail Masalah / Issue"
+                      >
+                        Detail
+                      </button>
                     </td>
                   </tr>
                 );
@@ -661,7 +649,7 @@ export default function IssuesPage() {
           const dept = departments.find(d => d.id === issue.departmentId);
 
           return (
-            <div key={issue.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px] p-5 shadow-sm space-y-3.5">
+            <div key={issue.id} className="bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-xl p-5 shadow-sm space-y-3.5">
               {/* Card Header: Title & Priority */}
               <div className="flex justify-between items-start gap-3">
                 <div className="space-y-1 flex-grow">
@@ -735,22 +723,9 @@ export default function IssuesPage() {
                     );
                   })()}
                 </div>
-                {isOwner ? (
-                  <select
-                    value={issue.priority}
-                    onChange={(e) => updateIssuePriority(issue.id, e.target.value as Issue["priority"])}
-                    className={`px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-[9px] font-extrabold outline-none cursor-pointer transition-all flex-shrink-0 ${getPriorityStyles(issue.priority)}`}
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                ) : (
-                  <span className={`px-2 py-0.5 text-[8px] font-extrabold uppercase rounded-full border flex-shrink-0 ${getPriorityStyles(issue.priority)}`}>
-                    {issue.priority}
-                  </span>
-                )}
+                <span className={`text-xs font-bold capitalize flex-shrink-0 ${getPriorityTextColor(issue.priority)}`}>
+                  {issue.priority}
+                </span>
               </div>
 
               {/* Card Details: Department, PIC & CreatedAt */}
@@ -758,11 +733,9 @@ export default function IssuesPage() {
                 <div className="space-y-1">
                   <div>
                     <span className="font-semibold text-slate-400">Divisi: </span>
-                    {canViewAll && dept && (
-                      <span className="px-2 py-0.5 text-[8px] font-extrabold rounded-full uppercase badge-glass">
-                        {dept.name}
-                      </span>
-                    )}
+                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                      {dept?.name || "Global"}
+                    </span>
                   </div>
                   <div>
                     <span className="font-semibold text-slate-400">PIC: </span>
@@ -776,66 +749,27 @@ export default function IssuesPage() {
                 </div>
               </div>
 
-              {/* Status Selector Dropdown & Actions */}
-              <div className="flex justify-between items-center pt-1.5 gap-2">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setConvertItem(issue)}
-                    title="Konversi Issue Ke Modul Lain"
-                    className="p-1.5 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleOpenEditIssue(issue)}
-                    title="Edit Issue"
-                    className="p-1.5 bg-transparent hover:bg-amber-500/10 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl transition-all shadow-2xs"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      showConfirm({
-                        title: "Hapus Masalah / Issue",
-                        message: `Apakah Anda yakin ingin menghapus issue "${issue.title}" secara permanen?`,
-                        variant: "danger",
-                        confirmText: "Ya, Hapus",
-                        onConfirm: () => deleteIssue(issue.id)
-                      });
-                    }}
-                    title="Hapus Issue Permanent"
-                    className="p-1.5 bg-transparent hover:bg-rose-500/10 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/60 rounded-xl transition-all shadow-2xs"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {isOwner ? (
-                  <select
-                    value={issue.status}
-                    onChange={(e) => updateIssueStatus(issue.id, e.target.value as Issue["status"])}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold outline-none border border-transparent shadow-sm cursor-pointer ${getStatusStyles(issue.status)}`}
-                  >
-                    <option value="open">🔴 Open</option>
-                    <option value="in_progress">🟡 In Progress</option>
-                    <option value="solved">🟢 Solved</option>
-                    <option value="closed">⚫ Closed</option>
-                  </select>
-                ) : (
-                  <span className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border border-transparent shadow-sm ${getStatusStyles(issue.status)}`}>
-                    {issue.status === "open" && "🔴 Open"}
-                    {issue.status === "in_progress" && "🟡 In Progress"}
-                    {issue.status === "solved" && "🟢 Solved"}
-                    {issue.status === "closed" && "⚫ Closed"}
+              {/* Status & Detail Action Button */}
+              <div className="flex justify-between items-center pt-2 gap-2">
+                <div>
+                  <span className={`text-xs font-bold ${getStatusTextColor(issue.status)}`}>
+                    {getStatusLabel(issue.status)}
                   </span>
-                )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDetailIssue(issue)}
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-lg text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs hover:shadow-xs cursor-pointer border border-slate-200/80 dark:border-zinc-700"
+                >
+                  Detail
+                </button>
               </div>
             </div>
           );
         })}
 
         {displayedIssues.length === 0 && (
-          <div className="p-8 text-center text-xs text-slate-400 font-medium bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-[20px]">
+          <div className="p-8 text-center text-xs text-slate-400 font-medium bg-white dark:bg-zinc-950 border border-slate-100 dark:border-zinc-850 rounded-xl">
             Tidak ada issue/kendala yang ditemukan.
           </div>
         )}
@@ -1211,6 +1145,28 @@ export default function IssuesPage() {
         onClose={() => setConvertItem(null)}
         sourceType="issue"
         sourceItem={convertItem}
+      />
+
+      {/* Issue Detail Modal */}
+      <IssueDetailModal
+        isOpen={!!detailIssue}
+        onClose={() => setDetailIssue(null)}
+        issue={detailIssue}
+        departments={departments}
+        onConvert={(issue) => setConvertItem(issue)}
+        onEdit={(issue) => handleOpenEditIssue(issue)}
+        onDelete={(issue) => {
+          showConfirm({
+            title: "Hapus Masalah / Issue",
+            message: `Apakah Anda yakin ingin menghapus issue "${issue.title}" secara permanen?`,
+            variant: "danger",
+            confirmText: "Ya, Hapus",
+            onConfirm: () => deleteIssue(issue.id)
+          });
+        }}
+        formatCardDate={formatCardDate}
+        downloadAttachment={downloadAttachment}
+        setLightboxImage={setLightboxImage}
       />
     </div>
   );

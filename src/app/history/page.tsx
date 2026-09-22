@@ -93,13 +93,15 @@ export default function HistoryPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 dark:border-zinc-800 pb-5">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            {language === "id" ? "Audit Log Aktivitas" : "Activity Audit Log"}
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {language === "id" ? "Histori" : "Audit Log"}
           </h2>
-          <p className="text-slate-500 font-medium mt-1">
-            {canViewAll ? "Owner View: Seluruh History Sistem" : `History Divisi: ${getDeptName(currentProfile.departmentId)}`}
+          <p className="text-slate-500 dark:text-zinc-400 font-medium text-sm mt-1">
+            {language === "id"
+              ? "Rekam jejak kronologis setiap aksi, perubahan data, dan aktivitas pengguna di seluruh sistem."
+              : "Chronological audit trail of system activities, data changes, and operational events."}
           </p>
         </div>
       </div>
@@ -175,7 +177,7 @@ export default function HistoryPage() {
                   <div className="w-1.5 h-1.5 rounded-full bg-[#108c8c]" />
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-50/50 p-4 border border-slate-100 rounded-[20px]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-50/50 p-4 border border-slate-100 rounded-xl">
                   <div className="space-y-1.5">
                     {/* User and Action */}
                     <div className="flex flex-wrap items-center gap-2">
