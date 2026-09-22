@@ -14,10 +14,25 @@ import {
   X,
   ArrowLeft,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Building2,
+  User,
+  Hash,
+  Percent,
+  Coins,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  BarChart2,
+  Zap,
+  Trophy,
+  Sparkles,
+  AlertTriangle,
+  Bell
 } from "lucide-react";
 import { AttachmentInfo } from "@/types";
 import FormDatePicker from "@/components/FormDatePicker";
+import FormSelect from "@/components/FormSelect";
 
 export type ConvertSourceType = "metric" | "todo" | "issue" | "headline";
 export type ConvertTargetType = "metric" | "todo" | "issue" | "headline";
@@ -431,54 +446,67 @@ export default function ConvertTargetForm({
             <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
               Divisi Terkait <span className="text-rose-500">*</span>
             </label>
-            <select
+            <FormSelect
+              size="sm"
               value={deptId}
-              onChange={(e) => handleDeptChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white cursor-pointer"
-            >
-              <option value="global">Semua Divisi (Global)</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>{d.name} Division</option>
-              ))}
-            </select>
+              onChange={handleDeptChange}
+              options={[
+                {
+                  value: "global",
+                  label: "Semua Divisi (Global)",
+                  icon: <Building2 className="w-3.5 h-3.5 text-slate-500" />,
+                  sublabel: "Akses terbuka lintas divisi"
+                },
+                ...departments.map((d) => ({
+                  value: d.id,
+                  label: `${d.name} Division`,
+                  icon: <Building2 className="w-3.5 h-3.5 text-blue-500" />,
+                  sublabel: `Divisi ${d.name}`
+                }))
+              ]}
+            />
           </div>
 
           <div>
             <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
               PIC (Person In Charge) <span className="text-rose-500">*</span>
             </label>
-            <select
+            <FormSelect
+              size="sm"
               value={selectedPicId}
-              onChange={(e) => {
-                const found = allProfiles.find(p => p.id === e.target.value);
+              onChange={(val) => {
+                const found = allProfiles.find(p => p.id === val);
                 if (found) {
                   setSelectedPicId(found.id);
                   setSelectedPicName(found.name);
                 }
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white cursor-pointer"
-            >
-              {deptPics.length > 0 ? (
-                <>
-                  <optgroup label="PIC Divisi Terkait">
-                    {deptPics.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
-                    ))}
-                  </optgroup>
-                  {otherPics.length > 0 && (
-                    <optgroup label="PIC Lainnya">
-                      {otherPics.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </>
-              ) : (
-                allProfiles.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
-                ))
-              )}
-            </select>
+              options={
+                deptPics.length > 0
+                  ? [
+                      ...deptPics.map(p => ({
+                        value: p.id,
+                        label: p.name,
+                        badge: p.role,
+                        group: "PIC Divisi Terkait",
+                        icon: <User className="w-3.5 h-3.5 text-blue-500" />
+                      })),
+                      ...otherPics.map(p => ({
+                        value: p.id,
+                        label: p.name,
+                        badge: p.role,
+                        group: "PIC Lainnya",
+                        icon: <User className="w-3.5 h-3.5 text-slate-400" />
+                      }))
+                    ]
+                  : allProfiles.map(p => ({
+                      value: p.id,
+                      label: p.name,
+                      badge: p.role,
+                      icon: <User className="w-3.5 h-3.5 text-slate-500" />
+                    }))
+              }
+            />
           </div>
         </div>
 
@@ -507,53 +535,57 @@ export default function ConvertTargetForm({
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-1">Satuan</label>
-                <select
+                <FormSelect
+                  size="sm"
                   value={metricUnit}
-                  onChange={(e) => setMetricUnit(e.target.value as any)}
-                  className="w-full px-2 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs"
-                >
-                  <option value="number">Angka (Qty)</option>
-                  <option value="percentage">Persen (%)</option>
-                  <option value="currency">Rupiah (Rp)</option>
-                </select>
+                  onChange={(val) => setMetricUnit(val as any)}
+                  options={[
+                    { value: "number", label: "Angka (Qty)", icon: <Hash className="w-3.5 h-3.5 text-slate-500" /> },
+                    { value: "percentage", label: "Persen (%)", icon: <Percent className="w-3.5 h-3.5 text-emerald-500" /> },
+                    { value: "currency", label: "Rupiah (Rp)", icon: <Coins className="w-3.5 h-3.5 text-amber-500" /> }
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-1">Arah Target</label>
-                <select
+                <FormSelect
+                  size="sm"
                   value={metricTargetType}
-                  onChange={(e) => setMetricTargetType(e.target.value as any)}
-                  className="w-full px-2 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs"
-                >
-                  <option value="higher_better">&ge; Lebih Tinggi</option>
-                  <option value="lower_better">&le; Lebih Rendah</option>
-                </select>
+                  onChange={(val) => setMetricTargetType(val as any)}
+                  options={[
+                    { value: "higher_better", label: "≥ Lebih Tinggi", icon: <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> },
+                    { value: "lower_better", label: "≤ Lebih Rendah", icon: <TrendingDown className="w-3.5 h-3.5 text-rose-500" /> }
+                  ]}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-1">Metode Akumulasi</label>
-                <select
+                <FormSelect
+                  size="sm"
                   value={metricAccumulationMode}
-                  onChange={(e) => setMetricAccumulationMode(e.target.value as any)}
-                  className="w-full px-2 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs"
-                >
-                  <option value="sum">Penjumlahan (SUM)</option>
-                  <option value="average">Rata-Rata (AVG)</option>
-                </select>
+                  onChange={(val) => setMetricAccumulationMode(val as any)}
+                  options={[
+                    { value: "sum", label: "Penjumlahan (SUM)", icon: <Plus className="w-3.5 h-3.5 text-blue-500" /> },
+                    { value: "average", label: "Rata-Rata (AVG)", icon: <BarChart2 className="w-3.5 h-3.5 text-amber-500" /> }
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-1">Siklus</label>
-                <select
+                <FormSelect
+                  size="sm"
                   value={metricCycle}
-                  onChange={(e) => setMetricCycle(e.target.value as any)}
-                  className="w-full px-2 py-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs"
-                >
-                  <option value="monthly">Bulanan (4 Minggu)</option>
-                  <option value="special">Khusus / Ad-Hoc</option>
-                </select>
+                  onChange={(val) => setMetricCycle(val as any)}
+                  options={[
+                    { value: "monthly", label: "Bulanan (4 Minggu)", icon: <Calendar className="w-3.5 h-3.5 text-blue-500" /> },
+                    { value: "special", label: "Khusus / Ad-Hoc", icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> }
+                  ]}
+                />
               </div>
             </div>
 
@@ -615,17 +647,43 @@ export default function ConvertTargetForm({
             <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
               Kategori Berita <span className="text-rose-500">*</span>
             </label>
-            <select
+            <FormSelect
+              size="sm"
               value={headlineCategory}
-              onChange={(e) => setHeadlineCategory(e.target.value as any)}
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none text-slate-900 dark:text-white cursor-pointer"
-            >
-              <option value="announcement">Pengumuman (Announcement)</option>
-              <option value="achievement">Pencapaian (Achievement)</option>
-              <option value="good_news">Kabar Baik (Good News)</option>
-              <option value="bad_news">Kendala / Kabar Buruk (Bad News)</option>
-              <option value="reminder">Pengingat (Reminder)</option>
-            </select>
+              onChange={(val) => setHeadlineCategory(val as any)}
+              options={[
+                {
+                  value: "announcement",
+                  label: "Pengumuman",
+                  sublabel: "Informasi resmi tim",
+                  icon: <Megaphone className="w-3.5 h-3.5 text-blue-500" />
+                },
+                {
+                  value: "achievement",
+                  label: "Pencapaian",
+                  sublabel: "Prestasi target tim",
+                  icon: <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                },
+                {
+                  value: "good_news",
+                  label: "Kabar Baik",
+                  sublabel: "Kabar gembira / progres positif",
+                  icon: <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                },
+                {
+                  value: "bad_news",
+                  label: "Kendala / Masalah",
+                  sublabel: "Hambatan operasional",
+                  icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                },
+                {
+                  value: "reminder",
+                  label: "Pengingat",
+                  sublabel: "Tenggat waktu & atensi",
+                  icon: <Bell className="w-3.5 h-3.5 text-indigo-500" />
+                }
+              ]}
+            />
           </div>
         )}
 
