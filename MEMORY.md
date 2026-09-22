@@ -55,6 +55,22 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-22] - Unified Split-Card Animated Convert Modal (Before -> After Interactive Canvas)
+* **Pembaruan Sistem Konversi Antar Modul (`src/components/UniversalConvertModal.tsx`)**:
+  * **Kanvas Split-Card Terpadu (Before &rarr; After)**: Mengubah modal konversi menjadi satu kanvas lebar (`max-w-5xl rounded-2xl`) yang memuat data sumber asal di sisi kiri dan formulir modul baru di sisi kanan secara berdampingan.
+  * **Panel Kiri (Data Sumber Asal / Read-Only Reference)**:
+    - Menampilkan informasi lengkap item asal: Judul asli, Divisi, PIC, Prioritas/Kategori, Deskripsi/Konten lengkap, serta Lampiran file/link pendukung.
+    - Menjamin pengguna tidak kehilangan konteks (*context amnesia*) saat mengisi formulir target baru.
+  * **Konektor Panah Mengalir (Floating Animated Bridge)**:
+    - Di layar desktop ($\ge$ 1024px), lingkaran aksen panah `ArrowRight` terapung di tengah sebagai penunjuk alur Before $\rightarrow$ After.
+    - Di layar mobile (< 1024px), bertransformasi menjadi pembatas horizontal dengan ikon `ArrowDown`.
+  * **Panel Kanan (Formulir Modul Target Aktif)**:
+    - Menggantikan raw emoji pilihan target dengan outline Lucide line icons (`Target`, `ClipboardList`, `AlertOctagon`, `Megaphone`).
+    - Formulir otomatis terisi (*pre-filled*) dari data sumber dan dapat disesuaikan.
+  * **Universal Cross-Module Deployment**:
+    - Langsung aktif secara serentak di 4 modul utama: **Scoreboard KPI**, **Agenda Todo**, **Masalah Issue**, dan **Berita Headline** tanpa duplikasi kode.
+  * **Rollback Ready**: Checkpoint git commit diamankan di commit hash `ded3297`.
+
 ### [2026-09-22] - Rocks Module Revamp (Automatic Dynamic Health Status, Executive Clean UI & Leader Verification)
 * **Pembaruan Menyeluruh Modul Rocks (`src/app/rocks/page.tsx`, `src/types/index.ts`, `src/context/AppContext.tsx`)**:
   * **Eliminasi Dropdown Manual Status pada Setiap Kartu**: Menghilangkan elemen `<select>` manual status pada header setiap kartu Rock yang sebelumnya membingungkan dan rawan kontradiksi dengan data riil Scoreboard.
