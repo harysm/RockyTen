@@ -8,10 +8,13 @@ import {
   AlertOctagon,
   Megaphone,
   Paperclip,
-  Sparkles,
+  RefreshCw,
   Loader2,
   Calendar,
-  X
+  X,
+  ArrowLeft,
+  ArrowRight,
+  ChevronRight
 } from "lucide-react";
 import { AttachmentInfo } from "@/types";
 import FormDatePicker from "@/components/FormDatePicker";
@@ -41,6 +44,7 @@ export interface ConvertTargetFormProps {
   sourceItem: UniversalConvertItem;
   onCancel: () => void;
   onSuccess: () => void;
+  onBack?: () => void;
   titleSuffix?: string;
 }
 
@@ -69,7 +73,8 @@ export default function ConvertTargetForm({
   sourceType,
   sourceItem,
   onCancel,
-  onSuccess
+  onSuccess,
+  onBack
 }: ConvertTargetFormProps) {
   const {
     currentProfile,
@@ -306,28 +311,41 @@ export default function ConvertTargetForm({
   const deptPics = isSpecificDept ? allProfiles.filter(p => p.departmentId === deptId) : [];
   const otherPics = isSpecificDept ? allProfiles.filter(p => p.departmentId !== deptId) : allProfiles;
 
+  const sourceDept = departments.find(d => d.id === sourceItem.departmentId);
+  const sourceDeptName = sourceItem.departmentId === "global" ? "Semua Divisi (Global)" : (sourceDept ? `${sourceDept.name} Division` : "");
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-zinc-900">
-      {/* Header Form */}
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40 flex items-center justify-between shrink-0">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <Sparkles className="w-3.5 h-3.5" />
+      {/* Header Form with Breadcrumb & Back button */}
+      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2.5">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-200/70 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Kembali ke Detail"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Kembali</span>
+            </button>
+          )}
+
+          {/* Breadcrumb Indicator */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="font-semibold text-slate-500 dark:text-zinc-400">Detail</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600" />
+            <span className="font-bold text-blue-600 dark:text-blue-400">
+              Konversi Modul
             </span>
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-              Formulir Modul Tujuan
-            </h4>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-            Pilih modul baru dan sesuaikan parameter data
-          </p>
         </div>
+
         <button
           type="button"
           onClick={onCancel}
           className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-all text-xs font-bold cursor-pointer"
-          title="Tutup Konversi"
+          title="Tutup Modal"
         >
           <X className="w-4 h-4" />
         </button>
@@ -335,6 +353,21 @@ export default function ConvertTargetForm({
 
       {/* Form Content (Scrollable) */}
       <form onSubmit={handleConvert} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+        {/* Source Context Mini-Card */}
+        <div className="px-4 py-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl border border-blue-200/70 dark:border-blue-900/50">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+            <span>Mengonversi dari: {getSourceTypeName(sourceType)}</span>
+            {sourceDeptName && (
+              <>
+                <span>•</span>
+                <span className="truncate">{sourceDeptName}</span>
+              </>
+            )}
+          </div>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate mt-1">
+            {sourceItem.title}
+          </h4>
+        </div>
         {/* Target Module Selector */}
         <div>
           <label className="block text-[10px] font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
@@ -662,7 +695,7 @@ export default function ConvertTargetForm({
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={onBack || onCancel}
             className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             Batal
@@ -679,7 +712,7 @@ export default function ConvertTargetForm({
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 <span>Konfirmasi Konversi</span>
               </>
             )}
