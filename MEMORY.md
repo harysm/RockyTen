@@ -56,6 +56,11 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-09-22] - Convert Form Bottom Void Elimination (Resetting pb-40 to Standard p-5)
+* **Eliminasi Kelebihan Void Kosong Bawah pada Form Konversi (`src/components/convert/ConvertTargetForm.tsx`)**:
+  * **Akar Masalah (Root Cause)**: Penambahan kelas utilitas `pb-40` (padding-bottom 160px) pada kontainer form scrollable meninggalkan celah putih raksasa yang tampak janggal (*excess void*) antara kartu konten form terbawah (seperti kartu Pengaturan Target Metrik) dan baris dock tombol aksi di footer (*Batal & Konfirmasi Konversi*).
+  * **Solusi & Optimasi**: Menghapus `pb-40` dan mengembalikan kontainer ke padding standar `p-5 space-y-4`. Seluruh section form kini duduk rapat, presisi, dan proporsional tepat di atas garis border dock footer tanpa void kosong berlebih. Dropdown tetap bekerja dengan lancar dan otomatis terlihat berkat auto-scroll mikro.
+
 ### [2026-09-22] - Convert Card High-Performance Optimization (Zero UI & Animation Degradation)
 * **Optimalisasi Kinerja & Akselerasi GPU Kartu Konversi (`src/components/convert/ConvertTargetForm.tsx`, `src/components/issues/IssueDetailModal.tsx`, `src/components/scoreboard/ScoreboardDetailModal.tsx`, `src/components/UniversalConvertModal.tsx`)**:
   * **Komitmen Desain 100% Utuh**: Mempertahankan seluruh estetika UI, efek *backdrop-blur*, bayangan (*shadow-2xl*), layout bertingkat, serta animasi geser horizontal kartu (*slide-in-from-right-6*).
