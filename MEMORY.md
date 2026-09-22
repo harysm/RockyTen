@@ -55,6 +55,18 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-22] - Custom Rich FormSelect Upgrade in Convert Form (Native Dropdowns Elimination)
+* **Modernisasi Seluruh Dropdown Form Konversi (`src/components/FormSelect.tsx`, `src/components/convert/ConvertTargetForm.tsx`)**:
+  * **Eliminasi 100% Elemen `<select>` Native Browser**: Menggantikan seluruh dropdown bawaan browser (Chromium native `<select>`) yang kaku dan tidak konsisten dengan komponen kustom `FormSelect` modern.
+  * **Peningkatan Komponen `FormSelect`**:
+    - Menambahkan varian ukuran `size="sm"` (`px-3 py-2 text-xs font-semibold rounded-xl`) yang cocok presisi untuk form input compact.
+    - Menambahkan dukungan `group` (header kategori optgroup yang elegan) untuk memisahkan daftar opsi secara visual tanpa garis pemisah kasar.
+  * **Penerapan Dropdown di `ConvertTargetForm.tsx`**:
+    - **Divisi Terkait**: Dilengkapi icon gedung (`Building2`), label divisi, dan sublabel peran.
+    - **PIC (Person In Charge)**: Menampilkan icon profil (`User`), role badge (`pic`, `owner`, `developer`), serta pengelompokan grup rapi (*PIC Divisi Terkait* dan *PIC Lainnya*).
+    - **Kategori Berita (Headlines)**: Menggunakan outline line icon Lucide tajam (`Megaphone`, `Trophy`, `Sparkles`, `AlertTriangle`, `Bell`) lengkap dengan sublabel deskriptif fungsi berita.
+    - **Pengaturan Metrik**: Menyelaraskan dropdown Satuan (`Hash`, `Percent`, `Coins`), Arah Target (`TrendingUp`, `TrendingDown`), Metode Akumulasi (`Plus`, `BarChart2`), dan Siklus (`Calendar`, `Zap`).
+
 ### [2026-09-22] - Compact Todo Priority Selector & In-Place Convert Refinement
 * **Penyederhanaan & Pemadatan Selector Prioritas Todo (`src/components/convert/ConvertTargetForm.tsx`, `src/app/todos/page.tsx`)**:
   * **Dynamic Grid Selector di Modal Convert**: Mengubah grid pemilih prioritas dari `grid-cols-4` statis menjadi dinamis: `${targetType === "issue" ? "grid-cols-4" : "grid-cols-3"} gap-1.5`. Menghilangkan slot kosong kolom ke-4 saat target konversi adalah Agenda Todo, sehingga 3 tombol prioritas (*Low*, *Medium*, *High*) mengisi baris secara proporsional dan padat (*dense*).
