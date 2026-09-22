@@ -34,9 +34,39 @@ export default function FormSelect({
   size = "default",
 }: FormSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
+  const [maxDropdownHeight, setMaxDropdownHeight] = useState(240);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+
+  const updatePosition = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const windowSpaceBelow = window.innerHeight - rect.bottom - 16;
+      const windowSpaceAbove = rect.top - 16;
+
+      const scrollParent = containerRef.current.closest(".overflow-y-auto");
+      let parentSpaceBelow = windowSpaceBelow;
+      let parentSpaceAbove = windowSpaceAbove;
+
+      if (scrollParent) {
+        const parentRect = scrollParent.getBoundingClientRect();
+        parentSpaceBelow = parentRect.bottom - rect.bottom - 12;
+        parentSpaceAbove = rect.top - parentRect.top - 12;
+      }
+
+      const spaceBelow = Math.min(windowSpaceBelow, parentSpaceBelow);
+      const spaceAbove = Math.min(windowSpaceAbove, parentSpaceAbove);
+
+      // Flip upward if space below is limited (< 210px) and space above is larger
+      const shouldOpenUpward = spaceBelow < 210 && spaceAbove > spaceBelow;
+      setOpenUpward(shouldOpenUpward);
+
+      const availableSpace = shouldOpenUpward ? spaceAbove : spaceBelow;
+      setMaxDropdownHeight(Math.min(240, Math.max(130, Math.floor(availableSpace))));
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,14 +81,23 @@ export default function FormSelect({
     };
 
     if (isOpen) {
+      updatePosition();
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleKeyDown);
-    }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
+      const handleScrollOrResize = () => {
+        updatePosition();
+      };
+      window.addEventListener("resize", handleScrollOrResize);
+      window.addEventListener("scroll", handleScrollOrResize, true);
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("resize", handleScrollOrResize);
+        window.removeEventListener("scroll", handleScrollOrResize, true);
+      };
+    }
   }, [isOpen]);
 
   const isSmall = size === "sm";
@@ -82,7 +121,10 @@ export default function FormSelect({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen) updatePosition();
+          setIsOpen(!isOpen);
+        }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={`w-full ${
@@ -126,11 +168,16 @@ export default function FormSelect({
         />
       </button>
 
-      {/* Floating Options Dropdown */}
+      {/* Floating Options Dropdown (Auto-Flip Upward or Downward) */}
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 shadow-xl shadow-slate-900/10 dark:shadow-black/40 animate-in fade-in-0 slide-in-from-top-1 duration-100 overscroll-contain"
+          style={{ maxHeight: `${maxDropdownHeight}px` }}
+          className={`absolute left-0 right-0 z-[60] overflow-y-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 shadow-xl shadow-slate-900/10 dark:shadow-black/40 overscroll-contain ${
+            openUpward
+              ? "bottom-full mb-1.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-100"
+              : "top-full mt-1.5 animate-in fade-in-0 slide-in-from-top-1 duration-100"
+          }`}
         >
           <div className="space-y-0.5">
             {options.map((opt, idx) => {
