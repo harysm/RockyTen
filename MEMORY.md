@@ -55,6 +55,54 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-24] - High-Contrast Dynamic Animated Aurora Blur Mesh at /help Header
+* **Peningkatan Kontras Warna & Animasi Latar Bergerak Hero Card Dokumentasi (`src/app/help/page.tsx`, `src/app/globals.css`)**:
+  * **Permintaan User**: Mengatasi tampilan latar belakang blur header yang sebelumnya flat/pudar agar warnanya jauh lebih berkontras, hidup, dan bergerak secara dinamis sehingga memukau pengguna.
+  * **Dynamic High-Contrast Aurora Mesh**:
+    - Menambahkan 3 node orb glowing blur berkontras tinggi dengan radius `blur-[75px]` s/d `blur-[85px]`:
+      1. *Orb Top-Right*: Gradien elektrik royal blue, indigo, dan cyan melayang di balik buku 3D.
+      2. *Orb Bottom-Left*: Gradien hangat sunset amber, ruby rose, dan oranye menyala di balik judul dan subjudul.
+      3. *Orb Center-Drift*: Gradien ungu violet, fuchsia, dan biru menghubungkan kedua sisi.
+  * **Animasi Melayang Mulus & Asinkron GPU-Accelerated (`@keyframes aurora-drift-1/2/3`)**:
+    - Tiga siklus orbit independen (12s, 16s, 20s) dengan translasi kurva multidimensi, perbesaran skala mikro, dan modulasi opasitas. Gerakan terasa mengalir alami seperti liquid aurora dan tidak pernah mengulang secara kaku/flat.
+  * **Finishing Frosted Glassmorphism**:
+    - Kontainer header menggunakan `backdrop-blur-2xl bg-white/70 dark:bg-zinc-900/50` dengan garis kilau tepi atas `h-[1.5px] bg-gradient-to-r` dan bayangan lembut `shadow-xl shadow-blue-500/5 dark:shadow-black/50`.
+    - Input pencarian dan tombol filter diselaraskan dengan sentuhan frosted glass berkontras tinggi (`bg-white/90 dark:bg-zinc-950/90 shadow-xs`) untuk menjamin keterbacaan sempurna.
+
+### [2026-09-24] - Documentation Dynamic Content Filtering, Scrollspy & Persistent Right Arrow
+* **Penyelarasan Dinamis Konten, Scrollspy, & Navigasi Daftar Isi di `/help` (`src/app/help/page.tsx`)**:
+  * **Permintaan User**:
+    1. Filter kategori dan pencarian tidak hanya memfilter sidebar TOC melainkan juga menyaring isi artikel modul di kanvas utama (`<main>`) agar fungsi filter terasa nyata dan berguna.
+    2. Navigasi Daftar Isi otomatis aktif menyorot item sesuai modul yang sedang dilihat saat halaman di-scroll (Scrollspy).
+    3. Ikon chevron panah biru pada item aktif di navigasi Daftar Isi tidak boleh berputar mengarah ke bawah, melainkan harus tetap konsisten mengarah ke kanan (`>`).
+  * **Dynamic Content Filtering pada Kanvas Utama**:
+    - Seluruh 9 modul dokumentasi (`overview`, `scoreboard`, `rocks`, `issues`, `todos-headlines`, `conversion`, `accounts`, `architecture`, `shortcuts`) kini dikondisikan dengan `{visibleSectionIds.has(...) && ( ... )}` yang sinkron secara real-time terhadap `filteredSections` (kategori filter & query pencarian).
+    - Menambahkan *Empty State* elegan di kanvas utama jika pencarian/filter tidak menemukan modul yang cocok, lengkap dengan tombol `Reset Filter & Pencarian`.
+  * **Scrollspy Auto-Active Navigation**:
+    - Mengimplementasikan listener scroll dengan threshold offset `window.scrollY + 140` yang secara otomatis mendeteksi modul mana yang sedang melintas di bawah TopBar (tinggi 64px) dan menyetel `activeSectionId` tanpa lonjakan state (*smooth and debounced*).
+    - Memastikan sinkronisasi otomatis: saat filter berganti, `activeSectionId` otomatis direset ke modul pertama yang masih tampil.
+  * **Chevron Panah TOC Konsisten Mengarah ke Kanan**:
+    - Menghilangkan rotasi `rotate-90` pada `ChevronRight` di sidebar TOC; panah kini selalu menghadap ke kanan (`>`), bertindak sebagai penunjuk link navigasi yang tajam dan rapi dengan warna biru menyala saat aktif.
+
+### [2026-09-24] - 3D Floating Documentation Book & V.3.7 Hub Badge at /help
+* **Pembaruan Visual Hero Banner Halaman Dokumentasi (`src/app/help/page.tsx`, `src/components/help/Documentation3DBook.tsx`, `src/app/globals.css`)**:
+  * **Permintaan User**: Mengganti kartu Status Sistem kotak yang kaku di kanan hero banner dengan ilustrasi ikon 3D buku dokumentasi melayang (*floating*), serta memperbarui badge atas menjadi `(icon buku) RockyTen Knowledge HUB • V.3.7`.
+  * **Pembaruan Badge Header**:
+    - Mengganti ikon `Sparkles` menjadi `BookOpen`.
+    - Format teks: `ROCKYTEN KNOWLEDGE HUB • V.3.7` (uppercase kapital penuh).
+  * **Upgrade 3D Book Menjadi High-Fidelity Render Tanpa Card (`Documentation3DBook.tsx`, `/public/docs_3d_book_transparent.png`)**:
+    - **Eliminasi Box Card**: Menghilangkan kotak kartu putih/border kaku di sekeliling buku; buku 3D kini melayang bebas (*free-floating*) di atas kanvas hero banner.
+    - **Visual Render 3D Fotorealistik**: Aset 3D render beresolusi tinggi buku panduan tebal bertekstur kulit royal blue mewah, emboss emas *"TRACTION EOS DOCUMENTATION & KNOWLEDGE MANUAL"*, lembaran halaman terbuka berlapis, pita pembatas satin merah, dan ambient lighting halo di belakangnya.
+    - **Latar Belakang Transparan & Efek Melayang**: Format PNG transparan beradaptasi sempurna di Light dan Dark mode, tetap mempertahankan animasi melayang halus 4s GPU-accelerated.
+  * **Perbaikan Clipping Tombol Filter Kategori Saat Hover (`src/app/help/page.tsx`)**:
+    - **Akar Masalah**: Kontainer pembungkus tombol filter kategori sebelumnya memiliki `overflow-x-auto` dengan `pb-0` di desktop dan tanpa padding atas (`pt-0`), menyebabkan batas atas/bawah tombol terpotong rata 1px saat di-hover dan background berubah warna.
+    - **Solusi**: Menambahkan ruang aman internal `py-2 px-1.5 -my-2 -mx-1.5` dengan `shrink-0` dan `md:flex-row`. Tombol kini memiliki ruang bebas 8px vertikal sehingga sudut rounded dan bayangan bebas dari efek terpotong saat di-hover.
+  * **Perbaikan Penjajaran Ikon Pencarian (`src/app/help/page.tsx`)**:
+    - **Akar Masalah**: Ikon `Search` sebelumnya diposisikan menggunakan nilai hardcoded `top-3` (12px), sehingga offset vertikalnya terlalu ke bawah dan tidak sejajar (*off-center*) terhadap tinggi input form.
+    - **Solusi**: Mengganti positioning menjadi `top-1/2 -translate-y-1/2 pointer-events-none` (begitu juga tombol Reset), memastikan ikon dan teks pencarian selalu 100% presisi berada di titik tengah vertikal.
+  * **Perbaikan Sticky Sidebar & Header Submerged Saat Scroll Kebawah (`src/app/help/page.tsx`)**:
+    - **Akar Masalah**: Sidebar sticky Table of Contents sebelumnya diset `top-4` (16px), sedangkan TopBar memiliki tinggi 64px (`h-16`). Akibatnya, saat halaman di-scroll ke bawah, bagian atas sidebar (48px) tenggelam tertutup di balik TopBar. Begitu juga dengan loncatan section artikel yang sebelumnya memakai `scroll-mt-6` (24px) sehingga judul artikel tertutup TopBar.
+    - **Solusi**: Mengubah offset sticky sidebar menjadi `top-20 z-20` (80px), memberikan jarak aman 16px di bawah TopBar saat scroll, dan memperbarui seluruh 9 section artikel menjadi `scroll-mt-24` (96px) agar judul artikel selalu terlihat utuh dan tidak tenggelam.
 
 ### [2026-09-22] - Full-Page Documentation Hub Portal at /help (Dedicated Docs Experience)
 * **Transformasi Fitur Bantuan & Sistem dari Modal Pop-up Menjadi Halaman Dokumentasi Penuh 1 Layar (`src/app/help/page.tsx`, `src/components/Sidebar.tsx`)**:

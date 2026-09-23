@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
 import {
@@ -41,6 +41,7 @@ import {
   X,
   Compass
 } from "lucide-react";
+import { Documentation3DBook } from "@/components/help/Documentation3DBook";
 
 interface DocSection {
   id: string;
@@ -162,6 +163,43 @@ export default function HelpSystemDocsPage() {
     });
   }, [sections, activeCategory, searchQuery, isId]);
 
+  const visibleSectionIds = useMemo(
+    () => new Set(filteredSections.map((sec) => sec.id)),
+    [filteredSections]
+  );
+
+  // Scrollspy: automatically highlight TOC item based on visible section during scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const sectionElements = Array.from(document.querySelectorAll("section[id]")) as HTMLElement[];
+      if (sectionElements.length === 0) return;
+
+      const scrollPosition = window.scrollY + 140;
+
+      for (let i = sectionElements.length - 1; i >= 0; i--) {
+        const section = sectionElements[i];
+        if (section.offsetTop <= scrollPosition) {
+          setActiveSectionId(section.id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [filteredSections]);
+
+  // Sync activeSectionId if current active section is filtered out
+  useEffect(() => {
+    if (filteredSections.length > 0 && !filteredSections.some((s) => s.id === activeSectionId)) {
+      setActiveSectionId(filteredSections[0].id);
+    }
+  }, [filteredSections, activeSectionId]);
+
   const scrollToSection = (id: string) => {
     setActiveSectionId(id);
     const element = document.getElementById(id);
@@ -173,17 +211,23 @@ export default function HelpSystemDocsPage() {
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
       {/* Top Banner / Docs Hero */}
-      <div className="rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 dark:from-zinc-900 dark:via-zinc-900/90 dark:to-blue-950/20 p-6 sm:p-8 shadow-sm relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-8 w-72 h-72 bg-blue-500/10 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute left-1/3 bottom-0 translate-y-12 w-64 h-64 bg-amber-500/10 dark:bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white/70 dark:bg-zinc-900/50 backdrop-blur-2xl p-6 sm:p-8 shadow-xl shadow-blue-500/5 dark:shadow-black/50 relative overflow-hidden transition-all">
+        {/* Dynamic High-Contrast Aurora Mesh (Moving Blobs) */}
+        <div className="absolute -right-16 -top-20 w-[420px] h-[420px] bg-gradient-to-br from-blue-600/40 via-indigo-500/35 to-cyan-400/30 dark:from-blue-500/45 dark:via-indigo-500/40 dark:to-cyan-400/35 rounded-full blur-[80px] pointer-events-none animate-aurora-1" />
+        <div className="absolute -left-16 -bottom-16 w-[380px] h-[380px] bg-gradient-to-tr from-amber-500/35 via-rose-500/30 to-orange-400/30 dark:from-amber-500/35 dark:via-rose-600/30 dark:to-orange-500/30 rounded-full blur-[75px] pointer-events-none animate-aurora-2" />
+        <div className="absolute left-1/3 top-1/4 w-[340px] h-[340px] bg-gradient-to-r from-purple-500/30 via-violet-500/25 to-blue-500/30 dark:from-purple-600/35 dark:via-violet-600/30 dark:to-blue-600/30 rounded-full blur-[85px] pointer-events-none animate-aurora-3" />
+
+        {/* Ambient Frosted Glass Shimmer & Reflective Edge Light */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-white/55 dark:from-white/5 dark:via-transparent dark:to-zinc-950/40 pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-blue-500/50 via-indigo-400/40 via-amber-400/40 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-extrabold bg-blue-100/70 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200/70 dark:border-blue-900/70 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>RockyTen Knowledge Hub</span>
+              <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>ROCKYTEN KNOWLEDGE HUB</span>
               <span className="opacity-50">•</span>
-              <span>v2.4 Enterprise</span>
+              <span>V.3.7</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -197,77 +241,33 @@ export default function HelpSystemDocsPage() {
             </p>
           </div>
 
-          {/* Quick System Status Card */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 shadow-sm shrink-0 md:w-72 space-y-2.5 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                {isId ? "Status Sistem" : "System Status"}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live / 60 FPS
-              </span>
-            </div>
-
-            <div className="space-y-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-500 dark:text-zinc-400">{isId ? "Mesin Data" : "Data Mode"}</span>
-                <span className="font-semibold text-slate-900 dark:text-white">Local-First (Storage)</span>
-              </div>
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-500 dark:text-zinc-400">{isId ? "Cloud Database" : "Cloud Sync"}</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">Supabase Ready</span>
-              </div>
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-500 dark:text-zinc-400">{isId ? "Simulasi Akun" : "Active Role"}</span>
-                <span className="font-bold text-slate-900 dark:text-white capitalize truncate max-w-[120px]">
-                  {currentProfile.name} ({currentProfile.role})
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-              <Link
-                href="/settings"
-                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
-              >
-                <Settings className="w-3 h-3" />
-                <span>{isId ? "Pengaturan Lengkap" : "Open Settings"}</span>
-              </Link>
-              <Link
-                href="/history"
-                className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 inline-flex items-center gap-1"
-              >
-                <Clock className="w-3 h-3" />
-                <span>{isId ? "Audit Log" : "Audit Log"}</span>
-              </Link>
-            </div>
-          </div>
+          {/* 3D Floating Knowledge Book Illustration */}
+          <Documentation3DBook isId={isId} />
         </div>
 
         {/* Search Bar & Category Filter */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="mt-6 pt-5 border-t border-slate-200/90 dark:border-white/10 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between relative z-10">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isId ? "Cari panduan, rumus KPI, Rocks, atau konfigurasi..." : "Search docs, KPI formulas, Rocks, or setup..."}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white"
+              className="w-full pl-9 pr-4 py-2 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200/90 dark:border-zinc-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white shadow-xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
               >
                 Reset
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto py-2 px-1.5 -my-2 -mx-1.5 scrollbar-none shrink-0">
             {[
               { id: "all", labelId: "Semua Topik", labelEn: "All Topics" },
               { id: "guide", labelId: "Panduan Modul", labelEn: "Module Guides" },
@@ -278,10 +278,10 @@ export default function HelpSystemDocsPage() {
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
                   activeCategory === cat.id
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs"
-                    : "bg-slate-100 dark:bg-zinc-850 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-800"
+                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md ring-1 ring-zinc-900/10 dark:ring-white/20"
+                    : "bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md text-slate-700 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 hover:text-slate-950 dark:hover:text-white border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs"
                 }`}
               >
                 {isId ? cat.labelId : cat.labelEn}
@@ -294,7 +294,7 @@ export default function HelpSystemDocsPage() {
       {/* Main Documentation Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sticky Docs Navigation Sidebar */}
-        <aside className="lg:col-span-3 sticky top-4 space-y-4">
+        <aside className="lg:col-span-3 sticky top-20 space-y-4 z-20">
           <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-xs">
             <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 border-b border-slate-100 dark:border-zinc-800/80 mb-2 flex items-center justify-between">
               <span>{isId ? "Daftar Isi Dokumentasi" : "Table of Contents"}</span>
@@ -320,8 +320,10 @@ export default function HelpSystemDocsPage() {
                       <span className="truncate">{isId ? sec.titleId : sec.titleEn}</span>
                     </div>
                     <ChevronRight
-                      className={`w-3.5 h-3.5 shrink-0 transition-transform ${
-                        isActive ? "rotate-90 text-blue-600 dark:text-blue-400" : "text-slate-400 opacity-40 group-hover:opacity-100"
+                      className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                        isActive
+                          ? "text-blue-600 dark:text-blue-400 opacity-100"
+                          : "text-slate-400 opacity-40 group-hover:opacity-100"
                       }`}
                     />
                   </button>
@@ -346,8 +348,38 @@ export default function HelpSystemDocsPage() {
 
         {/* Center / Main Reading Canvas */}
         <main className="lg:col-span-9 space-y-8">
+          {/* Empty State when no sections match */}
+          {filteredSections.length === 0 && (
+            <div className="rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-12 text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-zinc-800 text-slate-400 flex items-center justify-center mx-auto">
+                <Search className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {isId ? "Tidak Ada Modul yang Cocok" : "No Matching Modules"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm mx-auto">
+                  {isId
+                    ? "Coba gunakan kata kunci lain atau setel ulang filter kategori untuk melihat seluruh panduan."
+                    : "Try different search terms or reset the category filter to view all guides."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveCategory("all");
+                }}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                {isId ? "Reset Filter & Pencarian" : "Reset Filter & Search"}
+              </button>
+            </div>
+          )}
+
           {/* Section 1: Overview */}
-          <section id="overview" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("overview") && (
+            <section id="overview" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60 flex items-center justify-center shrink-0">
                 <Compass className="w-5 h-5" />
@@ -412,10 +444,12 @@ export default function HelpSystemDocsPage() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          )}
 
           {/* Section 2: Scoreboard KPI */}
-          <section id="scoreboard" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("scoreboard") && (
+            <section id="scoreboard" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
                 <Table2 className="w-5 h-5" />
@@ -494,10 +528,12 @@ export default function HelpSystemDocsPage() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          )}
 
           {/* Section 3: Rocks */}
-          <section id="rocks" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("rocks") && (
+            <section id="rocks" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 flex items-center justify-center shrink-0">
                 <Milestone className="w-5 h-5" />
@@ -568,10 +604,12 @@ export default function HelpSystemDocsPage() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          )}
 
           {/* Section 4: Issues */}
-          <section id="issues" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("issues") && (
+            <section id="issues" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/60 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-5 h-5" />
@@ -617,10 +655,12 @@ export default function HelpSystemDocsPage() {
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          )}
 
           {/* Section 5: Todos & Headlines */}
-          <section id="todos-headlines" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("todos-headlines") && (
+            <section id="todos-headlines" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
                 <CheckSquare className="w-5 h-5" />
@@ -644,9 +684,11 @@ export default function HelpSystemDocsPage() {
               </p>
             </div>
           </section>
+          )}
 
           {/* Section 6: Universal Convert */}
-          <section id="conversion" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("conversion") && (
+          <section id="conversion" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-200/60 dark:border-cyan-900/60 flex items-center justify-center shrink-0">
                 <RefreshCw className="w-5 h-5" />
@@ -685,9 +727,11 @@ export default function HelpSystemDocsPage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Section 7: Account Hierarchy & Simulator */}
-          <section id="accounts" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("accounts") && (
+          <section id="accounts" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/60 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />
@@ -759,9 +803,11 @@ export default function HelpSystemDocsPage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Section 8: Technical Architecture & Specs */}
-          <section id="architecture" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("architecture") && (
+          <section id="architecture" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-200/60 dark:border-sky-900/60 flex items-center justify-center shrink-0">
                 <Cpu className="w-5 h-5" />
@@ -814,9 +860,11 @@ export default function HelpSystemDocsPage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Section 9: Shortcuts & Productivity Tips */}
-          <section id="shortcuts" className="scroll-mt-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
+          {visibleSectionIds.has("shortcuts") && (
+          <section id="shortcuts" className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-5">
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-zinc-800 pb-4">
               <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-200/60 dark:border-fuchsia-900/60 flex items-center justify-center shrink-0">
                 <Command className="w-5 h-5" />
@@ -855,6 +903,7 @@ export default function HelpSystemDocsPage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Bottom Navigation Quick Links */}
           <div className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/40 flex flex-col sm:flex-row items-center justify-between gap-4">
