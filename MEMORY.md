@@ -55,6 +55,24 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-24] - Option A: Dual-Mode Documentation Hub (SOP User Guide vs System Specs)
+* **Transformasi Arsitektur Dual-Mode di `/help` (`src/app/help/page.tsx`, `src/components/help/UserGuideView.tsx`, `src/components/help/SystemSpecsView.tsx`)**:
+  * **Permintaan User**: Mengatasi kebingungan pengguna di mana isi halaman bantuan sebelumnya terlalu berat ke arah konsep, arsitektur teknis, dan rumus sistem. Pengguna lapangan membutuhkan panduan cara pakai praktis per halaman (SOP) dengan alur kerja nyata dan visual yang jelas, sementara spesifikasi sistem tetap dipertahankan untuk kebutuhan teknis/manajemen (Opsi A).
+  * **Checkpoint Rollback Aman**: Commit git `2527c3b` dibuat sebelum implementasi sebagai titik pemulihan.
+  * **Master Mode Switcher di Bawah Hero Header**:
+    - Mode 1: **`[ 📖 Panduan Cara Pakai (SOP) - OPERASIONAL ]`** (Aktif default).
+    - Mode 2: **`[ ⚙️ Spesifikasi & Sistem - TEKNIS ]`**.
+    - Input pencarian beradaptasi otomatis terhadap mode aktif (mencari tutorial alur vs mencari rumus/skema DB).
+  * **Modul Baru `UserGuideView.tsx` (100% Berorientasi Aksi & Lapangan)**:
+    1. *Alur Rapat Mingguan (SOP Rapat L10)*: Visual pipeline 5 tahap (Scoreboard 5M, Rocks 5M, Warta 5M, To-Do 5M, IDS 60M) lengkap dengan *Aturan Emas Rapat L10*.
+    2. *Scoreboard KPI*: Cara input nilai harian/mingguan W1–W4, evaluasi warna status, dan tombol pintas buka halaman Scoreboard.
+    3. *Batu Sasaran (Rocks)*: Cara menentukan 3–7 sasaran kuartalan, membaca radar otomatis, dan verifikasi selesai Owner.
+    4. *Pusat Kendala (Issues)*: Cara lapor masalah + bukti foto, triase 3 masalah prioritas, dan resolusi menjadi To-Do.
+    5. *Agenda Tugas (To-Do)*: Prinsip komitmen 7 hari, 1 PIC, dan promosi tugas ke metrik tetap Scoreboard.
+    6. *Warta & Pengumuman (Headlines)*: Panduan 5 kategori warta (Achievement, Good News, Bad News, Reminder, Announcement).
+  * **Modul Terpisah `SystemSpecsView.tsx` (Referensi Teknis & Tata Kelola)**:
+    - Menampung seluruh 9 modul teknis: filosofi Traction EOS, mesin kalkulasi SUM/AVG, radar kesehatan Rocks, framework IDS, konversi sliding dual-card, kredensial simulator akun, skema Supabase PostgreSQL, Local-First engine, dan pintasan keyboard.
+
 ### [2026-09-24] - High-Contrast Dynamic Animated Aurora Blur Mesh at /help Header
 * **Peningkatan Kontras Warna & Animasi Latar Bergerak Hero Card Dokumentasi (`src/app/help/page.tsx`, `src/app/globals.css`)**:
   * **Permintaan User**: Mengatasi tampilan latar belakang blur header yang sebelumnya flat/pudar agar warnanya jauh lebih berkontras, hidup, dan bergerak secara dinamis sehingga memukau pengguna.
