@@ -156,6 +156,10 @@ interface AppContextType {
   updateHighContrast: (enabled: boolean) => void;
   reduceMotion: boolean;
   updateReduceMotion: (enabled: boolean) => void;
+  // Sidebar State (Mini / Icon-only mode)
+  isSidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   // Email Notifications Settings
   emailNotifSettings: EmailNotifSettings;
   updateEmailNotifSettings: (newSettings: Partial<EmailNotifSettings>) => void;
@@ -232,6 +236,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [uiDensity, setUiDensity] = useState<"compact" | "normal" | "comfortable">("normal");
   const [highContrast, setHighContrast] = useState<boolean>(false);
   const [reduceMotion, setReduceMotion] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastInfo | null>(null);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalInfo | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -582,6 +587,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try { rm = Boolean(JSON.parse(savedReduceMotion)); } catch(e) { rm = savedReduceMotion === "true"; }
         setReduceMotion(rm);
         if (rm) document.documentElement.setAttribute("data-reduce-motion", "true");
+      }
+
+      const savedSidebarCollapsed = localStorage.getItem("sidebar_collapsed");
+      if (savedSidebarCollapsed !== null) {
+        try {
+          setIsSidebarCollapsed(JSON.parse(savedSidebarCollapsed));
+        } catch (e) {
+          setIsSidebarCollapsed(savedSidebarCollapsed === "true");
+        }
       }
       // Fetch initial live data from Supabase PostgreSQL Database (Bypassed in Local Mode)
       const fetchSupabaseData = async () => {
@@ -1058,6 +1072,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       document.documentElement.classList.remove("dark");
     }
+  };
+
+  const toggleSidebarCollapsed = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      saveState("sidebar_collapsed", next);
+      return next;
+    });
+  };
+
+  const setSidebarCollapsed = (collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+    saveState("sidebar_collapsed", collapsed);
   };
 
   const getMetricActiveWeek = (metric: Metric): number => {
@@ -2202,6 +2229,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateHighContrast,
         reduceMotion,
         updateReduceMotion,
+        isSidebarCollapsed,
+        toggleSidebarCollapsed,
+        setSidebarCollapsed,
         toast,
         showToast,
         hideToast,

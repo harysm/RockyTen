@@ -55,6 +55,17 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+### [2026-09-24] - Collapsible Mini-Sidebar (Icon-Only Mode) with 60 FPS Slide Animation
+* **Fitur Buka-Tutup Sidebar Desktop Ramping & Sinkronisasi Layout (`src/components/Sidebar.tsx`, `src/components/AppShell.tsx`, `src/context/AppContext.tsx`)**:
+  * **Permintaan User**: Menambahkan fitur tutup-buka navbar di mana saat ditutup navbar tidak hilang melainkan mengecil hingga hanya tampak ikon saja (*icon-only mini sidebar*), saat dibuka kembali normal, dan animasi slide buka-tutupnya bergerak halus (*smooth transition*).
+  * **Mekanisme Buka-Tutup Desktop**:
+    - **Mode Terbuka (`w-60` / 240px)**: Menampilkan brand `Rocky ten` lengkap, teks menu navigasi (`Dashboard`, `Scoreboard`, `Rocks`, dsb.), dan label pengaturan. Tombol `PanelLeftClose` terletak di kanan atas header untuk menutup navbar.
+    - **Mode Ramping / Icon-Only (`w-[68px]`)**: Sidebar mengecil secara presisi, menyembunyikan teks label, dan menyejajarkan seluruh ikon menu di tengah (`justify-center`). Dilengkapi *hover tooltip* HTML native (`title`) dan tombol `PanelLeftOpen` di header atas untuk membuka kembali navbar.
+  * **Animasi Slide 60 FPS Sinkron (Zero Layout Jitter)**:
+    - Sidebar (`Sidebar.tsx`) dan kontainer halaman utama (`AppShell.tsx` dengan `lg:pl-60` $\leftrightarrow$ `lg:pl-[68px]`) diinterpolasi dengan kelas utilitas `transition-all duration-300 ease-in-out` secara simultan, sehingga area kerja (tabel Scoreboard, kartu analitik) melebar dan menyempit secara mulus tanpa sentakan.
+  * **State Persistence Global (`localStorage`)**:
+    - Status collapse dikelola terpusat di `AppContext.tsx` (`isSidebarCollapsed`, `toggleSidebarCollapsed`, `setSidebarCollapsed`) dan disimpan di `localStorage.getItem("sidebar_collapsed")`, sehingga pilihan tampilan pengguna tetap konsisten saat berpindah halaman antar rute.
+
 ### [2026-09-24] - Option A: Dual-Mode Documentation Hub (SOP User Guide vs System Specs)
 * **Transformasi Arsitektur Dual-Mode di `/help` (`src/app/help/page.tsx`, `src/components/help/UserGuideView.tsx`, `src/components/help/SystemSpecsView.tsx`)**:
   * **Permintaan User**: Mengatasi kebingungan pengguna di mana isi halaman bantuan sebelumnya terlalu berat ke arah konsep, arsitektur teknis, dan rumus sistem. Pengguna lapangan membutuhkan panduan cara pakai praktis per halaman (SOP) dengan alur kerja nyata dan visual yang jelas, sementara spesifikasi sistem tetap dipertahankan untuk kebutuhan teknis/manajemen (Opsi A).

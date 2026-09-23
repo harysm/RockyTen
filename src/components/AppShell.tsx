@@ -15,7 +15,7 @@ import { MaintenanceScreen } from "@/components/MaintenanceScreen";
 const IS_MAINTENANCE_MODE = false;
 
 export const AppShell: React.FC<{ children: React.ReactNode; fullWidth?: boolean }> = ({ children, fullWidth }) => {
-  const { isLoggedIn, toast, hideToast, confirmModal, hideConfirm } = useApp();
+  const { isLoggedIn, toast, hideToast, confirmModal, hideConfirm, isSidebarCollapsed } = useApp();
   const pathname = usePathname();
   const router = useRouter();
   const [isBypassed, setIsBypassed] = React.useState<boolean>(false);
@@ -82,7 +82,12 @@ export const AppShell: React.FC<{ children: React.ReactNode; fullWidth?: boolean
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
-      <div className="flex-1 lg:pl-60 min-h-screen flex flex-col relative min-w-0" suppressHydrationWarning>
+      <div
+        className={`flex-1 ${
+          isSidebarCollapsed ? "lg:pl-[68px]" : "lg:pl-60"
+        } min-h-screen flex flex-col relative min-w-0 transition-all duration-300 ease-in-out`}
+        suppressHydrationWarning
+      >
         <TopBar onToggleSidebar={() => setMobileMenuOpen((prev) => !prev)} />
         <main className="flex-1 p-4 lg:p-6 pb-24 w-full max-w-full">
           {children}
