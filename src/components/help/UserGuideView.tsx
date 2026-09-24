@@ -157,7 +157,7 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
   return (
     <div className="space-y-6">
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 -my-1.5 scrollbar-none">
         {[
           { id: "all", labelId: "Semua Panduan", labelEn: "All Guides" },
           { id: "workflow", labelId: "Alur Rapat L10", labelEn: "L10 Routine" },
@@ -167,7 +167,7 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeCategory === cat.id
                 ? "bg-blue-600 text-white shadow-sm ring-1 ring-blue-600/20"
                 : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white"
@@ -468,7 +468,7 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
-                      Rp 16.200.000 (108% 🟢)
+                      Rp 16.200.000 (108%)
                     </span>
                     <span className="text-slate-400 text-[10px]">W3 Aktif</span>
                   </div>

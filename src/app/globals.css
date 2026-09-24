@@ -480,41 +480,6 @@ select {
   --tw-ring-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Primary CTA Buttons (Charcoal in Light Mode, Pure White in Dark Mode) */
-.bg-zinc-900,
-.bg-black {
-  background-color: #18181b !important;
-  color: #ffffff !important;
-  border-color: #18181b !important;
-}
-
-.dark .bg-zinc-900,
-.dark .bg-black {
-  background-color: #ffffff !important;
-  color: #09090b !important;
-  border-color: #ffffff !important;
-}
-
-/* Department & Neutral Badges */
-.bg-blue-50,
-.bg-indigo-50,
-.bg-purple-50 {
-  background-color: #f4f4f5 !important;
-  color: #18181b !important;
-  border-color: #e4e4e7 !important;
-}
-
-.dark .bg-blue-50,
-.dark .bg-blue-950\/20,
-.dark .bg-blue-950\/30,
-.dark .bg-blue-950\/40,
-.dark .dark\:bg-blue-950\/20,
-.dark .dark\:bg-blue-950\/40 {
-  background-color: #27272a !important;
-  color: #ffffff !important;
-  border-color: #3f3f46 !important;
-}
-
 /* Preserve KPI Status Colors (Green for Achieved / Red for Failed Target) */
 .text-emerald-600,
 .text-emerald-700 {
@@ -538,22 +503,50 @@ select {
   color: #f87171 !important;
 }
 
-.bg-emerald-50 {
+/* Light mode specific background for soft status badges */
+html:not(.dark) .bg-emerald-50 {
   background-color: rgba(240, 253, 244, 1) !important;
 }
 
-.dark .bg-emerald-950\/20,
-.dark .bg-emerald-950\/30 {
-  background-color: rgba(6, 78, 59, 0.35) !important;
-}
-
-.bg-rose-50 {
+html:not(.dark) .bg-rose-50 {
   background-color: rgba(254, 242, 242, 1) !important;
 }
 
+/* In Dark Mode, soft status badge & pill backgrounds MUST BE UNIFORMLY DARK (#141416) */
+.dark .bg-emerald-50,
+.dark .bg-emerald-950\/20,
+.dark .bg-emerald-950\/30,
+.dark .bg-emerald-950\/40,
+.dark [class*="bg-emerald-950"],
+.dark [class*="dark:bg-emerald-950"] {
+  background-color: #141416 !important;
+}
+
+.dark .bg-rose-50,
 .dark .bg-rose-950\/20,
-.dark .bg-rose-950\/30 {
-  background-color: rgba(136, 19, 55, 0.35) !important;
+.dark .bg-rose-950\/30,
+.dark .bg-rose-950\/40,
+.dark [class*="bg-rose-950"],
+.dark [class*="dark:bg-rose-950"] {
+  background-color: #141416 !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-950\/20,
+.dark .bg-amber-950\/30,
+.dark .bg-amber-950\/40,
+.dark [class*="bg-amber-950"],
+.dark [class*="dark:bg-amber-950"] {
+  background-color: #141416 !important;
+}
+
+.dark .bg-blue-50,
+.dark .bg-blue-950\/20,
+.dark .bg-blue-950\/30,
+.dark .bg-blue-950\/40,
+.dark [class*="bg-blue-950"],
+.dark [class*="dark:bg-blue-950"] {
+  background-color: #141416 !important;
 }
 
 /* Fix date/time picker calendar icon visibility in Light & Dark Mode */
@@ -844,4 +837,31 @@ html[data-reduce-motion="true"] *::after {
 .animate-aurora-3 {
   animation: aurora-drift-3 20s ease-in-out infinite;
   will-change: transform, opacity;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-fade {
+  animation: tabFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbar for Chrome, Safari, Edge, and Firefox */
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }

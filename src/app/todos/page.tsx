@@ -470,7 +470,7 @@ export default function TodoPage() {
       </div>
 
       {/* Todo List Card container */}
-      <div className="bg-white border border-slate-100 rounded-xl shadow-sm divide-y divide-slate-100 overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900/80 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm divide-y divide-slate-100 dark:divide-zinc-800 overflow-hidden">
         {sortedTodos.map((todo) => {
           const dept = departments.find(d => d.id === todo.departmentId);
           const isCompleted = todo.status === "completed";

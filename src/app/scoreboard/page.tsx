@@ -967,7 +967,7 @@ export default function ScoreboardPage() {
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
+                <tr className="bg-slate-50/50 dark:bg-zinc-900/40 border-b border-slate-100 dark:border-zinc-800">
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[200px]">Metric</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[120px]">Dibuat</th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[120px]">Deadline</th>
@@ -1116,13 +1116,13 @@ export default function ScoreboardPage() {
                     const isBerjalan = statusText === "Berjalan" || statusText === "Running";
 
                     let badgeClass = "bg-slate-50 text-slate-650 border-slate-200 dark:bg-zinc-900 dark:text-slate-450 dark:border-zinc-800";
-                    if (isSelesai) badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-900";
-                    else if (isGagal) badgeClass = "bg-rose-50 text-rose-700 border-rose-250 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900";
-                    else if (isBerjalan) badgeClass = "bg-amber-50 text-amber-700 border-amber-250 dark:bg-amber-950/20 dark:text-amber-450 dark:border-amber-900";
+                    if (isSelesai) badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-zinc-900 dark:text-emerald-400 dark:border-zinc-800";
+                    else if (isGagal) badgeClass = "bg-rose-50 text-rose-700 border-rose-250 dark:bg-zinc-900 dark:text-rose-400 dark:border-zinc-800";
+                    else if (isBerjalan) badgeClass = "bg-amber-50 text-amber-700 border-amber-250 dark:bg-zinc-900 dark:text-amber-400 dark:border-zinc-800";
 
                     return (
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <span className={`px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-full border ${badgeClass}`}>
+                        <span className={`px-2 py-0.5 text-[9px] font-extrabold uppercase rounded border ${badgeClass}`}>
                           {statusText}
                         </span>
                       </div>
@@ -1210,9 +1210,9 @@ export default function ScoreboardPage() {
                   {/* Status Badge */}
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded border ${statusText === "Tercapai" || statusText === "Selesai"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-255 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-900"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-zinc-900 dark:text-emerald-400 dark:border-zinc-800"
                         : (statusText === "Gagal" || statusText === "Gagal Target")
-                          ? "bg-rose-50 text-rose-700 border-rose-255 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900"
+                          ? "bg-rose-50 text-rose-700 border-rose-250 dark:bg-zinc-900 dark:text-rose-400 dark:border-zinc-800"
                           : "bg-slate-50 text-slate-650 border-slate-200 dark:bg-zinc-900 dark:text-slate-450 dark:border-zinc-800"
                       }`}>
                       {statusText}

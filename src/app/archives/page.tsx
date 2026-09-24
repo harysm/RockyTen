@@ -5,7 +5,6 @@ import { useApp } from "@/context/AppContext";
 import {
   Archive,
   Download,
-  Filter,
   Search,
   ArrowUp,
   ArrowDown,
@@ -336,7 +335,7 @@ export default function RebuiltArchivesPage() {
         <button
           type="button"
           onClick={handleExportExcel}
-          className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-2 shadow-md shadow-red-600/20 cursor-pointer transition-all active:scale-95 shrink-0"
+          className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 rounded-lg text-xs font-bold flex items-center gap-2 shadow-md shadow-zinc-900/10 cursor-pointer transition-all active:scale-95 shrink-0 border border-zinc-900 dark:border-zinc-100"
         >
           <Download className="w-4 h-4" />
           <span>{language === "id" ? "Export Excel Laporan (.xlsx)" : "Export Excel Report (.xlsx)"}</span>
@@ -349,7 +348,7 @@ export default function RebuiltArchivesPage() {
           type="button"
           onClick={() => setActiveTab("kpi")}
           className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "kpi"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+              ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-md shadow-zinc-900/10"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
         >
@@ -361,7 +360,7 @@ export default function RebuiltArchivesPage() {
           type="button"
           onClick={() => setActiveTab("todos")}
           className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "todos"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+              ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-md shadow-zinc-900/10"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
         >
@@ -373,7 +372,7 @@ export default function RebuiltArchivesPage() {
           type="button"
           onClick={() => setActiveTab("issues")}
           className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "issues"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+              ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-md shadow-zinc-900/10"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
         >
@@ -385,7 +384,7 @@ export default function RebuiltArchivesPage() {
           type="button"
           onClick={() => setActiveTab("headlines")}
           className={`px-4 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${activeTab === "headlines"
-              ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+              ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-md shadow-zinc-900/10"
               : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-800"
             }`}
         >
@@ -395,53 +394,49 @@ export default function RebuiltArchivesPage() {
       </div>
 
       {/* 3. Control Bar (Filter & Layout View Switcher) */}
-      <div className="bg-white dark:bg-zinc-900 p-4 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-4 w-full">
+      <div className="bg-white dark:bg-zinc-900/80 p-3 sm:p-3.5 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 sm:gap-4 w-full">
         <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="text-xs font-extrabold text-slate-700 dark:text-white uppercase tracking-wider">FILTER:</span>
-          </div>
 
           {canViewAll && (
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">DIVISI:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Divisi :</span>
               <CustomSelect
                 value={selectedDept}
                 onChange={(val: string) => setSelectedDept(val)}
-                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
                 options={[
-                  { value: "all", label: "SEMUA DIVISI" },
-                  ...departments.map((d) => ({ value: d.id, label: d.name.toUpperCase() })),
+                  { value: "all", label: "Semua Divisi" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name })),
                 ]}
               />
             </div>
           )}
 
           {activeTab !== "headlines" && (
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">STATUS:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Status :</span>
               <CustomSelect
                 value={selectedStatus}
                 onChange={(val: string) => setSelectedStatus(val)}
-                triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
+                triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
                 options={
                   activeTab === "kpi"
                     ? [
-                      { value: "all", label: "SEMUA STATUS" },
-                      { value: "active", label: "🟢 AKTIF" },
-                      { value: "completed", label: "🔵 SELESAI" },
+                      { value: "all", label: "Semua Status" },
+                      { value: "active", label: "Aktif" },
+                      { value: "completed", label: "Selesai" },
                     ]
                     : activeTab === "todos"
                       ? [
-                        { value: "all", label: "SEMUA STATUS" },
-                        { value: "completed", label: "✅ SELESAI" },
-                        { value: "pending", label: "⏳ PENDING" },
+                        { value: "all", label: "Semua Status" },
+                        { value: "completed", label: "Selesai" },
+                        { value: "pending", label: "Pending" },
                       ]
                       : [
-                        { value: "all", label: "SEMUA STATUS" },
-                        { value: "solved", label: "✅ TUNTAS" },
-                        { value: "in_progress", label: "⚠️ DALAM PROSES" },
-                        { value: "open", label: "🔴 TERBUKA" },
+                        { value: "all", label: "Semua Status" },
+                        { value: "solved", label: "Tuntas" },
+                        { value: "in_progress", label: "Dalam Proses" },
+                        { value: "open", label: "Terbuka" },
                       ]
                 }
               />
@@ -449,50 +444,60 @@ export default function RebuiltArchivesPage() {
           )}
 
           {/* SORT CONTROLS */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">URUTKAN:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Urutan :</span>
             <CustomSelect
-              value={sortBy}
-              onChange={(val: string) => setSortBy(val)}
-              triggerClass="bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold uppercase"
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(val: string) => {
+                const [newSortBy, newSortOrder] = val.split("-");
+                setSortBy(newSortBy);
+                setSortOrder(newSortOrder as "asc" | "desc");
+              }}
+              triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={
                 activeTab === "kpi"
                   ? [
-                    { value: "dept", label: "🏢 DIVISI" },
-                    { value: "type", label: "📅 TIPE (HARIAN/BULANAN)" },
-                    { value: "target", label: "🎯 TARGET" },
-                    { value: "name", label: "📝 NAMA METRIK" }
+                    { value: "dept-asc", label: "Divisi ↑" },
+                    { value: "dept-desc", label: "Divisi ↓" },
+                    { value: "type-asc", label: "Tipe ↑" },
+                    { value: "type-desc", label: "Tipe ↓" },
+                    { value: "target-asc", label: "Target ↑" },
+                    { value: "target-desc", label: "Target ↓" },
+                    { value: "name-asc", label: "Nama Metrik ↑" },
+                    { value: "name-desc", label: "Nama Metrik ↓" },
                   ]
                   : activeTab === "todos"
                     ? [
-                      { value: "status", label: "⚡ STATUS" },
-                      { value: "dept", label: "🏢 DIVISI" },
-                      { value: "priority", label: "🔥 PRIORITAS" },
-                      { value: "title", label: "📝 JUDUL" }
+                      { value: "status-asc", label: "Status ↑" },
+                      { value: "status-desc", label: "Status ↓" },
+                      { value: "dept-asc", label: "Divisi ↑" },
+                      { value: "dept-desc", label: "Divisi ↓" },
+                      { value: "priority-asc", label: "Prioritas ↑" },
+                      { value: "priority-desc", label: "Prioritas ↓" },
+                      { value: "title-asc", label: "Judul ↑" },
+                      { value: "title-desc", label: "Judul ↓" },
                     ]
                     : activeTab === "issues"
                       ? [
-                        { value: "status", label: "⚡ STATUS" },
-                        { value: "dept", label: "🏢 DIVISI" },
-                        { value: "priority", label: "🔥 PRIORITAS" },
-                        { value: "title", label: "📝 JUDUL" }
+                        { value: "status-asc", label: "Status ↑" },
+                        { value: "status-desc", label: "Status ↓" },
+                        { value: "dept-asc", label: "Divisi ↑" },
+                        { value: "dept-desc", label: "Divisi ↓" },
+                        { value: "priority-asc", label: "Prioritas ↑" },
+                        { value: "priority-desc", label: "Prioritas ↓" },
+                        { value: "title-asc", label: "Judul ↑" },
+                        { value: "title-desc", label: "Judul ↓" },
                       ]
                       : [
-                        { value: "dept", label: "🏢 DIVISI" },
-                        { value: "category", label: "🏷️ KATEGORI" },
-                        { value: "title", label: "📝 JUDUL" }
+                        { value: "dept-asc", label: "Divisi ↑" },
+                        { value: "dept-desc", label: "Divisi ↓" },
+                        { value: "category-asc", label: "Kategori ↑" },
+                        { value: "category-desc", label: "Kategori ↓" },
+                        { value: "title-asc", label: "Judul ↑" },
+                        { value: "title-desc", label: "Judul ↓" },
                       ]
               }
             />
-            <button
-              type="button"
-              onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-              title={sortOrder === "asc" ? "Urutkan Ascending (A-Z / 1-9)" : "Urutkan Descending (Z-A / 9-1)"}
-              className="p-1.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer flex items-center gap-1 text-xs font-extrabold"
-            >
-              {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-red-500" />}
-              <span className="uppercase">{sortOrder}</span>
-            </button>
           </div>
         </div>
 

@@ -191,8 +191,8 @@ export default function Dashboard() {
 
     return {
       data: [
-        { name: language === "id" ? "Tercapai" : "Achieved", value: achieved || 1, color: "#10b981" },
-        { name: language === "id" ? "Berjalan" : "Running", value: running || 1, color: "#3b82f6" },
+        { name: language === "id" ? "Tercapai" : "Achieved", value: achieved || 0, color: "#10b981" },
+        { name: language === "id" ? "Berjalan" : "Running", value: running || 0, color: "#f59e0b" },
         { name: language === "id" ? "Gagal Target" : "Off Target", value: failed || 0, color: "#f43f5e" }
       ],
       achieved,
@@ -289,7 +289,7 @@ export default function Dashboard() {
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{onTrackRocksCount} On Track</span> • {offTrackRocksCount} Off Track
                 </p>
               </div>
-              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50 rounded-lg flex-shrink-0">
+              <div className="p-2.5 bg-blue-50 dark:bg-zinc-900 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-zinc-800 rounded-lg flex-shrink-0">
                 <Target className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function Dashboard() {
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{metricStatusCounts.achievedPercent}% Tercapai</span> • {activeMetricsCount} Aktif
                 </p>
               </div>
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/50 rounded-lg flex-shrink-0">
+              <div className="p-2.5 bg-emerald-50 dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-zinc-800 rounded-lg flex-shrink-0">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
@@ -339,8 +339,8 @@ export default function Dashboard() {
               </div>
               <div className={`p-2.5 rounded-lg border flex-shrink-0 ${
                 urgentIssues.length > 0 
-                  ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-900/60 animate-pulse" 
-                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700"
+                  ? "bg-rose-50 dark:bg-zinc-900 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-zinc-800 animate-pulse" 
+                  : "bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800"
               }`}>
                 <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
@@ -360,10 +360,10 @@ export default function Dashboard() {
                   {pendingTodos.length}
                 </h3>
                 <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">{completedTodosCount} Selesai</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{completedTodosCount} Selesai</span> • {pendingTodos.length} Pending
                 </p>
               </div>
-              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/50 rounded-lg flex-shrink-0">
+              <div className="p-2.5 bg-amber-50 dark:bg-zinc-900 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-zinc-800 rounded-lg flex-shrink-0">
                 <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
@@ -511,31 +511,31 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Legend Pills */}
+          {/* Legend Pills (Harmonious & Unified) */}
           <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-zinc-850">
-            <div className="p-2 rounded-md bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 text-center">
+            <div className="p-2.5 rounded-lg bg-emerald-50/50 dark:bg-zinc-900/80 border border-emerald-200/50 dark:border-zinc-800 text-center">
               <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                 {language === "id" ? "Tercapai" : "Success"}
               </span>
-              <span className="text-base font-black text-emerald-800 dark:text-emerald-300">
+              <span className="text-base sm:text-lg font-black text-emerald-800 dark:text-emerald-400">
                 {metricStatusCounts.achieved}
               </span>
             </div>
 
-            <div className="p-2 rounded-md bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-900/40 text-center">
-              <span className="block text-[10px] font-bold text-blue-700 dark:text-blue-400">
+            <div className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-zinc-900/80 border border-amber-200/50 dark:border-zinc-800 text-center">
+              <span className="block text-[10px] font-bold text-amber-700 dark:text-amber-400">
                 {language === "id" ? "Berjalan" : "Running"}
               </span>
-              <span className="text-base font-black text-blue-800 dark:text-blue-300">
+              <span className="text-base sm:text-lg font-black text-amber-800 dark:text-amber-400">
                 {metricStatusCounts.running}
               </span>
             </div>
 
-            <div className="p-2 rounded-md bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/40 text-center">
+            <div className="p-2.5 rounded-lg bg-rose-50/50 dark:bg-zinc-900/80 border border-rose-200/50 dark:border-zinc-800 text-center">
               <span className="block text-[10px] font-bold text-rose-700 dark:text-rose-400">
                 {language === "id" ? "Gagal" : "Failed"}
               </span>
-              <span className="text-base font-black text-rose-800 dark:text-rose-300">
+              <span className="text-base sm:text-lg font-black text-rose-800 dark:text-rose-400">
                 {metricStatusCounts.failed}
               </span>
             </div>
@@ -584,13 +584,13 @@ export default function Dashboard() {
                     <span
                       className={`px-2 py-0.5 text-[9px] font-bold rounded border ${
                         isCompleted
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                          ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-zinc-900 dark:text-blue-400 dark:border-zinc-800"
                           : isOffTrack
-                          ? "bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
-                          : "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                          ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-zinc-900 dark:text-rose-400 dark:border-zinc-800"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-zinc-900 dark:text-emerald-400 dark:border-zinc-800"
                       }`}
                     >
-                      {isCompleted ? "🔵 Selesai" : isOffTrack ? "🔴 Off Track" : "🟢 On Track"}
+                      {isCompleted ? "Selesai" : isOffTrack ? "Off Track" : "On Track"}
                     </span>
                   </div>
 

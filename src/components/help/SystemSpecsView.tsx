@@ -173,7 +173,7 @@ export function SystemSpecsView({ isId, searchQuery }: SystemSpecsViewProps) {
   return (
     <div className="space-y-6">
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 -my-1.5 scrollbar-none">
         {[
           { id: "all", labelId: "Semua Spesifikasi", labelEn: "All Specs" },
           { id: "concept", labelId: "Logika & Konsep", labelEn: "Logic & Concepts" },
@@ -184,7 +184,7 @@ export function SystemSpecsView({ isId, searchQuery }: SystemSpecsViewProps) {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeCategory === cat.id
                 ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-sm ring-1 ring-zinc-900/10 dark:ring-white/20"
                 : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white"
@@ -383,22 +383,22 @@ export function SystemSpecsView({ isId, searchQuery }: SystemSpecsViewProps) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-1">
-                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-xs">🟢 On Track</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400 text-xs">On Track</span>
                     <p className="text-[11px] text-slate-600 dark:text-zinc-400">Laju pencapaian seimbang dengan sisa waktu kuartal berjalan.</p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 space-y-1">
-                    <span className="font-bold text-amber-700 dark:text-amber-400 text-xs">🟡 Siap Review (100%)</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-400 text-xs">Siap Review (100%)</span>
                     <p className="text-[11px] text-slate-600 dark:text-zinc-400">Progres telah tuntas 100%, sistem mengunci dan menunggu verifikasi atasan.</p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 space-y-1">
-                    <span className="font-bold text-rose-700 dark:text-rose-400 text-xs">🔴 Off Track (Peringatan Dini)</span>
+                    <span className="font-bold text-rose-700 dark:text-rose-400 text-xs">Off Track (Peringatan Dini)</span>
                     <p className="text-[11px] text-slate-600 dark:text-zinc-400">Sisa waktu $\le 14$ hari namun progres masih di bawah 50%.</p>
                   </div>
 
                   <div className="p-3.5 rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 space-y-1">
-                    <span className="font-bold text-blue-700 dark:text-blue-400 text-xs">🔵 Selesai (Terverifikasi)</span>
+                    <span className="font-bold text-blue-700 dark:text-blue-400 text-xs">Selesai (Terverifikasi)</span>
                     <p className="text-[11px] text-slate-600 dark:text-zinc-400">Telah ditinjau dan diverifikasi resmi oleh Owner/Direksi pada rapat L10.</p>
                   </div>
                 </div>

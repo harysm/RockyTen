@@ -487,11 +487,11 @@ export default function IssuesPage() {
       </div>
 
       {/* Issues Table Card (Desktop only) */}
-      <div className="hidden md:block bg-white border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white dark:bg-zinc-900/80 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
+              <tr className="bg-slate-50/50 dark:bg-zinc-900/40 border-b border-slate-100 dark:border-zinc-800">
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Issue / Kendala</th>
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[100px]">Divisi</th>
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-[120px]">Prioritas</th>
@@ -853,10 +853,10 @@ export default function IssuesPage() {
                     onChange={(e) => setNewPriority(e.target.value as Issue["priority"])}
                     className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-900 dark:text-white"
                   >
-                    <option value="low">🟢 Low Priority</option>
-                    <option value="medium">🟡 Medium Priority</option>
-                    <option value="high">🔴 High Priority</option>
-                    <option value="critical">🚨 Critical / Blocked</option>
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                    <option value="critical">Critical / Blocked</option>
                   </select>
                 </div>
 
@@ -1041,10 +1041,10 @@ export default function IssuesPage() {
                     onChange={(val) => setEditPriority(val as Issue["priority"])}
                     triggerClass="w-full justify-between bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3 py-2 rounded-xl text-xs font-bold"
                     options={[
-                      { value: "low", label: "Low", icon: <span>🟢</span> },
-                      { value: "medium", label: "Medium", icon: <span>🟡</span> },
-                      { value: "high", label: "High", icon: <span>🔴</span> },
-                      { value: "critical", label: "Critical", icon: <span>🚨</span> },
+                      { value: "low", label: "Low" },
+                      { value: "medium", label: "Medium" },
+                      { value: "high", label: "High" },
+                      { value: "critical", label: "Critical" },
                     ]}
                   />
                 </div>
@@ -1057,10 +1057,10 @@ export default function IssuesPage() {
                     onChange={(val) => setEditStatus(val as Issue["status"])}
                     triggerClass="w-full justify-between bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white px-3 py-2 rounded-xl text-xs font-bold"
                     options={[
-                      { value: "open", label: "Open", icon: <span>🔴</span> },
-                      { value: "in_progress", label: "In Progress", icon: <span>🟡</span> },
-                      { value: "solved", label: "Solved", icon: <span>🟢</span> },
-                      { value: "closed", label: "Closed", icon: <span>⚫</span> },
+                      { value: "open", label: "Open" },
+                      { value: "in_progress", label: "In Progress" },
+                      { value: "solved", label: "Solved" },
+                      { value: "closed", label: "Closed" },
                     ]}
                   />
                 </div>

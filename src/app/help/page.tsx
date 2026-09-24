@@ -89,53 +89,52 @@ export default function HelpSystemDocsPage() {
             )}
           </div>
 
-          {/* Mode Switcher Pill */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 dark:bg-zinc-950/90 border border-slate-200/80 dark:border-zinc-800 shadow-2xs self-start sm:self-auto">
+          {/* Mode Switcher Pill with Animated Smooth Slide */}
+          <div className="relative grid grid-cols-2 p-1 rounded-2xl bg-slate-100/90 dark:bg-zinc-950/90 border border-slate-200/80 dark:border-zinc-800 shadow-2xs w-full sm:w-auto sm:min-w-[420px]">
+            {/* Animated Sliding Pill Indicator */}
+            <div
+              className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl bg-blue-600 shadow-md shadow-blue-600/30 ring-1 ring-blue-500/40 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+                activeMainTab === "system" ? "translate-x-full" : "translate-x-0"
+              }`}
+            />
+
             <button
               type="button"
               onClick={() => setActiveMainTab("guide")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`relative z-10 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer select-none ${
                 activeMainTab === "guide"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/25 ring-1 ring-blue-500/30"
+                  ? "text-white"
                   : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>{isId ? "Panduan Cara Pakai (SOP)" : "User Manual (SOP)"}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase ${
-                activeMainTab === "guide" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-              }`}>
-                {isId ? "Operasional" : "Ops"}
-              </span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveMainTab("system")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`relative z-10 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer select-none ${
                 activeMainTab === "system"
-                  ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md ring-1 ring-zinc-900/10 dark:ring-white/20"
+                  ? "text-white"
                   : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Cpu className="w-3.5 h-3.5" />
               <span>{isId ? "Spesifikasi & Sistem" : "Specs & System"}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase ${
-                activeMainTab === "system" ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-950" : "bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"
-              }`}>
-                {isId ? "Teknis" : "Tech"}
-              </span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Tab Content Canvas */}
-      {activeMainTab === "guide" ? (
-        <UserGuideView isId={isId} searchQuery={searchQuery} />
-      ) : (
-        <SystemSpecsView isId={isId} searchQuery={searchQuery} />
-      )}
+      <div key={activeMainTab} className="animate-tab-fade">
+        {activeMainTab === "guide" ? (
+          <UserGuideView isId={isId} searchQuery={searchQuery} />
+        ) : (
+          <SystemSpecsView isId={isId} searchQuery={searchQuery} />
+        )}
+      </div>
     </div>
   );
 }

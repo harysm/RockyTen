@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
         {/* Form Area on Right */}
         <div className="lg:col-span-3">
-          <div className="bg-white border border-slate-100 rounded-xl shadow-sm p-6 md:p-8">
+          <div className="bg-white dark:bg-zinc-900/80 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm p-6 md:p-8">
             
             {/* 1. Tab Profile */}
             {activeTab === "profile" && (
@@ -788,7 +788,7 @@ export default function SettingsPage() {
                         : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
-                    {emailNotifSettings.enabled ? "🟢 HIDUP (ON)" : "🔴 MATI (OFF)"}
+                    {emailNotifSettings.enabled ? "HIDUP (ON)" : "MATI (OFF)"}
                   </button>
                 </div>
 

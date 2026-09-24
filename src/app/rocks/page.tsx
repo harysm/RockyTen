@@ -50,7 +50,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
     return {
       status: "completed",
       label: "Selesai",
-      badgeClass: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/60",
+      badgeClass: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-zinc-900 border border-blue-200/60 dark:border-zinc-800",
       dotClass: "bg-blue-500",
       subtext: "Terverifikasi oleh manajemen",
       isOffTrack: false,
@@ -65,7 +65,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
     return {
       status: "dropped",
       label: "Dropped",
-      badgeClass: "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700",
+      badgeClass: "text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800",
       dotClass: "bg-zinc-400",
       subtext: "Dibatalkan resmi oleh direksi",
       isOffTrack: false,
@@ -93,7 +93,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
     return {
       status: "review",
       label: "Siap Review",
-      badgeClass: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/60",
+      badgeClass: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-zinc-900 border border-amber-200/60 dark:border-zinc-800",
       dotClass: "bg-amber-500",
       subtext: "Progres 100% • Menunggu verifikasi atasan",
       isOffTrack: false,
@@ -108,7 +108,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
     return {
       status: "off_track",
       label: "Off Track (Terlambat)",
-      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60",
+      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-zinc-900 border border-rose-200/60 dark:border-zinc-800",
       dotClass: "bg-rose-500",
       subtext: `Lewat batas waktu (${Math.abs(daysRemaining)} hari lalu) • Perlu IDS`,
       isOffTrack: true,
@@ -123,7 +123,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
     return {
       status: "off_track",
       label: "Off Track (Beresiko)",
-      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60",
+      badgeClass: "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-zinc-900 border border-rose-200/60 dark:border-zinc-800",
       dotClass: "bg-rose-500",
       subtext: `Sisa ${daysRemaining} hari, progres ${progress}% • Butuh IDS`,
       isOffTrack: true,
@@ -137,7 +137,7 @@ export function getDynamicRockStatus(rock: Rock, progress: number): RockStatusIn
   return {
     status: "on_track",
     label: "On Track",
-    badgeClass: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/60",
+    badgeClass: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-zinc-900 border border-emerald-200/60 dark:border-zinc-800",
     dotClass: "bg-emerald-500",
     subtext: "Berjalan normal sesuai lini masa",
     isOffTrack: false,
@@ -529,11 +529,11 @@ export default function RocksPage() {
               triggerClass="bg-slate-100 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold"
               options={[
                 { value: "all", label: "Semua Status" },
-                { value: "on_track", label: "🟢 On Track" },
-                { value: "off_track", label: "🔴 Off Track (Perlu IDS)" },
-                { value: "review", label: "🟡 Siap Review (100%)" },
-                { value: "completed", label: "🔵 Selesai" },
-                { value: "dropped", label: "⚪ Dropped" },
+                { value: "on_track", label: "On Track" },
+                { value: "off_track", label: "Off Track (Perlu IDS)" },
+                { value: "review", label: "Siap Review (100%)" },
+                { value: "completed", label: "Selesai" },
+                { value: "dropped", label: "Dropped" },
               ]}
             />
           </div>
@@ -610,12 +610,11 @@ export default function RocksPage() {
 
                   {/* Right: Dynamic Status Indicator & Actions Menu */}
                   <div className="flex items-center gap-2">
-                    {/* Dynamic Status Badge */}
+                    {/* Dynamic Status Badge (Clean, No Dots) */}
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${statusInfo.badgeClass}`}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${statusInfo.badgeClass}`}
                       title={statusInfo.subtext}
                     >
-                      <span className={`w-2 h-2 rounded-full ${statusInfo.dotClass}`} />
                       <span>{statusInfo.label}</span>
                     </div>
 
@@ -1079,9 +1078,9 @@ export default function RocksPage() {
                     onChange={e => setEditingRock({ ...editingRock, status: e.target.value as any })}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    <option value="on_track">🟢 Aktif (Otomatis)</option>
-                    <option value="completed">🔵 Selesai (ACC Direksi)</option>
-                    <option value="dropped">⚪ Dropped (Dibatalkan)</option>
+                    <option value="on_track">Aktif (Otomatis)</option>
+                    <option value="completed">Selesai (ACC Direksi)</option>
+                    <option value="dropped">Dropped (Dibatalkan)</option>
                   </select>
                 </div>
 

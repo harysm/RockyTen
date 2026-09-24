@@ -59,10 +59,10 @@ export const ScoreboardSummaryCards: React.FC<ScoreboardSummaryCardsProps> = ({
               {totalCount}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">{subMetricCount} Sub-Rock</span> • {standaloneCount} Mandiri
+              <span className="text-slate-800 dark:text-zinc-200 font-semibold">{subMetricCount} Sub-Rock</span> • {standaloneCount} Mandiri
             </p>
           </div>
-          <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/50 rounded-lg flex-shrink-0">
+          <div className="p-2.5 bg-blue-50 dark:bg-zinc-900 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-zinc-800 rounded-lg flex-shrink-0">
             <Target className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -82,7 +82,7 @@ export const ScoreboardSummaryCards: React.FC<ScoreboardSummaryCardsProps> = ({
               <span className="text-emerald-600 dark:text-emerald-400 font-bold">{onTrackCount} Metrik</span> {language === "id" ? "memenuhi target" : "on-track"}
             </p>
           </div>
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/50 rounded-lg flex-shrink-0">
+          <div className="p-2.5 bg-emerald-50 dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-zinc-800 rounded-lg flex-shrink-0">
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
@@ -102,15 +102,15 @@ export const ScoreboardSummaryCards: React.FC<ScoreboardSummaryCardsProps> = ({
               {failedCount > 0 ? (
                 <span className="text-rose-600 dark:text-rose-400 font-bold">{failedCount} Gagal Target</span>
               ) : (
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Semua target aman</span>
+                <span className="text-slate-600 dark:text-zinc-400">Semua target aman</span>
               )}
               {" • "}{runningCount} {language === "id" ? "berjalan" : "running"}
             </p>
           </div>
           <div className={`p-2.5 rounded-lg border flex-shrink-0 ${
             needsAttentionCount > 0
-              ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-900/50 animate-pulse"
-              : "bg-slate-50 dark:bg-zinc-900 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-800"
+              ? "bg-rose-50 dark:bg-zinc-900 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-zinc-800 animate-pulse"
+              : "bg-slate-100 dark:bg-zinc-900 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800"
           }`}>
             <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>

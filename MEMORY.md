@@ -1065,6 +1065,45 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
   * Menghapus pembatasan rute `pathname === "/"` pada bilah atas.
   * Tampilan tanggal kalender lengkap (misal: *Senin, 21 September 2026*) dengan icon `Calendar` kini tampil konsisten di seluruh halaman aplikasi (`/scoreboard`, `/rocks`, `/todos`, `/issues`, `/headlines`, `/history`, `/archives`, `/settings`), menggantikan pengulangan nama halaman yang redundan.
 
+### [2026-09-24] - Resolusi Lengkap Audit Visual Dark Mode & Harmonisasi Filter (14 Bug Selesai)
+* **Audit Visual Mendalam & Eliminasi Kebocoran Dark Mode**:
+  * Melakukan audit komprehensif 14 temuan bug visual (6 kritis, 4 sedang, 4 minor) yang mencakup kebocoran kontainer terang, garis border terang (`border-slate-100`), dan inkonsistensi warna/radius.
+* **Perbaikan Halaman Histori (`src/app/history/page.tsx`)**:
+  * Menambahkan varian eksplisit `dark:bg-zinc-900/80 dark:border-zinc-800` pada kontainer utama timeline (BUG-01).
+  * Memperbarui garis vertikal timeline ke `border-slate-200 dark:border-zinc-700` (BUG-02).
+  * Mengganti indikator titik hardcoded teal `#108c8c` menjadi indikator netral monokrom (`zinc-400 / zinc-500`) (BUG-03).
+  * Menambahkan varian `dark:bg-zinc-900/50 dark:border-zinc-800` pada kartu log entry (BUG-04).
+  * Menyesuaikan radius badge action dan divisi dari `rounded-full` menjadi `rounded` (Tier 3 Badge standar) (BUG-12, BUG-13).
+  * Menstandarisasi warna badge action di `getActionBadgeColor()` menjadi palet monokrom zinc netral (BUG-14).
+* **Perbaikan Halaman Todos (`src/app/todos/page.tsx`)**:
+  * Menambahkan varian `dark:bg-zinc-900/80 dark:border-zinc-800 dark:divide-zinc-800` pada kontainer todo list untuk mencegah kebocoran garis terang di dark mode (BUG-05).
+* **Perbaikan Halaman Settings (`src/app/settings/page.tsx`)**:
+  * Menambahkan varian `dark:bg-zinc-900/80 dark:border-zinc-800` pada kontainer area form pengaturan (BUG-06).
+* **Perbaikan Halaman Issues (`src/app/issues/page.tsx`)**:
+  * Menambahkan varian `dark:bg-zinc-900/80` pada kontainer tabel desktop (BUG-07).
+  * Menambahkan varian `dark:bg-zinc-900/40 dark:border-zinc-800` pada header tabel `<thead>` (BUG-08).
+* **Perbaikan Halaman Scoreboard (`src/app/scoreboard/page.tsx`)**:
+  * Menambahkan varian `dark:bg-zinc-900/40 dark:border-zinc-800` pada baris `<thead>` tabel metrik harian (BUG-08).
+* **Harmonisasi Halaman Arsip (`src/app/archives/page.tsx`)**:
+  * Menstandarisasi bilah filter dari format uppercase lama (`FILTER:`, `URUTKAN:`) menjadi format Title Case konsisten (`Divisi :`, `Status :`, `Urutan :`) via `CustomSelect` (BUG-09).
+  * Mengubah warna tombol ekspor laporan Excel dari `bg-red-600` menjadi tombol monokrom standar `bg-zinc-900 dark:bg-zinc-100` (BUG-10).
+  * Mengubah styling tab filter aktif dari `bg-red-600` menjadi monokrom `bg-zinc-900 dark:bg-zinc-100` (BUG-11).
+* **Eliminasi Dot Indikator & Perbaikan Latar Gelap Badge Status (`globals.css`, `rocks/page.tsx`, `page.tsx`, `scoreboard/page.tsx`, `issues/page.tsx`, `SystemSpecsView.tsx`, `UserGuideView.tsx`, `settings/page.tsx`)**:
+  * Mengisolasi selector `.bg-emerald-50` dan `.bg-rose-50` dengan `html:not(.dark)` di `globals.css` agar tidak memaksakan warna putih/pucat terang via `!important` ke dalam tema gelap.
+  * Menetapkan aturan global Dark Mode pada `globals.css` untuk kelas status `bg-emerald-50`, `bg-rose-50`, `bg-amber-50`, dsb. menjadi hitam pekat (`#141416 !important`) agar seragam dengan warna kartu.
+  * Menghapus seluruh elemen bullet/dot indicator (`<span className="w-2 h-2 rounded-full ..."/>`) serta emoji dot (`🟢`, `🔴`, `🟡`, `🔵`, `⚪`) pada badge status dan opsi filter/modal di modul Rocks, Dashboard, Scoreboard, Issues, Settings, dan panduan Help sehingga tampilan status lebih bersih (*clean text-only badge*).
+* **Harmonisasi Warna Stat Cards, Icon Box & Legend Donut Chart (`globals.css`, `page.tsx`, `ScoreboardSummaryCards.tsx`)**:
+  * Menghapus override destruktif `.dark .bg-zinc-900 { background-color: #ffffff !important; }` dan `.dark .bg-blue-50 { color: #ffffff !important; background-color: #27272a !important; }` dari `globals.css` yang sebelumnya memutihkan teks/icon biru dan merusak kontras di dark mode.
+  * Menyelaraskan kartu legenda Donut chart Dashboard ("Tercapai", "Berjalan", "Gagal") ke background seragam `dark:bg-zinc-900/80` dan border `dark:border-zinc-800`, serta menstandarisasi warna "Berjalan" ke Amber hangat (bukan biru gelap menyendiri).
+  * Menyelaraskan seluruh wadah icon stat cards di Dashboard dan Scoreboard ke background gelap seragam `dark:bg-zinc-900` dengan warna icon aksen yang sesuai (Target: biru, Trending: hijau, Alert: merah, To-Do: amber).
+  * Menyelaraskan teks progres To-Do ("Selesai") menjadi hijau emerald konsisten dengan metrik tercapai dan rocks on-track.
+* **Penyederhanaan & Animasi Smooth Slide Tab Bantuan (`src/app/help/page.tsx`, `src/app/globals.css`)**:
+  * Menghapus pill badge `OPERASIONAL` (atau `Ops`) dan `TEKNIS` (atau `Tech`) dari dalam tombol tab switcher ("Panduan Cara Pakai (SOP)" dan "Spesifikasi & Sistem").
+  * Menerapkan indikator latar belakang geser (*smooth sliding pill*) berbasis CSS 3D transform (`translate-x-full` / `translate-x-0`) dengan kurva easing `cubic-bezier(0.16, 1, 0.3, 1)` durasi 300ms untuk perpindahan tab 60 FPS yang mulus dan tanpa lompatan tata letak (layout jump).
+* **Resolusi Perbaikan Hover Clipping pada Tombol Filter Kategori Bantuan (`UserGuideView.tsx`, `SystemSpecsView.tsx`, `globals.css`)**:
+  * Mengatasi masalah tombol filter kategori (*"Semua Panduan"*, *"Alur Rapat L10"*, *"Semua Spesifikasi"*, dsb.) yang terpotong di bagian bawah saat di-hover atau aktif akibat batasan vertikal kontainer `overflow-x-auto pb-1`.
+  * Menambahkan padding vertikal yang cukup (`py-2 px-1 -my-1.5`) pada kontainer pembungkus tombol filter agar bayangan (*box-shadow*), sudut membulat (*border-radius*), dan efek latar belakang saat hover memiliki ruang nafas lega dan tidak lagi terpotong garis batas scroll kontainer.
+  * Mendaftarkan utility class `.scrollbar-none` dan `.no-scrollbar` secara cross-browser di `src/app/globals.css` (Webkit, Firefox, Edge) agar scrollbar bawaan sistem operasi tidak mendistorsi tinggi kontainer tombol.
 
 
 
