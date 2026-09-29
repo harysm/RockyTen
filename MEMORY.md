@@ -58,6 +58,15 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-09-29] - Visual Analytics: Authentic 0% Metric Trend Rate & Role-Scoped Division View
+* **Penghapusan Formula Dummy pada Grafik Tren Ketercapaian (`src/app/page.tsx`)**:
+  - Menghapus formula pengisi dummy `(w <= currentWeek ? (70 + (w * 4)) : 0)` saat `evaluated === 0`, sehingga jika belum ada input data metrik di minggu tersebut, nilai ketercapaian mutlak bernilai `0%` (garis grafik rata di dasar).
+  - Menyesuaikan batas minimum persentase dari `Math.max(15, ...)` menjadi `Math.max(0, ...)` untuk akurasi matematis murni.
+  - Menambahkan keterangan konteks `(Belum ada input data pekan ini)` pada tooltip grafik jika pekan tersebut belum memiliki input data.
+* **Personalisasi Berbasis Peran (Owner vs PIC) (Opsi A)**:
+  - **Akun Owner & Developer**: Menampilkan judul "Tren Ketercapaian Metrik Mingguan (Semua Divisi)", menghitung rata-rata seluruh perusahaan, dan menampilkan ringkasan performa seluruh divisi (`visibleDepts = departments`).
+  - **Akun PIC**: Menampilkan judul spesifik divisi ("Tren Ketercapaian Metrik - Divisi [Nama]"), menghitung tren mingguan khusus untuk metrik divisinya sendiri, dan hanya menampilkan ringkasan ketercapaian divisinya sendiri di bagian bawah.
+
 ### [2026-09-29] - Security Fix: Zero-Trust Authentication Guard & Mandatory Login Redirect
 * **Pencegahan Otomatis Login Tanpa Izin (`src/context/AppContext.tsx`, `src/components/AppShell.tsx`)**:
   - Memperbaiki kerentanan keamanan di mana `isLoggedIn` sebelumnya bernilai default `true` (yang menyebabkan pengguna baru otomatis masuk sebagai Owner tanpa otentikasi).

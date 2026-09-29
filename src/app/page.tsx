@@ -55,7 +55,7 @@ export default function Dashboard() {
   const getDeptName = (id: string | null) => {
     if (!id) return language === "id" ? "Semua Divisi (Owner)" : "All Divisions (Owner)";
     const dept = departments.find(d => d.id === id);
-    return dept ? `${dept.name} Division` : "Unknown Division";
+    return dept ? (language === "id" ? `Divisi ${dept.name}` : `${dept.name} Division`) : "Unknown Division";
   };
 
   const formatCardDate = (dateStr: string) => {
@@ -121,17 +121,9 @@ export default function Dashboard() {
     return null;
   };
 
-  const chartDepts = [
-    { id: "dept-it", name: "IT" },
-    { id: "dept-finance", name: "Finance" },
-    { id: "dept-kitchen", name: "Kitchen" },
-    { id: "dept-service", name: "Service" },
-    { id: "dept-marketing", name: "Marketing" }
-  ];
-
   const visibleDepts = isOwnerOrDev 
-    ? chartDepts 
-    : chartDepts.filter(d => d.id === currentProfile.departmentId);
+    ? departments 
+    : departments.filter(d => d.id === currentProfile.departmentId);
 
   // 2. Weekly Performance Trend Calculations for Recharts AreaChart
   const weeklyTrendData = useMemo(() => {
@@ -151,14 +143,13 @@ export default function Dashboard() {
             const ratio = m.targetType === "higher_better" 
               ? (targetNum > 0 ? (val / targetNum) * 100 : 0)
               : (val > 0 ? (targetNum / val) * 100 : 0);
-            scoreSum += Math.min(95, Math.max(15, Math.round(ratio)));
+            scoreSum += Math.min(95, Math.max(0, Math.round(ratio)));
           }
         }
       });
 
-      const rate = evaluated > 0 
-        ? Math.round(scoreSum / evaluated) 
-        : (w <= currentWeek ? (70 + (w * 4)) : 0);
+      // Pure authentic rate: 0% if no metrics have inputs yet (no dummy numbers)
+      const rate = evaluated > 0 ? Math.round(scoreSum / evaluated) : 0;
 
       return {
         week: `Minggu ${w}`,
@@ -224,6 +215,7 @@ export default function Dashboard() {
   // Custom Tooltips for Recharts
   const CustomChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
       return (
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl shadow-lg text-xs">
           <p className="font-bold text-slate-900 dark:text-white mb-1">{label}</p>
@@ -234,6 +226,11 @@ export default function Dashboard() {
             </span>
             <span className="font-black text-blue-600 dark:text-blue-400">{payload[0].value}%</span>
           </div>
+          {dataPoint?.evaluated === 0 && (
+            <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 italic">
+              {language === "id" ? "(Belum ada input data pekan ini)" : "(No input data this week)"}
+            </p>
+          )}
         </div>
       );
     }
@@ -380,12 +377,18 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-2 border-b border-slate-100 dark:border-zinc-850">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {language === "id" ? "Tren Ketercapaian Metrik Mingguan" : "Weekly Metric Performance Trend"}
+                  {language === "id" 
+                    ? (isOwnerOrDev ? "Tren Ketercapaian Metrik Mingguan (Semua Divisi)" : `Tren Ketercapaian Metrik - ${getDeptName(currentProfile.departmentId)}`)
+                    : (isOwnerOrDev ? "Weekly Metric Performance Trend (All Divisions)" : `Weekly Metric Performance Trend - ${getDeptName(currentProfile.departmentId)}`)}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
                   {language === "id" 
-                    ? "Rata-rata persentase realisasi target Scoreboard per pekan (W1 - W4)" 
-                    : "Average Scoreboard target realization rate by week (W1 - W4)"}
+                    ? (isOwnerOrDev 
+                        ? "Rata-rata persentase realisasi target seluruh Scoreboard per pekan (W1 - W5)" 
+                        : `Rata-rata persentase realisasi target ${getDeptName(currentProfile.departmentId)} per pekan (W1 - W5)`)
+                    : (isOwnerOrDev 
+                        ? "Average Scoreboard target realization rate across all divisions (W1 - W5)" 
+                        : `Average Scoreboard target realization rate for ${getDeptName(currentProfile.departmentId)} (W1 - W5)`)}
                 </p>
               </div>
 
@@ -443,7 +446,9 @@ export default function Dashboard() {
           {/* Division quick summary chips */}
           <div className="pt-4 mt-2 border-t border-slate-100 dark:border-zinc-850 flex flex-wrap items-center justify-between gap-2 text-[11px]">
             <span className="text-slate-500 dark:text-zinc-400 font-semibold">
-              {language === "id" ? "Ketercapaian Divisi (W" + currentWeek + "):" : "Divisions This Week:"}
+              {language === "id" 
+                ? (isOwnerOrDev ? "Ketercapaian Divisi (W" + currentWeek + "):" : "Ketercapaian Divisi Anda (W" + currentWeek + "):")
+                : (isOwnerOrDev ? "Divisions Performance (W" + currentWeek + "):" : "Your Division Performance (W" + currentWeek + "):")}
             </span>
             <div className="flex flex-wrap gap-2">
               {visibleDepts.map((dept) => {
@@ -458,7 +463,7 @@ export default function Dashboard() {
                     key={dept.id}
                     className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300"
                   >
-                    {dept.name}: <strong className={rate >= 70 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>{rate}%</strong>
+                    {dept.name}: <strong className={rate >= 70 ? "text-emerald-600 dark:text-emerald-400" : (rate > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-zinc-400")}>{rate}%</strong>
                   </span>
                 );
               })}
