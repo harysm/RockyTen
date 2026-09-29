@@ -58,6 +58,16 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-09-29] - Security Fix: Zero-Trust Authentication Guard & Mandatory Login Redirect
+* **Pencegahan Otomatis Login Tanpa Izin (`src/context/AppContext.tsx`, `src/components/AppShell.tsx`)**:
+  - Memperbaiki kerentanan keamanan di mana `isLoggedIn` sebelumnya bernilai default `true` (yang menyebabkan pengguna baru otomatis masuk sebagai Owner tanpa otentikasi).
+  - Mengubah default state `isLoggedIn` menjadi `false` (Zero-Trust Model) dan menambahkan flag `isAuthReady: boolean` untuk memvalidasi keberadaan sesi di `localStorage` saat *client mount*.
+  - Sesi yang valid hanya terbentuk jika `localStorage.getItem("isLoggedIn") === "true"` serta `currentProfile` tersimpan dan valid.
+  - Saat `logoutProfile()`, data sesi `isLoggedIn` dan `currentProfile` dihapus sepenuhnya dari `localStorage`.
+* **Proteksi Akses Rute Global via `AppShell.tsx`**:
+  - Menghalangi bocornya antarmuka internal (`Sidebar`, `TopBar`, dashboard, dll.): jika `!isLoggedIn && !isAuthPage`, sistem menampilkan splash loader dan langsung mengeksekusi `router.replace("/auth")`.
+  - Halaman internal 100% terlindungi dari akses tanpa login.
+
 ### [2026-09-29] - Ultra-Smooth Theme Switching Transition (Light & Dark Mode)
 * **Dukungan Modern View Transitions API & Fallback CSS (`src/context/AppContext.tsx`, `src/app/globals.css`)**:
   - Pada fungsi `updateTheme`, diintegrasikan `document.startViewTransition()` browser modern untuk menghasilkan transisi *cross-fade* menyeluruh yang halus (350ms, *cubic-bezier(0.16, 1, 0.3, 1)*) tanpa efek kedip (*flash/pop*).

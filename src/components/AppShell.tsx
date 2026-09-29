@@ -17,6 +17,7 @@ const IS_MAINTENANCE_MODE = false;
 export const AppShell: React.FC<{ children: React.ReactNode; fullWidth?: boolean }> = ({ children, fullWidth }) => {
   const { 
     isLoggedIn, 
+    isAuthReady,
     toasts, 
     hideToast, 
     alertModal, 
@@ -42,21 +43,25 @@ export const AppShell: React.FC<{ children: React.ReactNode; fullWidth?: boolean
   const isAuthPage = pathname === "/auth";
 
   useEffect(() => {
-    if (!isLoggedIn && !isAuthPage) {
-      router.push("/auth");
+    // Only redirect once client has checked session state from localStorage
+    if (isAuthReady && !isLoggedIn && !isAuthPage) {
+      router.replace("/auth");
     }
-  }, [isLoggedIn, isAuthPage, router]);
+  }, [isAuthReady, isLoggedIn, isAuthPage, router]);
 
   // If Maintenance Mode is Active & Not Bypassed -> Render Maintenance Screen
   if (IS_MAINTENANCE_MODE && !isBypassed) {
     return <MaintenanceScreen onBypass={() => setIsBypassed(true)} />;
   }
 
-  // Not logged in yet: render loading state while redirect happens
-  if (!isLoggedIn && !isAuthPage) {
+  // Not logged in or checking auth: render clean loading spinner while redirect or session check occurs
+  if ((!isAuthReady || !isLoggedIn) && !isAuthPage) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-zinc-950">
-        <div className="w-8 h-8 border-4 border-slate-200 dark:border-zinc-800 border-t-red-500 rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-zinc-950 gap-3">
+        <div className="w-8 h-8 border-4 border-slate-200 dark:border-zinc-800 border-t-red-600 rounded-full animate-spin" />
+        <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500">
+          Memverifikasi Sesi...
+        </span>
       </div>
     );
   }

@@ -183,6 +183,7 @@ interface AppContextType {
   isLoading: boolean;
   // Auth & Profile
   isLoggedIn: boolean;
+  isAuthReady: boolean;
   credentials: Record<string, { password: string; profileId: string }>;
   loginProfile: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutProfile: () => void;
@@ -196,8 +197,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const INITIAL_LOGS: HistoryLog[] = [];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Auth state
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Default logged in to allow immediate preview
+  // Auth state - Secure by default: unauthenticated until verified
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
   const [allProfiles, setAllProfiles] = useState<Profile[]>(DEFAULT_PROFILES);
   const [credentials, setCredentials] = useState<Record<string, { password: string; profileId: string }>>(DEFAULT_CREDENTIALS);
 
@@ -531,12 +533,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const savedProfiles = localStorage.getItem("allProfiles");
       const savedCredentials = localStorage.getItem("credentials");
 
-      if (savedProfile) {
-        try { setCurrentProfile(JSON.parse(savedProfile)); } catch (e) { }
+      let hasValidSession = false;
+      if (savedLoggedIn === "true" && savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          if (parsed && parsed.id) {
+            setCurrentProfile(parsed);
+            setIsLoggedIn(true);
+            hasValidSession = true;
+          }
+        } catch (e) { }
       }
-      if (savedLoggedIn) {
-        try { setIsLoggedIn(JSON.parse(savedLoggedIn)); } catch (e) { }
+      if (!hasValidSession) {
+        setIsLoggedIn(false);
       }
+      setIsAuthReady(true);
       if (savedProfiles) {
         try { setAllProfiles(JSON.parse(savedProfiles)); } catch (e) { }
       }
@@ -979,6 +990,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logoutProfile = () => {
     setIsLoggedIn(false);
     saveState("isLoggedIn", false);
+    try {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("currentProfile");
+    } catch (e) { }
   };
 
   const resetToDummyData = () => {
@@ -2323,6 +2338,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         hideConfirm,
         isLoading,
         isLoggedIn,
+        isAuthReady,
         credentials,
         loginProfile,
         logoutProfile,
