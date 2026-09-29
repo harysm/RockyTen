@@ -1,19 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { History, Search, Filter, User } from "lucide-react";
 import CustomSelect from "@/components/CustomSelect";
 import HistorySkeleton from "@/components/skeletons/HistorySkeleton";
 
 export default function HistoryPage() {
+  const router = useRouter();
   const {
     currentProfile,
     departments,
     getFilteredData,
     language,
+    showToast,
     isLoading
   } = useApp();
+
+  const roleLower = (currentProfile.role || "").toLowerCase();
+  const canViewAll = roleLower === "owner" || roleLower === "developer" || !currentProfile.departmentId;
+
+  useEffect(() => {
+    if (!canViewAll && !isLoading) {
+      showToast(
+        language === "id"
+          ? "Akses Ditolak: Halaman Histori Log khusus Owner & Developer"
+          : "Access Denied: History Log is restricted to Owner & Developer",
+        "error"
+      );
+      router.replace("/");
+    }
+  }, [canViewAll, isLoading, router, showToast, language]);
 
   const { historyLogs } = getFilteredData();
 
@@ -22,9 +40,8 @@ export default function HistoryPage() {
   const [selectedActionFilter, setSelectedActionFilter] = useState("all");
   const [selectedDeptFilter, setSelectedDeptFilter] = useState("all");
 
-  const isOwner = currentProfile.role === "owner";
-  const isDeveloper = currentProfile.role === "developer";
-  const canViewAll = isOwner || isDeveloper;
+  const isOwner = roleLower === "owner";
+  const isDeveloper = roleLower === "developer";
 
   const getDeptName = (id: string | null) => {
     if (!id) return "Global";
@@ -97,6 +114,10 @@ export default function HistoryPage() {
 
   if (isLoading) {
     return <HistorySkeleton />;
+  }
+
+  if (!canViewAll) {
+    return null;
   }
 
   return (

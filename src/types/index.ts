@@ -130,3 +130,12 @@ export interface ConfirmModalInfo {
   variant?: "danger" | "warning" | "info";
   onConfirm: () => void;
 }
+
+export interface AlertModalInfo {
+  title?: string;
+  message: string;
+  buttonText?: string;
+  variant?: "info" | "success" | "warning" | "error";
+  onClose?: () => void;
+}
+

@@ -47,14 +47,18 @@ export const fetchHeadlinesFromDb = async (): Promise<Headline[]> => {
 export const insertHeadlineToDb = async (headline: Headline): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    let authorId = headline.authorId;
+    if (!authorId || !authorId.startsWith("prof-")) {
+      authorId = "prof-dev";
+    }
     const payload: any = {
       id: headline.id,
       department_id: headline.departmentId || null,
       title: headline.title,
       content: headline.content,
       category: headline.category,
-      author_id: headline.authorId,
-      author_name: headline.authorName,
+      author_id: authorId,
+      author_name: headline.authorName || "Developer",
       created_at: headline.createdAt,
       attachments: headline.attachments || []
     };

@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<string>("profile");
 
   // Profile Tab state
-  const currentEmailKey = Object.keys(credentials).find(key => credentials[key].profileId === currentProfile.id) || `${currentProfile.name.toLowerCase()}@nasigerilya.com`;
+  const currentEmailKey = currentProfile.email || Object.keys(credentials).find(key => credentials[key].profileId === currentProfile.id) || `${currentProfile.name.toLowerCase()}@ng.com`;
   const [profileName, setProfileName] = useState(currentProfile.name);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(currentProfile.avatarUrl || "");
   const [profileEmail, setProfileEmail] = useState(currentEmailKey);
@@ -647,62 +647,64 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* 4. Local Dummy Data Testing & Reset */}
-                <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        {language === "id" ? "Mode Data Dummy Lokal (Aktif)" : "Local Dummy Data Mode (Active)"}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white mt-2">
-                      {language === "id" ? "Pengujian & Reset Data Dummy" : "Dummy Data Testing & Reset"}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {language === "id"
-                        ? "Aplikasi saat ini berjalan 100% menggunakan data dummy lokal JavaScript (tanpa database cloud). Anda dapat mereset seluruh data (Rocks, Todos, Issues, Metrik, Headlines) ke kondisi awal kapan saja."
-                        : "The application is currently running 100% with local JavaScript dummy data (no cloud database). You can reset all data (Rocks, Todos, Issues, Metrics, Headlines) back to initial default seed at any time."}
-                    </p>
-                  </div>
-
-                  <div className="p-4 border border-amber-200/80 dark:border-amber-900/40 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* 4. Local Dummy Data Testing & Reset (Developer Only) */}
+                {isDeveloper && (
+                  <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 space-y-4">
                     <div>
-                      <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
-                        {language === "id" ? "Reset ke Data Dummy Bawaan" : "Reset to Default Dummy Data"}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                          {language === "id" ? "Mode Data Dummy Lokal (Aktif)" : "Local Dummy Data Mode (Active)"}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white mt-2">
+                        {language === "id" ? "Pengujian & Reset Data Dummy" : "Dummy Data Testing & Reset"}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {language === "id"
-                          ? "Hapus perubahan pengujian lokal dan muat ulang data dummy bawaan lengkap (5 divisi, target Q3, dsb)."
-                          : "Wipe local testing changes and reload complete default dummy seed data."}
+                          ? "Aplikasi saat ini berjalan 100% menggunakan data dummy lokal JavaScript (tanpa database cloud). Anda dapat mereset seluruh data (Rocks, Todos, Issues, Metrik, Headlines) ke kondisi awal kapan saja."
+                          : "The application is currently running 100% with local JavaScript dummy data (no cloud database). You can reset all data (Rocks, Todos, Issues, Metrics, Headlines) back to initial default seed at any time."}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        showConfirm({
-                          title: language === "id" ? "Reset ke Data Dummy Bawaan" : "Reset to Default Dummy Data",
-                          message: language === "id"
-                            ? "Apakah Anda yakin ingin mereset seluruh data (Rocks, Scoreboard, Todos, Issues, Headlines) kembali ke data dummy bawaan?"
-                            : "Are you sure you want to reset all data back to default dummy seed data?",
-                          variant: "danger",
-                          confirmText: language === "id" ? "Ya, Reset Sekarang" : "Yes, Reset Now",
-                          onConfirm: () => {
-                            resetToDummyData();
-                            showToast(
-                              language === "id" ? "Seluruh data telah direset ke data dummy bawaan!" : "All data has been reset to default dummy data!",
-                              "success"
-                            );
-                          }
-                        });
-                      }}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      {language === "id" ? "Reset Data Dummy" : "Reset Dummy Data"}
-                    </button>
+
+                    <div className="p-4 border border-amber-200/80 dark:border-amber-900/40 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                          {language === "id" ? "Reset ke Data Dummy Bawaan" : "Reset to Default Dummy Data"}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          {language === "id"
+                            ? "Hapus perubahan pengujian lokal dan muat ulang data dummy bawaan lengkap (5 divisi, target Q3, dsb)."
+                            : "Wipe local testing changes and reload complete default dummy seed data."}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          showConfirm({
+                            title: language === "id" ? "Reset ke Data Dummy Bawaan" : "Reset to Default Dummy Data",
+                            message: language === "id"
+                              ? "Apakah Anda yakin ingin mereset seluruh data (Rocks, Scoreboard, Todos, Issues, Headlines) kembali ke data dummy bawaan?"
+                              : "Are you sure you want to reset all data back to default dummy seed data?",
+                            variant: "danger",
+                            confirmText: language === "id" ? "Ya, Reset Sekarang" : "Yes, Reset Now",
+                            onConfirm: () => {
+                              resetToDummyData();
+                              showToast(
+                                language === "id" ? "Seluruh data telah direset ke data dummy bawaan!" : "All data has been reset to default dummy data!",
+                                "success"
+                              );
+                            }
+                          });
+                        }}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        {language === "id" ? "Reset Data Dummy" : "Reset Dummy Data"}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
               </div>
             )}
@@ -804,7 +806,7 @@ export default function SettingsPage() {
                         type="text"
                         value={emailNotifSettings.targetEmail}
                         onChange={(e) => updateEmailNotifSettings({ targetEmail: e.target.value })}
-                        placeholder="contoh: haryswork06@gmail.com, owner@nasigerilya.com"
+                        placeholder="contoh: haryswork06@gmail.com, owner@ng.com"
                         className="w-full max-w-lg px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 dark:text-white"
                       />
                       <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl space-y-1 text-[11px] text-emerald-900 dark:text-emerald-300">
@@ -1048,7 +1050,7 @@ export default function SettingsPage() {
                           required
                           value={newUserEmail}
                           onChange={(e) => setNewUserEmail(e.target.value)}
-                          placeholder="contoh: user@nasigerilya.com"
+                          placeholder="contoh: user@ng.com"
                           className="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:outline-none text-slate-900 dark:text-white"
                         />
                       </div>

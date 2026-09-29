@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import ConvertTargetForm from "@/components/convert/ConvertTargetForm";
+import { isMediaAttachment } from "@/utils/attachmentUtils";
 
 interface IssueDetailModalProps {
   isOpen: boolean;
@@ -121,12 +122,12 @@ export default function IssueDetailModal({
     }
   };
 
-  const linkAndDocAtts = issue.attachments?.filter(
-    (att) => att.type === "link" || att.dataUrl?.startsWith("http") || !att.type.startsWith("image/")
+  const docAndLinkAtts = issue?.attachments?.filter(
+    (att) => !isMediaAttachment(att.name, att.type, att.dataUrl)
   ) || [];
 
-  const imageAtts = issue.attachments?.filter(
-    (att) => att.type.startsWith("image/") && att.type !== "link" && !att.dataUrl?.startsWith("http")
+  const mediaAtts = issue?.attachments?.filter(
+    (att) => isMediaAttachment(att.name, att.type, att.dataUrl)
   ) || [];
 
   return (
@@ -264,53 +265,47 @@ export default function IssueDetailModal({
                     Lampiran File & Link ({issue.attachments.length})
                   </span>
 
-                  {/* Links & Documents */}
-                  {linkAndDocAtts.length > 0 && (
+                  {/* Links & Documents (Buka di Tab Baru) */}
+                  {docAndLinkAtts.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {linkAndDocAtts.map((att, idx) => (
+                      {docAndLinkAtts.map((att, idx) => (
                         <div key={idx} className="flex items-center">
-                          {att.type === "link" || att.dataUrl?.startsWith("http") ? (
-                            <a
-                              href={att.dataUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-bold text-blue-700 dark:text-blue-300 transition-all text-left shadow-2xs"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                              <span className="truncate max-w-[200px]">{att.name}</span>
-                            </a>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => downloadAttachment(att.name, att.dataUrl, att.type)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 transition-all text-left shadow-2xs cursor-pointer"
-                            >
-                              <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span className="truncate max-w-[200px]">{att.name}</span>
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => downloadAttachment(att.name, att.dataUrl, att.type)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 transition-all text-left shadow-2xs cursor-pointer group"
+                            title={`Buka ${att.name} di Tab Baru`}
+                          >
+                            {att.type === "link" || att.dataUrl?.startsWith("http") ? (
+                              <ExternalLink className="w-3.5 h-3.5 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
+                            ) : (
+                              <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0 group-hover:scale-110 transition-transform" />
+                            )}
+                            <span className="truncate max-w-[200px]">{att.name}</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-60 ml-0.5" />
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Images */}
-                  {imageAtts.length > 0 && (
+                  {/* Media (Foto / Video - Buka Langsung di Web) */}
+                  {mediaAtts.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 pt-1">
-                      {imageAtts.map((att, idx) => (
+                      {mediaAtts.map((att, idx) => (
                         <div
                           key={idx}
                           className="relative w-16 h-16 rounded-lg border border-slate-255 dark:border-zinc-800 overflow-hidden bg-slate-100 dark:bg-zinc-900 flex items-center justify-center group cursor-pointer shadow-2xs hover:shadow-md hover:border-red-400 dark:hover:border-red-600 transition-all"
-                          onClick={() => setLightboxImage(att.dataUrl || null)}
-                          title={att.name || "Gambar Lampiran"}
+                          onClick={() => downloadAttachment(att.name, att.dataUrl, att.type)}
+                          title={`${att.name || "Media"} - Klik untuk lihat langsung di web`}
                         >
                           <img
                             src={att.dataUrl}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                             alt={att.name || "attachment"}
                           />
-                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-[9px] text-white font-bold bg-black/60 px-1.5 py-0.5 rounded">Zoom</span>
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[9px] text-white font-bold bg-black/60 px-1.5 py-0.5 rounded">Lihat</span>
                           </div>
                         </div>
                       ))}

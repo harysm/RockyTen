@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useApp, Headline, AttachmentInfo } from "@/context/AppContext";
 import { Plus, Newspaper, Calendar, User, Tag, HelpCircle, FileText, Paperclip, Edit3, Trash2, RefreshCw, Link as LinkIcon, ExternalLink, Loader2, Trophy, Sparkles, AlertTriangle, Bell, Megaphone, MoreVertical } from "lucide-react";
-import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
 import CustomSelect from "@/components/CustomSelect";
 import HeadlinesSkeleton from "@/components/skeletons/HeadlinesSkeleton";
+import MediaLightboxModal from "@/components/MediaLightboxModal";
+import { isMediaAttachment, handleAttachmentClick, MediaPreviewItem } from "@/utils/attachmentUtils";
+import UniversalConvertModal, { UniversalConvertItem } from "@/components/UniversalConvertModal";
 
 export default function HeadlinesPage() {
   const {
@@ -139,59 +141,10 @@ export default function HeadlinesPage() {
     setLinkInputName("");
   };
 
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [previewMedia, setPreviewMedia] = useState<MediaPreviewItem | null>(null);
 
-  const downloadAttachment = (name: string, dataUrl?: string, type?: string) => {
-    if (!dataUrl) {
-      alert("File data tidak ditemukan.");
-      return;
-    }
-
-    try {
-      // Convert base64 dataUrl to Blob
-      const parts = dataUrl.split(",");
-      if (parts.length < 2) {
-        window.open(dataUrl, "_blank");
-        return;
-      }
-      const mime = parts[0].match(/:(.*?);/)?.[1] || type || "application/octet-stream";
-      const bstr = atob(parts[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      const blob = new Blob([u8arr], { type: mime });
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Open PDF & images in a new browser tab; download PPT, Excel, Word, CSV, ZIP
-      if (mime === "application/pdf" || mime.startsWith("image/")) {
-        const opened = window.open(blobUrl, "_blank");
-        if (!opened) {
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      } else {
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (e) {
-      console.error("Error opening file blob:", e);
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+  const handleOpenAttachment = (name: string, dataUrl?: string, type?: string) => {
+    handleAttachmentClick({ name, dataUrl, type }, setPreviewMedia);
   };
 
   const isOwner = currentProfile.role === "owner";
@@ -515,58 +468,51 @@ export default function HeadlinesPage() {
                 {hl.content}
               </p>
               {hl.attachments && hl.attachments.length > 0 && (() => {
-                const linkAndDocAtts = hl.attachments.filter(
-                  (att) => att.type === "link" || att.dataUrl?.startsWith("http") || !att.type.startsWith("image/")
+                const mediaAtts = hl.attachments.filter((att) =>
+                  isMediaAttachment(att.name, att.type, att.dataUrl)
                 );
-                const imageAtts = hl.attachments.filter(
-                  (att) => att.type.startsWith("image/") && att.type !== "link" && !att.dataUrl?.startsWith("http")
+                const docAndLinkAtts = hl.attachments.filter(
+                  (att) => !isMediaAttachment(att.name, att.type, att.dataUrl)
                 );
 
                 return (
                   <div className="mt-3 space-y-2.5">
-                    {/* 1. Links & Documents (Atas) */}
-                    {linkAndDocAtts.length > 0 && (
+                    {/* 1. Links & Documents (Buka di Tab Baru) */}
+                    {docAndLinkAtts.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {linkAndDocAtts.map((att, idx) => (
-                          <div key={idx} className="flex items-center">
+                        {docAndLinkAtts.map((att, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleOpenAttachment(att.name, att.dataUrl, att.type)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200 dark:border-zinc-800 rounded-xl text-[10px] font-bold text-slate-700 dark:text-slate-300 transition-all text-left shadow-2xs group cursor-pointer"
+                            title={`Buka ${att.name} di Tab Baru`}
+                          >
                             {att.type === "link" || att.dataUrl?.startsWith("http") ? (
-                              <a
-                                href={att.dataUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-xl text-[10px] font-bold text-blue-700 dark:text-blue-300 transition-all text-left shadow-2xs group"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
-                                <span className="truncate max-w-[180px]">{att.name}</span>
-                              </a>
+                              <ExternalLink className="w-3.5 h-3.5 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => downloadAttachment(att.name, att.dataUrl, att.type)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border border-slate-200 dark:border-zinc-800 rounded-xl text-[10px] font-bold text-slate-600 dark:text-slate-400 transition-all text-left shadow-2xs"
-                              >
-                                <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <span className="truncate max-w-[180px]">{att.name}</span>
-                              </button>
+                              <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0 group-hover:scale-110 transition-transform" />
                             )}
-                          </div>
+                            <span className="truncate max-w-[180px]">{att.name}</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-60 ml-0.5" />
+                          </button>
                         ))}
                       </div>
                     )}
 
-                    {/* 2. Images / Gambar (Bawah - Sejajar & Rapi) */}
-                    {imageAtts.length > 0 && (
+                    {/* 2. Photos & Videos (Buka Langsung di Web Tanpa Pindah Tab) */}
+                    {mediaAtts.length > 0 && (
                       <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                        {imageAtts.map((att, idx) => (
+                        {mediaAtts.map((att, idx) => (
                           <div 
                             key={idx} 
                             className="relative w-14 h-14 rounded-xl border border-slate-250 dark:border-zinc-800 overflow-hidden bg-slate-100 dark:bg-zinc-900 flex items-center justify-center group cursor-pointer shadow-2xs hover:shadow-md hover:border-red-400 dark:hover:border-red-600 transition-all" 
-                            onClick={() => setLightboxImage(att.dataUrl || null)}
-                            title={att.name || "Gambar Lampiran"}
+                            onClick={() => handleOpenAttachment(att.name, att.dataUrl, att.type)}
+                            title={`${att.name || "Media"} - Klik untuk lihat langsung di web`}
                           >
                             <img src={att.dataUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" alt={att.name || "attachment"} />
-                            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-[9px] text-white font-bold bg-black/60 px-1.5 py-0.5 rounded">Zoom</span>
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-[9px] text-white font-bold bg-black/60 px-1.5 py-0.5 rounded">Lihat</span>
                             </div>
                           </div>
                         ))}
@@ -913,27 +859,7 @@ export default function HeadlinesPage() {
       )}
 
       {/* Lightbox Modal */}
-      {lightboxImage && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in duration-200"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-transparent overflow-hidden rounded-2xl shadow-2xl">
-            <img 
-              src={lightboxImage} 
-              className="max-w-full max-h-[85vh] object-contain rounded-xl select-none" 
-              alt="attachment-popup" 
-              onClick={(e) => e.stopPropagation()} 
-            />
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 text-xs font-bold leading-none cursor-pointer w-8 h-8 flex items-center justify-center"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <MediaLightboxModal media={previewMedia} onClose={() => setPreviewMedia(null)} />
       {/* Universal Convert Modal */}
       <UniversalConvertModal
         isOpen={!!convertItem}

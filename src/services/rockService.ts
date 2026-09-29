@@ -34,6 +34,10 @@ export const fetchRocksFromDb = async (): Promise<Rock[]> => {
 export const insertRockToDb = async (rock: Rock): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    let picId = rock.picId;
+    if (!picId || !picId.startsWith("prof-")) {
+      picId = "prof-pic-it";
+    }
     const { error } = await supabase.from("rocks").insert({
       id: rock.id,
       department_id: rock.departmentId,
@@ -42,8 +46,8 @@ export const insertRockToDb = async (rock: Rock): Promise<boolean> => {
       quarter: rock.quarter,
       year: rock.year,
       status: rock.status,
-      pic_id: rock.picId,
-      pic_name: rock.picName,
+      pic_id: picId,
+      pic_name: rock.picName || "IT",
       due_date: rock.dueDate,
       created_at: rock.createdAt
     });

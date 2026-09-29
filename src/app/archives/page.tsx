@@ -519,7 +519,9 @@ export default function RebuiltArchivesPage() {
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "grid" ? "bg-white dark:bg-zinc-800 text-red-600 dark:text-red-500 shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "grid"
+                  ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -529,7 +531,9 @@ export default function RebuiltArchivesPage() {
             <button
               type="button"
               onClick={() => setViewMode("table")}
-              className={`p-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "table" ? "bg-white dark:bg-zinc-800 text-red-600 dark:text-red-500 shadow-xs" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === "table"
+                  ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
             >
               <Table2 className="w-4 h-4" />

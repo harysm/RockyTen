@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, Lock } from "lucide-react";
 
 export interface FormSelectOption {
   value: string;
@@ -108,6 +108,7 @@ export default function FormSelect({
         type="button"
         disabled={disabled}
         onClick={() => {
+          if (disabled) return;
           if (!isOpen) {
             updatePosition();
             setIsOpen(true);
@@ -155,13 +156,17 @@ export default function FormSelect({
           )}
         </div>
 
-        <ChevronDown
-          className={`${
-            isSmall ? "w-3.5 h-3.5" : "w-4 h-4"
-          } text-slate-400 dark:text-zinc-500 transition-transform duration-200 shrink-0 group-hover:text-slate-700 dark:group-hover:text-zinc-200 ${
-            isOpen ? "rotate-180 text-slate-900 dark:text-white" : ""
-          }`}
-        />
+        {disabled ? (
+          <Lock className={`${isSmall ? "w-3.5 h-3.5" : "w-4 h-4"} text-slate-400 dark:text-zinc-500 shrink-0`} />
+        ) : (
+          <ChevronDown
+            className={`${
+              isSmall ? "w-3.5 h-3.5" : "w-4 h-4"
+            } text-slate-400 dark:text-zinc-500 transition-transform duration-200 shrink-0 group-hover:text-slate-700 dark:group-hover:text-zinc-200 ${
+              isOpen ? "rotate-180 text-slate-900 dark:text-white" : ""
+            }`}
+          />
+        )}
       </button>
 
       {/* Floating Options Dropdown (Auto-Flip Upward or Downward) */}

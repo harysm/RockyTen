@@ -8,8 +8,8 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 
 * **Nama Proyek**: Scoreboard Management System - Nasi Gerilya
 * **Tech Stack**: Next.js 16 (App Router + Turbopack), TypeScript, TailwindCSS, Lucide Icons, Recharts.
-* **Database Cloud**: Supabase PostgreSQL (`https://kgdesstrvhrkounqqruk.supabase.co`)
-* **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnZGVzc3Rydmhya291bnFxcnVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MDA1NjUsImV4cCI6MjEwMTQ3NjU2NX0.fML9JKsx72oexrjC-cAS1u-mHdYYA6dTorL2J8k1khU`
+* **Database Cloud**: Supabase PostgreSQL (`https://pmnswfpwwsylqlttjzvd.supabase.co`)
+* **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtbnN3ZnB3d3N5bHFsdHRqenZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NzAxOTMsImV4cCI6MjEwNjE0NjE5M30.DYjD2yOz7VhXR9JOmnOBJ7J1oeoTX2LD2L0UueqQ8eM`
 * **GitHub Repository**: `https://github.com/harysm/RockyTen`
 * **Auto-Push & Deployment**: Terintegrasi otomatis via Git & Vercel.
 
@@ -17,13 +17,15 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 
 ## 👥 2. Akun Simulator & Kredensial Master
 
-| Peran | Nama | Email Login | Password | Hak Akses |
+| Peran | Nama Profil | Email Login | Password Default | Hak Akses |
 |---|---|---|---|---|
-| **Owner** | Richard | `richard@gmail.com` | `owner123` | Global Access (Semua Divisi + History System) |
-| **Owner** | Kim | `kim@gmail.com` | `owner123` | Global Access (Semua Divisi + History System) |
-| **Developer** | Developer | `developer@nasigerilya.com` | `123456` | Global Access (Semua Divisi + History System + Dev Tools) |
-| **PIC IT** | Harys | `harys@nasigerilya.com` | `123456` | Divisi IT |
-| **PIC Kitchen** | PIC Kitchen | `kitchen@nasigerilya.com` | `123456` | Divisi Kitchen |
+| **Developer** | Developer | `developer@ng.com` *(alias: `dev@ng.com`)* | `dev123` | Global Access (Semua Divisi + History System + Dev Tools) |
+| **Owner** | Owner | `owner@ng.com` | `owner123` | Global Access (Semua Divisi + History System) |
+| **PIC IT** | IT | `it@ng.com` | `123456` | Divisi IT |
+| **PIC Marketing** | Marketing | `marketing@ng.com` | `123456` | Divisi Marketing |
+| **PIC Kitchen** | Kitchen | `kitchen@ng.com` | `123456` | Divisi Kitchen |
+| **PIC Finance** | Finance | `finance@ng.com` | `123456` | Divisi Finance |
+| **PIC Service** | Service | `service@ng.com` | `123456` | Divisi Service |
 
 ---
 
@@ -55,6 +57,168 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 6. `issues` (`id`, `department_id`, `title`, `description`, `priority`, `status`, `pic_id`, `pic_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
+
+### [2026-09-29] - Ultra-Smooth Theme Switching Transition (Light & Dark Mode)
+* **Dukungan Modern View Transitions API & Fallback CSS (`src/context/AppContext.tsx`, `src/app/globals.css`)**:
+  - Pada fungsi `updateTheme`, diintegrasikan `document.startViewTransition()` browser modern untuk menghasilkan transisi *cross-fade* menyeluruh yang halus (350ms, *cubic-bezier(0.16, 1, 0.3, 1)*) tanpa efek kedip (*flash/pop*).
+  - Untuk peramban yang belum mendukung View Transitions, disiapkan mekanisme transisi CSS dinamis melalui kelas `html.theme-transitioning` yang memudarkan `background-color`, `border-color`, `color`, `fill`, `stroke`, dan `box-shadow` secara bertahap selama 350ms sebelum kelas tersebut dilepas otomatis.
+  - Menghormati pengaturan aksesibilitas: transisi otomatis dinonaktifkan jika pengguna mengaktifkan mode *Kurangi Animasi (Reduce Motion)* atau sistem memiliki preferensi `prefers-reduced-motion`.
+* **Animasi Morphing Ikon Sun & Moon di TopBar (`src/components/TopBar.tsx`)**:
+  - Tombol pengalih tema di bilah atas kini dilengkapi animasi *smooth rotation & scale morphing*: saat beralih ke Mode Gelap, ikon Matahari berputar 90° mengecil sembari ikon Bulan berputar dan membesar masuk, disertai mikro-animasi *active scale bounce* (90%).
+
+### [2026-09-29] - Access Restriction: Developer-Only Local Dummy Data Reset
+* **Pembatasan Tampilan Bagian "Pengujian & Reset Data Dummy" (`src/app/settings/page.tsx`)**:
+  - Bagian "Pengujian & Reset Data Dummy" (yang memuat status *Mode Data Dummy Lokal* dan tombol *Reset ke Data Dummy Bawaan*) di tab Tampilan (*Appearance*) halaman Pengaturan kini dibatasi secara eksklusif dengan kondisi `isDeveloper`.
+  - Akun Owner dan seluruh akun PIC tidak lagi melihat bagian reset data dummy ini, sehingga mencegah risiko ketidaksengajaan me-reset data pengujian oleh pihak non-teknis.
+
+### [2026-09-29] - Comprehensive Interactive Flowchart Architecture for Module Guides & SOPs
+* **Komponen Diagram Alur Flowchart Sejati (`src/components/help/GuideFlowchart.tsx`)**:
+  - Menggantikan layout linier lama dengan flowchart berstandar diagram teknis/SOP: Start Terminal Node (kapsul awal) ➔ Step Cards bernomor urut tegas (`01`, `02`, dst.) ➔ Decision Diamond (Belah ketupat evaluasi kondisi) dengan cabang ganda *Yes* & *No* ➔ Garis penghubung konvergen (*Converging Connector*) ➔ End Terminal Node (kapsul akhir).
+  - Dilengkapi mini mockup visual antarmuka realistis (*Contoh Tampilan / UI Preview*) di setiap langkah untuk mengilustrasikan elemen nyata sistem (filter divisi, modal input baris, radar warna, 5 Whys IDS, unggah berkas, dsb.).
+  - Mendukung tip operasional berikon `Lightbulb`, konektor SVG presisi, dan palette warna tematik adaptif (Emerald, Amber, Rose, Indigo, Cyan, Purple, Blue) dengan dukungan dark/light mode 100%.
+* **Integrasi Menyeluruh di 7 Modul Panduan (`src/components/help/UserGuideView.tsx`)**:
+  - Seluruh modul panduan kini tersaji dalam bentuk flowchart lengkap dengan mockup visual, keterangan mendalam, dan logika percabangan:
+    1. **Alur Rapat Mingguan (SOP L10)**: Mulai Rapat ➔ Scoreboard (5m) ➔ Rocks (5m) ➔ Headlines (5m) ➔ Review To-Do (5m) ➔ Sesi IDS (60m) ➔ Kondisi Ada Masalah Baru? (Ya ➔ Catat ke Issue / Tidak ➔ Rapat Selesai).
+    2. **Scoreboard KPI**: Buka Halaman ➔ Pilih Divisi & Periode ➔ Input Angka Aktual Harian/Mingguan ➔ Baca Radar Warna Status ➔ Kondisi Metrik Merah ≥ 2 Minggu? (Ya ➔ Konversi 1-Klik ke Issue / Tidak ➔ Pertahankan).
+    3. **Batu Sasaran / Rocks**: Buka Halaman ➔ Tentukan Sasaran Kuartal 90 Hari ➔ Tautkan Metrik Pendukung ➔ Pantau Radar Otomatis ➔ Kondisi Progres 100%? (Ya ➔ Verifikasi Selesai Owner / Tidak ➔ Bawa ke Sesi IDS).
+    4. **Pusat Kendala / Issues (IDS)**: Ada Kendala? ➔ Lapor Masalah + Foto Bukti ➔ Sortir Top 3 Kritis di Rapat ➔ Bedah Akar Masalah (5 Whys) ➔ Kondisi Solusi Ketemu? (Ya ➔ Konversi Jadi To-Do / Tidak ➔ Riset Mendalam).
+    5. **Agenda Tugas / To-Do List**: Tugas Masuk ➔ Terima Komitmen 1 PIC & 7 Hari ➔ Lampirkan Dokumen/Foto Bukti ➔ Eksekusi di Lapangan ➔ Kondisi Selesai Sebelum Rapat? (Ya ➔ Konfirmasi Selesai / Tidak ➔ Buat Ulang).
+    6. **Warta Tim / Headlines**: Ada Kabar? ➔ Pilih Kategori Warta ➔ Susun Pesan & Lampiran ➔ Publikasikan ke Tim ➔ Kondisi Butuh Aksi? (Ya ➔ Konversi ke To-Do / Tidak ➔ Arsip Feed Tim).
+    7. **Arsip & Laporan**: Buka Arsip ➔ Pilih Tab Modul ➔ Filter Divisi & Rentang Waktu ➔ Analisis Ringkasan Kinerja ➔ Kondisi Butuh Laporan Tercetak? (Ya ➔ Ekspor Excel/CSV / Tidak ➔ Tinjau Online).
+  - Teks tetap 100% *searchable* di pencarian Help dan mendukung penuh dwibahasa (ID/EN).
+
+### [2026-09-29] - Access Restriction: Removal of History Log from PIC Accounts
+* **Penyembunyian Menu Navigasi Histori Log untuk Akun PIC (`src/components/Sidebar.tsx`)**:
+  - Menu navigasi "Histori Log" dipindahkan dari menu dasar publik (`baseNavItems`) ke daftar menu eksklusif Owner & Developer (`isOwnerOrDev`), bersanding dengan menu "Arsip".
+  - Seluruh akun PIC operasional (Kitchen, Marketing, IT, Finance, Service) kini tidak lagi melihat maupun memiliki akses menu Histori Log di bilah samping (*sidebar*).
+* **Proteksi Rute Halaman Histori Log (`src/app/history/page.tsx`)**:
+  - Ditambahkan penjaga rute (*route guard*): jika akun dengan peran PIC mencoba membuka `/history` secara langsung melalui URL browser, sistem otomatis memblokir akses, memunculkan notifikasi toast penolakan akses ("Akses Ditolak: Halaman Histori Log khusus Owner & Developer"), dan me-redirect pengguna kembali ke Dashboard (`/`).
+  - Halaman tidak merender data audit log ke DOM (`return null`) jika pengguna bukan Owner atau Developer.
+* **Isolasi State Audit Log dari PIC (`src/context/AppContext.tsx`)**:
+  - Pada fungsi `getFilteredData()`, properti `historyLogs` untuk profil non-Owner/non-Dev diisi array kosong (`[]`) sehingga data rekam jejak sistem tidak terekspos ke state client akun PIC.
+
+### [2026-09-29] - In-App Media Viewer & Smart Document Attachment Routing
+* **In-App Lightbox Modal untuk File Foto & Video (`src/utils/attachmentUtils.ts`, `src/components/MediaLightboxModal.tsx`)**:
+  - Dibuat utilitas terpusat `attachmentUtils.ts` (`isPhotoAttachment`, `isVideoAttachment`, `isMediaAttachment`, `getMimeTypeFromDataUrl`, `handleAttachmentClick`) untuk mendeteksi tipe file lampiran secara presisi.
+  - File foto (`.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`, `.bmp`, `.avif`) dan video (`.mp4`, `.webm`, `.ogg`, `.mov`) langsung dibuka di dalam aplikasi via modal lightbox interaktif `MediaLightboxModal` tanpa membuka atau berpindah ke tab browser baru.
+  - Lightbox dilengkapi fitur zoom/fit preview, pemutar video HTML5 dengan playback control, badge judul berkas, tombol unduh berkas langsung, serta penutupan responsif melalui tombol Escape, tombol X, maupun klik backdrop.
+* **Pembukaan Otomatis Dokumen & Tautan di Tab Baru (`_blank`)**:
+  - Seluruh file di luar foto dan video (seperti Excel `.xlsx`/`.xls`, CSV `.csv`, Word `.docx`/`.doc`, PDF `.pdf`, PowerPoint `.pptx`/`.ppt`, file teks/arsip `.txt`/`.zip`, dan URL eksternal) secara otomatis dibuka di tab browser baru (`target="_blank"`, `rel="noopener,noreferrer"`).
+  - Untuk file lokal/base64, data dikonversi secara cerdas menjadi `Blob` dengan MIME type dokumen yang sesuai sehingga browser dapat merender atau menyajikan dokumen langsung di tab baru.
+* **Integrasi Menyeluruh di Seluruh Modul (`src/app/todos/page.tsx`, `src/app/issues/page.tsx`, `src/components/issues/IssueDetailModal.tsx`, `src/app/headlines/page.tsx`, `src/components/convert/ConvertTargetForm.tsx`)**:
+  - Seluruh daftar lampiran di Todos, Issues (Tabel & Kartu & Modal Detail), Headlines, dan form Konversi Universal telah dihubungkan ke `handleAttachmentClick` dengan indikator visual `ExternalLink` untuk dokumen/link dan thumbnail interaktif untuk media.
+
+### [2026-09-29] - Conversion & Scoreboard Enhancements: Division Rocks Integration & Automatic Division Scoping
+* **Pilihan Prioritas Rock pada Konversi Universal (`src/components/convert/ConvertTargetForm.tsx`)**:
+  - Saat mengonversi Todo, Issue, atau Headline menjadi Scoreboard KPI, form kini menyajikan selector **"Prioritas Rock (90 Hari)"** yang otomatis memfilter daftar Rock aktif milik divisi target terkait.
+  - Jika divisi target memiliki Rock aktif, pengguna dapat langsung menautkan hasil konversi ke Rock tersebut (atau memilih opsi default "Metrik Mandiri").
+  - Nilai `rockId` diteruskan secara seamless ke fungsi `addMetric()`, sehingga progres metrik baru langsung mengkalkulasi pencapaian Rock kuartalan divisi tersebut.
+* **Otomatisasi Deteksi Divisi pada Tambah Metrik Scoreboard (`src/app/scoreboard/page.tsx`)**:
+  - Menghilangkan input manual "Target Divisi" yang berulang saat membuat metrik baru di Scoreboard.
+  - Untuk akun PIC: target divisi 100% otomatis menggunakan divisi PIC bersangkutan.
+  - Untuk akun Owner: jika sedang membuka filter divisi tertentu atau jika memilih prioritas Rock kuartalan, divisi target langsung otomatis terkunci ke divisi tersebut dengan badge informatif. Dropdown manual divisi hanya dimunculkan jika Owner berada di tab "Semua Divisi" dan metrik yang dibuat adalah metrik mandiri (tanpa Rock).
+
+### [2026-09-29] - Role Scoping: Hide Developer Account from Operational PIC Selections
+* **Pembersihan Akun Developer dari Dropdown PIC (`src/components/convert/ConvertTargetForm.tsx`, `src/app/rocks/page.tsx`)**:
+  - Akun peran "Developer" disembunyikan (*hidden*) dari daftar pilihan PIC (Person In Charge) di modal Konversi dan form Tambah/Edit Rock. Developer diperlakukan murni sebagai akun teknis/sistem administrator dan tidak dihitung sebagai PIC operasional bisnis.
+  - Opsi PIC kini murni hanya menyajikan peran operasional (Owner dan PIC divisi terkait).
+
+### [2026-09-29] - UX Streamlining & Data Integrity: Simplified Add Rock Modal & Conversion Division/PIC Lock
+* **Penyederhanaan Form Tambah Rock (`src/app/rocks/page.tsx`)**:
+  - Menghapus input manual "Tahun" dan input "Progres Mandiri Awal (%)" dari modal Tambah Rock. Rock baru kini selalu mulai dari 0% secara otomatis.
+  - Tahun secara cerdas diekstrak langsung dari tanggal Batas Waktu (`newDueDate`), dan perubahan kuartal otomatis menyinkronkan default tanggal akhir kuartal (Q1: 31 Mar, Q2: 30 Jun, Q3: 30 Sep, Q4: 31 Des).
+  - Tampilan form kini rapi 2 kolom: `[ Kuartal ]` dan `[ Batas Waktu (Due Date) ]`.
+* **Penguncian Hak Akses Konversi Divisi & PIC (`src/components/convert/ConvertTargetForm.tsx`)**:
+  - Mengunci (`disabled={true}`) pilihan Divisi Terkait dan PIC untuk seluruh akun non-Owner (`!isOwner`, mencakup seluruh PIC divisi serta akun Developer) agar data tidak bisa dipindahkan sembarangan antar divisi saat konversi modul.
+  - Menambahkan indikator visual gembok 🔒 "Terkunci" pada label Divisi dan PIC serta banner informasi.
+  - Hak akses memindahkan divisi & PIC saat konversi kini secara ketat dan eksklusif HANYA diberikan kepada peran **Owner** (`role === "owner"`).
+
+### [2026-09-29] - UI Alignment: Kartu/Tabel View Mode Switcher Active Black Capsule
+* **Penyelarasan Tampilan Toggle View Mode Halaman Arsip (`src/app/archives/page.tsx`)**:
+  - Mengubah styling tombol aktif "Kartu" dan "Tabel" dari kapsul putih dengan teks merah (`bg-white text-red-600`) menjadi kapsul hitam solid modern (`bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs`).
+  - Menyamakan desain visual dengan indikator tab utama di bagian atas arsip dan tombol kontrol modern lainnya di seluruh aplikasi.
+
+### [2026-09-29] - Critical Database Fix: Resolusi Bug Gagal Simpan Data Baru (Metrics, Todos, Issues)
+* **Investigasi Akar Masalah & Perbaikan Database Payload (`src/services/metricService.ts`, `src/services/todoService.ts`, `src/context/AppContext.tsx`)**:
+  * **Akar Masalah 1: Kolom Hantu `rock_id` pada Metrik**:
+    - `insertMetricToDb` sebelumnya mengirimkan properti `rock_id: metric.rockId || null` ke tabel `public.metrics` di Supabase. Karena kolom `rock_id` tidak ada dalam skema PostgreSQL, PostgREST menolak penyimpanan dengan error `Could not find the 'rock_id' column of 'metrics' in the schema cache`, menyebabkan metrik baru gagal disimpan ke database.
+    - **Solusi**: Dieliminasi dari payload insert/update dan ditambahkan kolom `accumulation_mode` yang sesuai dengan skema PostgreSQL.
+  * **Akar Masalah 2: Pelanggaran Foreign Key `todos_created_by_fkey` pada Todo/Agenda**:
+    - `addTodo` di `AppContext.tsx` sebelumnya mengirimkan nama profil (`currentProfile.name` seperti "Richard" atau "IT") ke field `created_by`. Karena kolom `todos.created_by` memiliki relasi foreign key ke `public.profiles(id)` (yang membutuhkan string berformat `prof-...`), PostgreSQL menolak transaksi dengan error `violates foreign key constraint "todos_created_by_fkey"`.
+    - **Solusi**: Diubah menjadi `currentProfile.id` (`prof-pic-it`, `prof-dev`, dst.) serta ditambahkan sanitasi fallback ID profil yang valid pada `insertTodoToDb`.
+  * **Penguatan Menyeluruh Layanan Database**:
+    - Sanitasi `pic_id` dan `author_id` diterapkan ke `issueService.ts`, `headlineService.ts`, `rockService.ts`, dan `saveMetricValueToDb` agar setiap data operasional dijamin lolos validasi foreign key PostgreSQL.
+
+### [2026-09-29] - PIC Accounts Modernization: @ng.com Domain & Concise Role-Based Profile Names
+* **Standardisasi Akun Pengguna & PIC Divisi (`src/constants/index.ts`, Supabase `profiles`, `src/context/AppContext.tsx`, `src/components/help/SystemSpecsView.tsx`)**:
+  * **Nama Profil Ringkas Tanpa Nama Personal**:
+    - Seluruh nama profil PIC dan pengguna utama disederhanakan murni menjadi nama perannya: **Developer**, **Owner**, **IT**, **Marketing**, **Kitchen**, **Finance**, dan **Service**.
+  * **Migrasi Domain Resmi `@ng.com`**:
+    - Email login utama diperbarui menjadi: `developer@ng.com`, `owner@ng.com`, `it@ng.com`, `marketing@ng.com`, `kitchen@ng.com`, `finance@ng.com`, dan `service@ng.com`.
+  * **Sinkronisasi Langsung ke Supabase PostgreSQL**:
+    - Tabel `public.profiles` di Supabase langsung dimutakhirkan baris datanya untuk semua ID profil terkait (`prof-dev`, `prof-owner`, `prof-pic-it`, `prof-pic-marketing`, `prof-pic-kitchen`, `prof-pic-finance`, `prof-pic-service`).
+    - Skrip database `supabase_schema.sql` dan `scripts/schema.sql` diselaraskan ke seed baru.
+  * **Ketahanan Cache & Autentikasi Aplikasi**:
+    - `AppContext.tsx` memetakan properti `email` dari `dbProfiles` Supabase dan menggabungkan `DEFAULT_CREDENTIALS` saat load lokal maupun cloud, menjamin kredensial baru langsung aktif tanpa mengharuskan pengguna clear cache browser.
+
+### [2026-09-28] - Auth UI Polish: Black Action Buttons, Smooth Sliding Switcher, Custom Divisi Dropdown & PBKDF2 Password Encryption
+* **Penyempurnaan Tampilan Form Autentikasi & Keamanan Kriptografi Password (`src/app/auth/page.tsx`, `src/lib/crypto.ts`, `src/context/AppContext.tsx`)**:
+  * **Tombol Utama Hitam Elegan**:
+    - Tombol aksi merah (`Daftar & Masuk` dan `Masuk ke Dashboard`) diganti menjadi hitam solid modern (`bg-zinc-950 hover:bg-zinc-800 text-white font-bold`) dengan shadow halus dan transisi interaktif.
+    - Ring fokus input diselaraskan dari merah menjadi neutral dark (`focus:border-zinc-400 focus:ring-zinc-900/10`).
+  * **Sliding Pill Tab Switcher 60 FPS**:
+    - Tombol tab "Masuk" dan "Daftar" kini dilengkapi indikator kapsul hitam (`bg-zinc-950`) yang meluncur halus (*hardware-accelerated slide*) dengan kurva easing `cubic-bezier(0.16,1,0.3,1)` berdurasi 300ms.
+    - Teks tab aktif berwarna putih tajam (`text-white`) sedangkan tab tidak aktif berwarna slate abu-abu lembut (`text-slate-500 hover:text-slate-900`).
+  * **Desain Dropdown Divisi Bebas Bug Visual**:
+    - Menggantikan elemen `<select>` native browser dengan custom dropdown modern yang konsisten dengan styling input (`bg-slate-50 border-slate-200 rounded-xl`).
+    - Dilengkapi ikon representatif per divisi (Laptop untuk IT, Utensils untuk Kitchen, Users untuk Service, Coins untuk Finance, Megaphone untuk Marketing), checkmark opsi aktif, rotasi chevron 180°, auto-close saat klik di luar (*click-outside*) atau tombol `Escape`, dan layer `z-50` tanpa bug clipping/overflow.
+  * **Enkripsi Kata Sandi Standar NIST (PBKDF2 + SHA-256 + Random Salt)**:
+    - Modul utilitas baru `src/lib/crypto.ts` mengimplementasikan fungsi `hashPassword` dan `verifyPassword` menggunakan Web Crypto API native (`crypto.subtle`) tanpa dependensi eksternal.
+    - Setiap pendaftaran user baru (`addProfile`) atau perubahan password (`updateProfileAndSave`) secara otomatis menyimpan kata sandi dalam bentuk hash aman bergaram acak 16-byte (`pbkdf2$50000$<salt>$<hash>`).
+    - Kompatibilitas mundur penuh: akun demo lama (seperti `owner123` / `123456`) tetap dapat login dan otomatis di-*upgrade* ke format hash PBKDF2 saat berhasil login.
+
+### [2026-09-28] - Clean Slate Production State: Pembersihan Menyeluruh Seluruh Data Dummy Operasional
+* **Pembersihan Data Dummy di Tiga Lapisan: Cloud Supabase, Local Constants, dan Cache Browser (`src/constants/index.ts`, `src/context/AppContext.tsx`, `supabase_schema.sql`, `scripts/schema.sql`)**:
+  * **Scope Data yang Dibersihkan**:
+    - **Tabel Cloud Supabase (`pmnswfpwwsylqlttjzvd`)**: Seluruh record di tabel operasional (`rocks`, `metrics`, `metric_values`, `todos`, `issues`, `headlines`, `history_logs`) telah dihapus secara menyeluruh (0 rows).
+    - **Master Data Utuh**: Tabel `departments` (5 departemen) dan `profiles` (8 profil pengguna simulator termasuk Owner Richard & Kim, PIC IT Devin, Kitchen Chef Budi, Finance Sarah, Service Rian, Marketing Dewi, dan Developer) tetap dipertahankan utuh dan aman.
+    - **Konstanta Inisial Aplikasi (`src/constants/index.ts`)**: Array `INITIAL_ROCKS`, `INITIAL_METRICS`, `INITIAL_METRIC_VALUES`, `INITIAL_TODOS`, `INITIAL_ISSUES`, dan `INITIAL_HEADLINES` telah dikosongkan menjadi `[]`.
+    - **Konteks & Cache Browser (`src/context/AppContext.tsx`)**:
+      - `INITIAL_LOGS` dikosongkan menjadi `[]`.
+      - Ditambahkan auto-purge one-time `dummy_cleanup_done_v2` pada `useEffect` inisialisasi agar browser client lama langsung membuang sisa cache localStorage dummy (`nasi_gerilya_*`) tanpa perlu manual clear browser storage.
+      - Fungsi `resetToDummyData` diperbarui untuk mereset sistem ke lembar bersih kosong (`[]`), bukan memuat kembali data dummy lama.
+    - **Skrip DDL Database (`supabase_schema.sql`, `scripts/schema.sql`)**: Blok `INSERT INTO public.rocks` dummy seed kuartal Q3 telah dihapus agar eksekusi DDL baru tidak menyisipkan data dummy kembali.
+
+### [2026-09-28] - Top-Center Multi-Stacking Toasts & Custom Alert Modal with Action Button
+* **Perombakan Sistem Notifikasi Toast & Penggantian Alert Bawaan Browser (`src/components/AppShell.tsx`, `src/components/CustomAlertModal.tsx`, `src/context/AppContext.tsx`, `src/types/index.ts`)**:
+  * **Relokasi ke Atas-Tengah (Top-Center)**:
+    - Memindahkan notifikasi toast dari pojok kanan atas (`sm:right-5 sm:top-6`) ke posisi tengah atas layar (`top-5 left-1/2 -translate-x-1/2`).
+  * **Sistem Multi-Stacking Vertikal**:
+    - State toast kini berupa array `toasts: ToastInfo[]` (antrean maksimal 4 toast bertumpuk) dengan animasi slide-down dan progress countdown bar 3.5 detik yang berjalan independen per toast.
+  * **Komponen Baru `CustomAlertModal.tsx` (Menggantikan Alert Pop-up Browser)**:
+    - Alert ber-tombol yang biasanya muncul dari atas dengan desain browser default kini digantikan modal custom modern bergaya RockyTen yang meluncur halus dari atas layar (*slide-in-from-top*).
+    - Memiliki icon dinamis (error, warning, success, info), tipografi judul & deskripsi berlatar glassmorphism dark/light, serta tombol aksi "Mengerti / OK".
+    - `window.alert` di-intercept secara global di `AppContext` sehingga seluruh pemanggilan `alert(...)` di halaman manapun otomatis menampilkan modal custom ini.
+
+### [2026-09-28] - Supabase Cloud Project Integration (Ref: pmnswfpwwsylqlttjzvd)
+* **Integrasi Database Cloud Supabase PostgreSQL (`.env.local`, `supabase_schema.sql`, `scripts/schema.sql`)**:
+  * **Kredensial Project**:
+    - URL: `https://pmnswfpwwsylqlttjzvd.supabase.co`
+    - Dashboard SQL: `https://supabase.com/dashboard/project/pmnswfpwwsylqlttjzvd/sql/new`
+    - Environment Variables: Disetel ke `.env.local` dengan `NEXT_PUBLIC_ENABLE_DATABASE=true`.
+  * **Penyempurnaan Skema Database (`supabase_schema.sql`)**:
+    - Menambahkan tabel `rocks` yang sebelumnya tertinggal di skema DDL awal.
+    - Menambahkan seed awal 5 departemen, 8 profil simulator, dan 5 rocks prioritas Q3 2026.
+    - Mengaktifkan Row Level Security (RLS) pada 10 tabel utama (`departments`, `profiles`, `rocks`, `metrics`, `metric_values`, `todos`, `issues`, `headlines`, `history_logs`, `system_settings`) dengan policy akses `anon` client-side.
+
+### [2026-09-28] - Fix Layout Bug: Filter Pills Cramped & Inconsistent Vertical Spacing at /help
+* **Penyelarasan Spacing Filter Pills & Alignment Grid (`src/components/help/UserGuideView.tsx`, `src/components/help/SystemSpecsView.tsx`)**:
+  * **Akar Masalah**: Class pembungkus filter pills sebelumnya menggunakan `py-2 px-1 -my-1.5 scrollbar-none`. Utility `-my-1.5` (-6px) memicu kolaps margin vertikal sehingga tombol `Semua Panduan` / `Semua Spesifikasi` menempel terlalu rapat (~6-8px) di atas kartu `DAFTAR PANDUAN SOP`, sementara jarak atasnya jauh lebih longgar. Selain itu `px-1` menyebabkan tombol menjorok ke dalam 4px sehingga tidak sejajar dengan tepi kartu di bawahnya.
+  * **Solusi**:
+    - Menghapus negative margin `-my-1.5` dan padding horizontal `px-1` berlebih menjadi `py-1 scrollbar-none`.
+    - Spacing vertikal kini konsisten dan simetris secara ritmik (~40px ruang nafas di atas maupun di bawah) mengikuti `space-y-6` dari kontainer utama.
+    - Sisi kiri tombol kini sejajar presisi (*pixel-perfect alignment*) dengan batas tepi kiri kartu `DAFTAR PANDUAN SOP` dan artikel kanvas.
+
 ### [2026-09-24] - Collapsible Mini-Sidebar (Icon-Only Mode) with 60 FPS Slide Animation
 * **Fitur Buka-Tutup Sidebar Desktop Ramping & Sinkronisasi Layout (`src/components/Sidebar.tsx`, `src/components/AppShell.tsx`, `src/context/AppContext.tsx`)**:
   * **Permintaan User**: Menambahkan fitur tutup-buka navbar di mana saat ditutup navbar tidak hilang melainkan mengecil hingga hanya tampak ikon saja (*icon-only mini sidebar*), saat dibuka kembali normal, dan animasi slide buka-tutupnya bergerak halus (*smooth transition*).

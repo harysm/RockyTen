@@ -28,11 +28,15 @@ import {
   Trophy,
   Sparkles,
   AlertTriangle,
-  Bell
+  Bell,
+  Lock,
+  ExternalLink
 } from "lucide-react";
 import { AttachmentInfo } from "@/types";
 import FormDatePicker from "@/components/FormDatePicker";
 import FormSelect from "@/components/FormSelect";
+import { handleAttachmentClick, isMediaAttachment, MediaPreviewItem } from "@/utils/attachmentUtils";
+import MediaLightboxModal from "@/components/MediaLightboxModal";
 
 export type ConvertSourceType = "metric" | "todo" | "issue" | "headline";
 export type ConvertTargetType = "metric" | "todo" | "issue" | "headline";
@@ -150,6 +154,7 @@ export default function ConvertTargetForm({
     currentProfile,
     departments,
     allProfiles,
+    rocks,
     addMetric,
     addTodo,
     addHeadline,
@@ -171,14 +176,39 @@ export default function ConvertTargetForm({
 
   const [targetType, setTargetType] = useState<ConvertTargetType>(() => availableTargets[0]?.type || "todo");
 
+  // Role permissions: Lock division & PIC for all roles EXCEPT Owner
+  const roleLower = (currentProfile?.role || "").toLowerCase();
+  const isOwner = roleLower === "owner";
+  const isLocked = !isOwner;
+
+  // Filter out Developer from operational PIC options (Developer is a system administrator role, not an operational PIC)
+  const operationalProfiles = useMemo(() => {
+    return allProfiles.filter(p => p.role.toLowerCase() !== "developer" && p.id !== "prof-dev");
+  }, [allProfiles]);
+
   // Form states (Pre-filled directly from sourceItem at initialization - Zero Mount Lag)
   const [title, setTitle] = useState(() => sourceItem?.title || "");
   const [desc, setDesc] = useState(() => sourceItem?.description || sourceItem?.content || "");
   const [deptId, setDeptId] = useState(() => sourceItem?.departmentId || currentProfile?.departmentId || departments[0]?.id || "");
 
   // PIC States
-  const [selectedPicId, setSelectedPicId] = useState(() => sourceItem?.picId || currentProfile?.id || "");
-  const [selectedPicName, setSelectedPicName] = useState(() => sourceItem?.picName || currentProfile?.name || "");
+  const [selectedPicId, setSelectedPicId] = useState(() => {
+    if (sourceItem?.picId && sourceItem.picId !== "prof-dev") return sourceItem.picId;
+    const initialDept = sourceItem?.departmentId || currentProfile?.departmentId || departments[0]?.id;
+    const match = allProfiles.find(p => p.departmentId === initialDept && p.role.toLowerCase() !== "developer");
+    if (match) return match.id;
+    const nonDev = allProfiles.find(p => p.role.toLowerCase() !== "developer");
+    return nonDev ? nonDev.id : (currentProfile?.id || "");
+  });
+
+  const [selectedPicName, setSelectedPicName] = useState(() => {
+    if (sourceItem?.picName && sourceItem.picId !== "prof-dev") return sourceItem.picName;
+    const initialDept = sourceItem?.departmentId || currentProfile?.departmentId || departments[0]?.id;
+    const match = allProfiles.find(p => p.departmentId === initialDept && p.role.toLowerCase() !== "developer");
+    if (match) return match.name;
+    const nonDev = allProfiles.find(p => p.role.toLowerCase() !== "developer");
+    return nonDev ? nonDev.name : (currentProfile?.name || "");
+  });
 
   // Target Specific States
   // Metric
@@ -189,6 +219,7 @@ export default function ConvertTargetForm({
   const [metricCycle, setMetricCycle] = useState<"monthly" | "special">("monthly");
   const [metricDeadline, setMetricDeadline] = useState("");
   const [metricDurationDays, setMetricDurationDays] = useState(7);
+  const [metricRockId, setMetricRockId] = useState<string>("");
 
   // Todo / Issue
   const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">(() => sourceItem?.priority || "medium");
@@ -200,6 +231,7 @@ export default function ConvertTargetForm({
   const [attachmentFiles, setAttachmentFiles] = useState<AttachmentInfo[]>(() => (sourceItem?.attachments && Array.isArray(sourceItem.attachments) ? [...sourceItem.attachments] : []));
   const [linkInputUrl, setLinkInputUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewMedia, setPreviewMedia] = useState<MediaPreviewItem | null>(null);
 
   // Only update state if sourceItem ID actually changes after mount (avoids cascading re-renders on mount)
   const prevSourceIdRef = useRef(sourceItem?.id);
@@ -209,8 +241,17 @@ export default function ConvertTargetForm({
       setTitle(sourceItem.title || "");
       setDesc(sourceItem.description || sourceItem.content || "");
       setDeptId(sourceItem.departmentId || currentProfile.departmentId || departments[0]?.id || "");
-      setSelectedPicId(sourceItem.picId || currentProfile.id);
-      setSelectedPicName(sourceItem.picName || currentProfile.name);
+      const targetPic = (sourceItem.picId && sourceItem.picId !== "prof-dev")
+        ? allProfiles.find(p => p.id === sourceItem.picId)
+        : (allProfiles.find(p => p.departmentId === (sourceItem.departmentId || currentProfile.departmentId) && p.role.toLowerCase() !== "developer") || allProfiles.find(p => p.role.toLowerCase() !== "developer"));
+
+      if (targetPic) {
+        setSelectedPicId(targetPic.id);
+        setSelectedPicName(targetPic.name);
+      } else {
+        setSelectedPicId(sourceItem.picId || currentProfile.id);
+        setSelectedPicName(sourceItem.picName || currentProfile.name);
+      }
 
       if (sourceItem.priority) {
         setPriority(sourceItem.priority);
@@ -235,10 +276,13 @@ export default function ConvertTargetForm({
   const handleDeptChange = (newDeptId: string) => {
     setDeptId(newDeptId);
     if (newDeptId === "global") {
-      setSelectedPicId(currentProfile.id);
-      setSelectedPicName(currentProfile.name);
+      const ownerProfile = operationalProfiles.find(p => p.role.toLowerCase() === "owner") || operationalProfiles[0];
+      if (ownerProfile) {
+        setSelectedPicId(ownerProfile.id);
+        setSelectedPicName(ownerProfile.name);
+      }
     } else {
-      const match = allProfiles.find(p => p.departmentId === newDeptId);
+      const match = operationalProfiles.find(p => p.departmentId === newDeptId);
       if (match) {
         setSelectedPicId(match.id);
         setSelectedPicName(match.name);
@@ -299,7 +343,24 @@ export default function ConvertTargetForm({
 
     setIsSubmitting(true);
     try {
-      const targetDept = deptId || currentProfile.departmentId || departments[0]?.id || "";
+      const targetDept = (isLocked && sourceItem?.departmentId)
+        ? sourceItem.departmentId
+        : (deptId || currentProfile.departmentId || departments[0]?.id || "");
+
+      let targetPicId = (isLocked && sourceItem?.picId && sourceItem.picId !== "prof-dev")
+        ? sourceItem.picId
+        : (selectedPicId || currentProfile.id);
+
+      if (targetPicId === "prof-dev") {
+        const fallbackPic = operationalProfiles.find(p => p.departmentId === targetDept) || operationalProfiles.find(p => p.role.toLowerCase() === "owner") || operationalProfiles[0];
+        if (fallbackPic) {
+          targetPicId = fallbackPic.id;
+        }
+      }
+
+      const selectedPicObj = operationalProfiles.find(p => p.id === targetPicId) || allProfiles.find(p => p.id === targetPicId) || currentProfile;
+
+      const targetPicName = selectedPicObj.name;
 
       if (targetType === "metric") {
         if (metricCycle === "special" && !metricDeadline) {
@@ -311,6 +372,7 @@ export default function ConvertTargetForm({
         const selectedPicObj = allProfiles.find(p => p.id === selectedPicId) || currentProfile;
         await addMetric({
           name: title.trim(),
+          rockId: metricRockId ? metricRockId : null,
           target: Number(metricTarget) || 100,
           unit: metricUnit,
           targetType: metricTargetType,
@@ -380,8 +442,8 @@ export default function ConvertTargetForm({
   };
 
   const isSpecificDept = deptId && deptId !== "global";
-  const deptPics = useMemo(() => isSpecificDept ? allProfiles.filter(p => p.departmentId === deptId) : [], [isSpecificDept, allProfiles, deptId]);
-  const otherPics = useMemo(() => isSpecificDept ? allProfiles.filter(p => p.departmentId !== deptId) : allProfiles, [isSpecificDept, allProfiles, deptId]);
+  const deptPics = useMemo(() => isSpecificDept ? operationalProfiles.filter(p => p.departmentId === deptId) : [], [isSpecificDept, operationalProfiles, deptId]);
+  const otherPics = useMemo(() => isSpecificDept ? operationalProfiles.filter(p => p.departmentId !== deptId) : operationalProfiles, [isSpecificDept, operationalProfiles, deptId]);
 
   const divisionOptions = useMemo(() => [
     {
@@ -397,6 +459,31 @@ export default function ConvertTargetForm({
       sublabel: `Divisi ${d.name}`
     }))
   ], [departments]);
+
+  // Filter available rocks for the target division (active rocks only, excluding dropped)
+  const availableRocks = useMemo(() => {
+    if (!rocks || rocks.length === 0) return [];
+    return rocks.filter(r => {
+      if (r.status === "dropped") return false;
+      if (!deptId || deptId === "global") return true;
+      return r.departmentId === deptId;
+    });
+  }, [rocks, deptId]);
+
+  const rockOptions = useMemo(() => [
+    {
+      value: "",
+      label: "— Metrik Mandiri (Bukan bagian dari Rock) —",
+      sublabel: "Metrik KPI reguler tanpa keterkaitan target kuartalan"
+    },
+    ...availableRocks.map((r) => ({
+      value: r.id,
+      label: r.title,
+      badge: `${r.quarter} ${r.year}`,
+      sublabel: `${departments.find(d => d.id === r.departmentId)?.name || "Divisi"} Division`,
+      icon: <Target className="w-3.5 h-3.5 text-blue-500" />
+    }))
+  ], [availableRocks, departments]);
 
   const picOptions = useMemo(() => {
     if (deptPics.length > 0) {
@@ -417,13 +504,13 @@ export default function ConvertTargetForm({
         }))
       ];
     }
-    return allProfiles.map(p => ({
+    return operationalProfiles.map(p => ({
       value: p.id,
       label: p.name,
       badge: p.role,
       icon: <User className="w-3.5 h-3.5 text-slate-500" />
     }));
-  }, [deptPics, otherPics, allProfiles]);
+  }, [deptPics, otherPics, operationalProfiles]);
 
   const priorityOptions = useMemo(() => [
     { val: "low" as const, label: "Low", color: "text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900" },
@@ -547,36 +634,63 @@ export default function ConvertTargetForm({
         </div>
 
         {/* Division & PIC */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
-              Divisi Terkait <span className="text-rose-500">*</span>
-            </label>
-            <FormSelect
-              size="sm"
-              value={deptId}
-              onChange={handleDeptChange}
-              options={divisionOptions}
-            />
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                  Divisi Terkait <span className="text-rose-500">*</span>
+                </label>
+                {isLocked && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50 px-2 py-0.5 rounded-md shadow-2xs">
+                    <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" /> Terkunci
+                  </span>
+                )}
+              </div>
+              <FormSelect
+                size="sm"
+                value={deptId}
+                disabled={isLocked}
+                onChange={handleDeptChange}
+                options={divisionOptions}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                  PIC (Person In Charge) <span className="text-rose-500">*</span>
+                </label>
+                {isLocked && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50 px-2 py-0.5 rounded-md shadow-2xs">
+                    <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" /> Terkunci
+                  </span>
+                )}
+              </div>
+              <FormSelect
+                size="sm"
+                value={selectedPicId}
+                disabled={isLocked}
+                onChange={(val) => {
+                  const found = allProfiles.find(p => p.id === val);
+                  if (found) {
+                    setSelectedPicId(found.id);
+                    setSelectedPicName(found.name);
+                  }
+                }}
+                options={picOptions}
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-300 mb-1">
-              PIC (Person In Charge) <span className="text-rose-500">*</span>
-            </label>
-            <FormSelect
-              size="sm"
-              value={selectedPicId}
-              onChange={(val) => {
-                const found = allProfiles.find(p => p.id === val);
-                if (found) {
-                  setSelectedPicId(found.id);
-                  setSelectedPicName(found.name);
-                }
-              }}
-              options={picOptions}
-            />
-          </div>
+          {isLocked && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 rounded-xl text-[11px] text-slate-500 dark:text-zinc-400">
+              <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>
+                Divisi dan PIC dikunci mengikuti data asal (hanya Owner yang dapat mengubah tujuan konversi).
+              </span>
+            </div>
+          )}
         </div>
 
         {/* TARGET SPECIFIC CONFIG */}
@@ -588,6 +702,32 @@ export default function ConvertTargetForm({
               <span className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 Pengaturan Target Metrik
               </span>
+            </div>
+
+            {/* Hubungkan ke Prioritas Rock (90 Hari) jika tersedia pada divisi tersebut */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400">
+                  Prioritas Rock (90 Hari) <span className="text-slate-400 font-normal">(Opsional)</span>
+                </label>
+                {availableRocks.length > 0 && (
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50 px-2 py-0.5 rounded-md">
+                    {availableRocks.length} Rock Tersedia
+                  </span>
+                )}
+              </div>
+              <FormSelect
+                size="sm"
+                value={metricRockId}
+                onChange={(val) => setMetricRockId(val)}
+                placeholder={availableRocks.length > 0 ? "Pilih Prioritas Rock kuartalan..." : "— Tidak ada Rock kuartalan di divisi ini —"}
+                options={rockOptions}
+              />
+              <p className="text-[9.5px] text-slate-400 dark:text-zinc-500 mt-1">
+                {availableRocks.length > 0
+                  ? "Jika dihubungkan, capaian metrik hasil konversi ini otomatis mengkalkulasi progres Rock kuartalan divisi."
+                  : "Belum ada Rock kuartalan aktif di divisi ini (metrik akan tersimpan sebagai metrik mandiri)."}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -749,21 +889,33 @@ export default function ConvertTargetForm({
 
             {attachmentFiles.length > 0 && (
               <div className="space-y-1 max-h-24 overflow-y-auto pt-1">
-                {attachmentFiles.map((file, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-1.5 bg-slate-50 dark:bg-zinc-950 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <Paperclip className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="truncate text-slate-800 dark:text-zinc-200">{file.name}</span>
+                {attachmentFiles.map((file, idx) => {
+                  const isMedia = isMediaAttachment(file.name, file.type, file.dataUrl);
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-1.5 bg-slate-50 dark:bg-zinc-950 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleAttachmentClick(file, setPreviewMedia)}
+                        className="flex items-center gap-1.5 truncate text-left group cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        title={isMedia ? `Lihat ${file.name} langsung di web` : `Buka ${file.name} di tab baru`}
+                      >
+                        <Paperclip className="w-3 h-3 text-slate-400 shrink-0 group-hover:text-blue-500" />
+                        <span className="truncate text-slate-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 font-medium">
+                          {file.name}
+                        </span>
+                        {!isMedia && <ExternalLink className="w-2.5 h-2.5 text-slate-400 opacity-60 ml-0.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAttachmentFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        className="text-rose-500 hover:text-rose-700 text-xs font-bold px-1 cursor-pointer"
+                        title="Hapus lampiran"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setAttachmentFiles((prev) => prev.filter((_, i) => i !== idx))}
-                      className="text-rose-500 hover:text-rose-700 text-xs font-bold px-1 cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -798,6 +950,9 @@ export default function ConvertTargetForm({
           )}
         </button>
       </div>
+
+      {/* In-app Media Lightbox Modal */}
+      <MediaLightboxModal media={previewMedia} onClose={() => setPreviewMedia(null)} />
     </form>
   );
 }

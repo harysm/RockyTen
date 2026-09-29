@@ -692,7 +692,11 @@ export default function ScoreboardPage() {
           <button
             onClick={() => {
               setIsAddMetricOpen(true);
-              setNewMetricDept(currentProfile.departmentId || departments[0]?.id || "dept-kitchen");
+              const defaultDept = (roleLower === "pic" && currentProfile.departmentId)
+                ? currentProfile.departmentId
+                : (selectedDeptFilter !== "all" ? selectedDeptFilter : (departments[0]?.id || "dept-it"));
+              setNewMetricDept(defaultDept);
+              setNewMetricRockId("");
               setNewMetricCycleType(scoreboardTab);
             }}
             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold rounded-xl shadow-md shadow-zinc-900/10 transition-all cursor-pointer border border-zinc-900 dark:border-zinc-100"
@@ -1304,7 +1308,23 @@ export default function ScoreboardPage() {
                   />
                 </div>
 
-                {canViewAll && (
+                {/* Visual Target Divisi: Otomatis jika PIC, atau terkunci jika Rock dipilih / Filter aktif */}
+                {roleLower === "pic" ? (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-100/80 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                    <Building2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <span>Target Divisi: <strong className="text-slate-900 dark:text-white">{getDeptName(currentProfile.departmentId)}</strong> (Otomatis dari Akun Anda)</span>
+                  </div>
+                ) : isOwner && newMetricRockId ? (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300">
+                    <Building2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <span>Target Divisi: <strong className="text-blue-900 dark:text-blue-100">{getDeptName(newMetricDept)}</strong> (Otomatis dari Prioritas Rock)</span>
+                  </div>
+                ) : isOwner && selectedDeptFilter !== "all" ? (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-100/80 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                    <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Target Divisi: <strong className="text-slate-900 dark:text-white">{getDeptName(newMetricDept)}</strong> (Sesuai Filter Scoreboard Aktif)</span>
+                  </div>
+                ) : isOwner && selectedDeptFilter === "all" ? (
                   <div>
                     <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                       Target Divisi <span className="text-red-500">*</span>
@@ -1320,7 +1340,7 @@ export default function ScoreboardPage() {
                       }))}
                     />
                   </div>
-                )}
+                ) : null}
 
                 {/* Hubungkan ke Prioritas Rock (90 Hari) */}
                 <div>
@@ -1329,7 +1349,15 @@ export default function ScoreboardPage() {
                   </label>
                   <FormSelect
                     value={newMetricRockId}
-                    onChange={(val) => setNewMetricRockId(val)}
+                    onChange={(val) => {
+                      setNewMetricRockId(val);
+                      if (val) {
+                        const targetRock = rocks.find(r => r.id === val);
+                        if (targetRock) {
+                          setNewMetricDept(targetRock.departmentId);
+                        }
+                      }
+                    }}
                     placeholder="— Metrik Mandiri (Bukan bagian dari Rock) —"
                     options={[
                       {
@@ -1338,7 +1366,13 @@ export default function ScoreboardPage() {
                         sublabel: "Metrik mandiri tanpa keterkaitan target kuartalan"
                       },
                       ...rocks
-                        .filter(r => canViewAll ? (newMetricDept ? r.departmentId === newMetricDept : true) : r.departmentId === currentProfile.departmentId)
+                        .filter(r => {
+                          if (r.status === "dropped") return false;
+                          if (roleLower === "pic") return r.departmentId === currentProfile.departmentId;
+                          if (selectedDeptFilter !== "all") return r.departmentId === selectedDeptFilter;
+                          if (newMetricDept) return r.departmentId === newMetricDept;
+                          return true;
+                        })
                         .map((r) => ({
                           value: r.id,
                           label: r.title,

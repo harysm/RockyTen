@@ -48,6 +48,10 @@ export const fetchIssuesFromDb = async (): Promise<Issue[]> => {
 export const insertIssueToDb = async (issue: Issue): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    let picId = issue.picId;
+    if (!picId || !picId.startsWith("prof-")) {
+      picId = "prof-pic-it";
+    }
     const payload: any = {
       id: issue.id,
       department_id: issue.departmentId,
@@ -55,8 +59,8 @@ export const insertIssueToDb = async (issue: Issue): Promise<boolean> => {
       description: issue.description || null,
       priority: issue.priority,
       status: issue.status,
-      pic_id: issue.picId || null,
-      pic_name: issue.picName || null,
+      pic_id: picId,
+      pic_name: issue.picName || "IT",
       created_at: issue.createdAt,
       attachments: issue.attachments || []
     };

@@ -29,8 +29,15 @@ import {
   RefreshCw,
   Eye,
   Camera,
-  Layers
+  Layers,
+  Archive,
+  Download,
+  Filter,
+  Users,
+  ShieldAlert,
+  ArrowDown
 } from "lucide-react";
+import GuideFlowchart, { ChartNode } from "./GuideFlowchart";
 
 interface UserGuideViewProps {
   isId: boolean;
@@ -105,6 +112,15 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
       icon: <Megaphone className="w-4 h-4 text-cyan-500" />,
       summaryId: "Menyiarkan prestasi tim, pengumuman resmi, kabar gembira, dan pengingat",
       summaryEn: "Broadcasting achievements, official company news, good news, and reminders"
+    },
+    {
+      id: "guide-archives",
+      titleId: "Arsip & Rekap Data Laporan (Ekspor Excel)",
+      titleEn: "Archives & Report Export (Excel/CSV)",
+      category: "module",
+      icon: <Archive className="w-4 h-4 text-purple-500" />,
+      summaryId: "Meninjau data lampau seluruh modul dan mengunduh laporan resmi format Excel/CSV",
+      summaryEn: "Reviewing historical data across all modules and exporting Excel/CSV reports"
     }
   ];
 
@@ -154,10 +170,612 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
     }
   };
 
+  // ==========================================
+  // TRUE FLOWCHART DATASETS (ChartNode[])
+  // ==========================================
+
+  // 1. Alur Rapat L10 (Weekly SOP Routine)
+  const l10RoutineNodes: ChartNode[] = [
+    { type: "start", emoji: "🗓️", titleId: "Mulai Rapat L10", titleEn: "Start L10 Meeting" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "📊",
+      titleId: "Baca Scoreboard KPI (5 mnt)",
+      titleEn: "Review Scoreboard (5 min)",
+      descId: "Baca capaian W1-W4 setiap divisi. Jangan perdebatkan solusi. Jika angka merah, catat untuk sesi IDS.",
+      descEn: "Read weekly numbers. Do not debate solutions. Mark red metrics for IDS.",
+      tipsId: "Hanya sebutkan angka dan status. Maksimal 5 menit!",
+      tipsEn: "State number and status only. Strictly 5 minutes!",
+      mockup: (
+        <div className="space-y-1.5 text-[11px] font-sans">
+          <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold text-[10px]">⏱️ 05:00</span>
+              <span className="font-semibold text-slate-800 dark:text-zinc-200">Kitchen: {isId ? "Omset Harian" : "Daily Revenue"}</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black text-[10px]">108% 🟢</span>
+          </div>
+          <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 shadow-2xs">
+            <span className="text-slate-600 dark:text-zinc-400">Marketing: {isId ? "Leads Iklan" : "Ad Leads"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-black text-[10px]">45% 🔴 ➔ {isId ? "Catat ke IDS" : "Push to IDS"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "🪨",
+      titleId: "Cek Progres Rocks (5 mnt)",
+      titleEn: "Check Rocks Progress (5 min)",
+      descId: "Verifikasi apakah sasaran 90 hari setiap divisi masih On Track atau berisiko Off Track.",
+      descEn: "Verify if 90-day goals are On Track or at risk of Off Track.",
+      tipsId: "Jika Rock terancam meleset, langsung masukkan ke daftar Issue.",
+      tipsEn: "If a Rock is at risk, push it to the Issues list immediately.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1.5 shadow-2xs text-[11px] font-sans">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-800 dark:text-zinc-200 truncate">{isId ? "Standardisasi Resep Sambal (Kitchen)" : "Recipe Standardization (Kitchen)"}</span>
+            <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] shrink-0">🟢 On Track</span>
+          </div>
+          <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-emerald-500 h-full rounded-full" style={{ width: "80%" }} />
+          </div>
+          <div className="flex justify-between text-[10px] text-slate-400">
+            <span>{isId ? "Progres 80%" : "Progress 80%"}</span>
+            <span>{isId ? "Sisa 18 Hari" : "18 Days Left"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "📢",
+      titleId: "Warta & Headlines (5 mnt)",
+      titleEn: "Headlines & News (5 min)",
+      descId: "Bagikan kabar baik, apresiasi tim, atau pengumuman operasional penting.",
+      descEn: "Share achievements, customer wins, and important operational notices.",
+      tipsId: "Fokus pada apresiasi dan kabar positif untuk membangun semangat tim.",
+      tipsEn: "Focus on wins and positive feedback to boost morale.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-start gap-2 text-[11px] font-sans shadow-2xs">
+          <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300 font-bold text-[10px] shrink-0">🎉 {isId ? "Kabar Baik" : "Good News"}</span>
+          <div className="min-w-0">
+            <span className="font-bold text-slate-800 dark:text-zinc-200 block truncate">{isId ? "Review Bintang 5 dari Food Vlogger Viral!" : "5-Star Review from Viral Food Vlogger!"}</span>
+            <span className="text-[10px] text-slate-400 block">{isId ? "Apresiasi tinggi untuk kru outlet dan tim dapur." : "Kudos to the entire frontline & kitchen team."}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 4,
+      emoji: "✅",
+      titleId: "Review To-Do Minggu Lalu (5 mnt)",
+      titleEn: "Review Last Week's To-Dos (5 min)",
+      descId: "Konfirmasi apakah tugas 7 hari minggu lalu sudah tuntas (Done) atau belum.",
+      descEn: "Confirm which 7-day commitments are Done or Not Done.",
+      tipsId: "Targetkan rasio penyelesaian minimal 90% setiap minggunya.",
+      tipsEn: "Target at least 90% completion rate on weekly commitments.",
+      mockup: (
+        <div className="space-y-1 text-[11px] font-sans">
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
+            <span className="line-through text-slate-500 dark:text-zinc-400 truncate">☑️ {isId ? "Ganti sensor chiller dapur (Budi)" : "Replace chiller sensor (Budi)"}</span>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">{isId ? "Tuntas" : "Done"}</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
+            <span className="line-through text-slate-500 dark:text-zinc-400 truncate">☑️ {isId ? "Cetak booklet menu promo (Dewi)" : "Print promo menu booklet (Dewi)"}</span>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">{isId ? "Tuntas" : "Done"}</span>
+          </div>
+          <div className="text-[10px] text-right font-bold text-slate-500">{isId ? "Pencapaian: 2/2 Selesai (100%)" : "Completion: 2/2 Done (100%)"}</div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 5,
+      emoji: "🔥",
+      titleId: "Sesi Bedah IDS (60 mnt)",
+      titleEn: "IDS Problem Solving (60 min)",
+      descId: "Pilih 3 masalah paling kritis. Bedah akar penyebab, diskusikan solusi, dan putuskan tindakan konkret jadi To-Do.",
+      descEn: "Pick top 3 issues. Identify root causes, discuss, and convert to actionable To-Dos.",
+      tipsId: "Diskusi selesai hanya jika ada To-Do dengan 1 PIC yang jelas.",
+      tipsEn: "A discussion is done only when converted into a To-Do with 1 PIC.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1.5 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-bold text-[10px]">#1 {isId ? "Kritis (IDS)" : "Critical (IDS)"}</span>
+            <span className="text-[10px] font-mono text-slate-400">⏱️ {isId ? "Sisa 45:00" : "45:00 Left"}</span>
+          </div>
+          <p className="font-bold text-slate-800 dark:text-zinc-200">{isId ? "Pasokan Beras Terlambat 3 Hari Berturut-turut" : "Rice Supply Delayed 3 Days In a Row"}</p>
+          <div className="text-[10px] text-slate-500 dark:text-zinc-400 pl-2 border-l-2 border-rose-400 space-y-0.5">
+            <div><strong>{isId ? "Akar:" : "Root:"}</strong> {isId ? "Supplier tunggal kehabisan stok" : "Sole supplier ran out of stock"}</div>
+            <div><strong>{isId ? "Solusi:" : "Fix:"}</strong> {isId ? "Buat kontrak supplier cadangan (To-Do 7 Hari)" : "Establish backup supplier contract (7-Day To-Do)"}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Ada Masalah Baru Lagi?",
+      questionEn: "Any New Issues?",
+      yes: { labelId: "✅ Ya, Ada", labelEn: "✅ Yes", emoji: "📌", titleId: "Catat ke Daftar Issue", titleEn: "Log to Issue Tracker", descId: "Jangan bahas sekarang — tambahkan ke daftar Issue untuk rapat berikutnya.", descEn: "Don't debate now — add to Issues for next week's IDS session.", variant: "warning" },
+      no: { labelId: "🎯 Tidak Ada", labelEn: "🎯 None", emoji: "🏁", titleId: "Rapat Selesai Tepat Waktu!", titleEn: "Meeting Complete On Time!", descId: "Selamat! Rapat L10 selesai dalam 90 menit. Semua tugas dan masalah sudah dicatat.", descEn: "Excellent! L10 meeting done in 90 minutes. All actions and issues are logged.", variant: "success" }
+    },
+    { type: "end", emoji: "🏁", titleId: "Sampai Jumpa Minggu Depan", titleEn: "See You Next Week" }
+  ];
+
+  // 2. Scoreboard KPI Nodes
+  const scoreboardFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "📊", titleId: "Buka Scoreboard KPI", titleEn: "Open Scoreboard KPI" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "🏢",
+      titleId: "Pilih Divisi & Periode",
+      titleEn: "Select Division & Cycle",
+      descId: "Buka halaman Scoreboard, pilih tab divisi Anda, dan pastikan periode minggu aktif (W1–W4) sudah sesuai.",
+      descEn: "Navigate to Scoreboard, select your division tab, and verify the active weekly cycle (W1–W4).",
+      tipsId: "Untuk akun PIC, divisi otomatis terkunci ke divisi masing-masing demi keamanan data.",
+      tipsEn: "For PIC accounts, the division is locked automatically to your department.",
+      mockup: (
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-sans">
+          <div className="flex items-center rounded-lg bg-slate-100 dark:bg-zinc-800 p-0.5 border border-slate-200 dark:border-zinc-700">
+            <span className="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 font-bold text-emerald-600 text-[10px] shadow-2xs">Kitchen</span>
+            <span className="px-2 py-0.5 text-slate-500 text-[10px]">Floor</span>
+            <span className="px-2 py-0.5 text-slate-500 text-[10px]">Marketing</span>
+          </div>
+          <span className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800">
+            📅 {isId ? "September 2026 • W3 Aktif" : "September 2026 • Active W3"}
+          </span>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "✏️",
+      titleId: "Input Capaian Aktual",
+      titleEn: "Input Actual Values",
+      descId: "Klik baris metrik untuk membuka modal input. Masukkan angka harian (Senin–Minggu) atau langsung isi total minggu ini.",
+      descEn: "Click any metric row to open input dialog. Fill daily numbers or direct weekly total.",
+      tipsId: "Metrik SUM menjumlah otomatis; metrik AVG menghitung rata-rata harian.",
+      tipsEn: "SUM metrics auto-aggregate; AVG metrics calculate daily mean.",
+      mockup: (
+        <div className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span>{isId ? "Input Harian (Sen-Min)" : "Daily Input (Mon-Sun)"}</span>
+            <span className="font-bold text-emerald-600">{isId ? "Total Minggu Ini" : "Weekly Total"}: Rp 16.200.000</span>
+          </div>
+          <div className="grid grid-cols-4 gap-1 text-center font-mono text-[10px]">
+            <div className="p-1 rounded bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">Sen: 2.4M</div>
+            <div className="p-1 rounded bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">Sel: 2.8M</div>
+            <div className="p-1 rounded bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">Rab: 2.5M</div>
+            <div className="p-1 rounded bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">Kam: 3.1M</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "🎯",
+      titleId: "Baca Radar Warna Status",
+      titleEn: "Check Status Color Radar",
+      descId: "Sistem otomatis membandingkan capaian aktual vs target. Badge warna muncul real-time: Hijau (On Track) atau Merah (Drop).",
+      descEn: "System compares actual vs target automatically. Green = On Track, Red = Drop.",
+      tipsId: "Metrik 'Lower is Better' (Waste/Biaya) — angka lebih kecil bernilai hijau.",
+      tipsEn: "For 'Lower is Better' metrics, smaller numbers turn green.",
+      mockup: (
+        <div className="space-y-1 text-[11px] font-sans">
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+            <span className="font-bold text-emerald-800 dark:text-emerald-200">{isId ? "Omset Penjualan (108%)" : "Sales Revenue (108%)"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-extrabold text-[9px]">🟢 On Track</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+            <span className="font-bold text-rose-800 dark:text-rose-200">{isId ? "Biaya Waste Dapur (180%)" : "Kitchen Waste (180%)"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[9px]">🔴 Drop</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Metrik Merah ≥ 2 Minggu?",
+      questionEn: "Metric Red ≥ 2 Weeks?",
+      yes: { labelId: "🔴 Ya, Merah", labelEn: "🔴 Yes, Red", emoji: "🔄", titleId: "Konversi 1-Klik ke Issue", titleEn: "1-Click Convert to Issue", descId: "Klik ikon Konversi (🔄) — metrik langsung masuk antrian IDS tanpa ketik ulang.", descEn: "Click Convert (🔄) — metric instantly queued for IDS without retyping.", variant: "danger" },
+      no: { labelId: "🟢 On Track", labelEn: "🟢 On Track", emoji: "✅", titleId: "Pertahankan & Lanjut", titleEn: "Maintain & Continue", descId: "Bagus! Capaian sudah melampaui target. Pertahankan konsistensi minggu depan.", descEn: "Great! Performance exceeds target. Maintain the consistency next week.", variant: "success" }
+    },
+    { type: "end", emoji: "✅", titleId: "Scoreboard Minggu Ini Selesai", titleEn: "This Week's Scoreboard Done" }
+  ];
+
+  // 3. Rocks 90-Day Nodes
+  const rocksFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "🪨", titleId: "Buka Halaman Rocks", titleEn: "Open Rocks Page" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "🎯",
+      titleId: "Tentukan Sasaran Kuartal",
+      titleEn: "Set 90-Day Priority",
+      descId: "Di awal kuartal (Q1–Q4), buat 3–7 sasaran utama divisi dengan target spesifik, batas waktu akhir kuartal, dan 1 PIC.",
+      descEn: "At quarter start, define 3–7 key Rocks with clear milestones, quarter deadline, and 1 PIC.",
+      tipsId: "Maksimal 3–7 Rock per divisi. Jika semuanya prioritas, berarti tidak ada prioritas!",
+      tipsEn: "Limit to 3–7 Rocks per division. If everything is a priority, nothing is!",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-800 dark:text-zinc-100 truncate">{isId ? "Standardisasi SOP Resep Dapur" : "Kitchen Recipe Standardization"}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold shrink-0">Q3 2026</span>
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span>PIC: Chef Juna</span>
+            <span>{isId ? "Batas: 30 Sep 2026 (90 Hari)" : "Deadline: Sep 30, 2026 (90 Days)"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "📈",
+      titleId: "Tautkan Metrik Pendukung",
+      titleEn: "Link Supporting Metrics",
+      descId: "Hubungkan metrik harian/mingguan dari Scoreboard ke Rock ini. Setiap update metrik mendorong progres Rock otomatis.",
+      descEn: "Link daily/weekly Scoreboard metrics. Updating values automatically drives Rock progress.",
+      tipsId: "Rock yang ditautkan metrik memiliki progres objektif berbasis data nyata, bukan perasaan.",
+      tipsEn: "Metrics-driven Rocks have objective progress backed by real numbers.",
+      mockup: (
+        <div className="p-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-center justify-between text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="text-amber-600 font-bold">🔗 {isId ? "Tertaut:" : "Linked:"}</span>
+            <span className="text-slate-700 dark:text-zinc-300 font-medium truncate">{isId ? "Metrik Food Waste Kitchen (% Omset)" : "Kitchen Food Waste (% Sales)"}</span>
+          </div>
+          <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded shrink-0">Auto Sync</span>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "📡",
+      titleId: "Pantau Radar Otomatis",
+      titleEn: "Monitor Health Radar",
+      descId: "Radar RockyTen memantau rasio progres vs sisa hari: On Track, Off Track Beresiko, atau Terlambat — otomatis.",
+      descEn: "RockyTen radar calculates progress vs remaining days: On Track, Off Track at Risk, or Overdue.",
+      tipsId: "Jika sisa waktu ≤ 14 hari namun progres < 50%, sistem menyalakan radar peringatan merah.",
+      tipsEn: "If ≤ 14 days remain with < 50% progress, system triggers red warning radar.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1.5 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="font-bold text-slate-700 dark:text-zinc-300">{isId ? "Radar Kesehatan Sasaran" : "Strategic Health Radar"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black text-[9px]">🟢 On Track</span>
+          </div>
+          <div className="w-full bg-slate-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+            <div className="bg-emerald-500 h-full rounded-full" style={{ width: "78%" }} />
+          </div>
+          <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+            <span>{isId ? "Progres: 78%" : "Progress: 78%"}</span>
+            <span>{isId ? "Sisa: 18 Hari" : "18 Days Left"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Progres Capai 100%?",
+      questionEn: "Progress Reach 100%?",
+      yes: { labelId: "✅ Sudah 100%", labelEn: "✅ Yes, 100%", emoji: "🏆", titleId: "Ajukan Verifikasi Owner", titleEn: "Request Owner Verification", descId: "Status berubah 'Siap Review'. Owner menekan tombol Verifikasi Selesai — Rock resmi tuntas!", descEn: "Status turns 'Ready for Review'. Owner presses Verify — Rock officially complete!", variant: "success" },
+      no: { labelId: "⚠️ Belum Selesai", labelEn: "⚠️ Incomplete", emoji: "🚨", titleId: "Bawa ke Sesi IDS Rapat", titleEn: "Escalate to IDS Session", descId: "Rock beresiko meleset. Bawa ke sesi IDS rapat mingguan untuk cari solusi darurat.", descEn: "Rock at risk of missing deadline. Escalate to IDS session for emergency recovery plan.", variant: "danger" }
+    },
+    { type: "end", emoji: "🏆", titleId: "Rock Kuartal Ini Selesai", titleEn: "Quarterly Rock Complete" }
+  ];
+
+  // 4. Issues & IDS Nodes
+  const issuesFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "⚠️", titleId: "Ada Kendala di Lapangan?", titleEn: "Operational Obstacle Found?" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "📸",
+      titleId: "Lapor Kendala + Foto Bukti",
+      titleEn: "Report Issue + Photo Proof",
+      descId: "Klik 'Tambah Masalah'. Pilih divisi, jelaskan masalah, dan lampirkan foto bukti (kompor rusak, bahan rusak, dll).",
+      descEn: "Click 'Add Issue'. Pick division, describe the problem, and attach photo proof.",
+      tipsId: "Foto langsung terbuka di modal aplikasi — tidak perlu buka tab baru.",
+      tipsEn: "Photos open in-app lightbox — no new tab needed.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1.5 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-800 dark:text-zinc-100 truncate">{isId ? "⚠️ Pintu Chiller Dapur Rusak" : "⚠️ Kitchen Chiller Door Broken"}</span>
+            <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950 text-[10px] font-bold shrink-0">P1 (Kritis)</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded bg-slate-50 dark:bg-zinc-800 text-[10px] text-slate-500">
+            <span>📸 seal_bocor.jpg (1.4 MB)</span>
+            <span className="text-blue-500 font-bold">{isId ? "[In-App Lightbox]" : "[In-App Lightbox]"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "🏆",
+      titleId: "Pilih Top 3 Masalah Paling Kritis",
+      titleEn: "Prioritize Top 3 Issues",
+      descId: "Di sesi IDS rapat mingguan, sortir semua masalah dan pilih 3 yang paling krusial untuk dibedah mendalam.",
+      descEn: "During IDS session, sort all issues and pick top 3 most critical for deep-dive.",
+      tipsId: "Tuntaskan 3 masalah besar hingga akar, bukan 20 masalah secara dangkal.",
+      tipsEn: "Fully resolve 3 big issues to root cause — don't rush through 20 superficially.",
+      mockup: (
+        <div className="space-y-1 text-[10px] font-sans">
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-800 dark:text-rose-200 font-bold">
+            <span>#1 🔴 {isId ? "Chiller Dapur Rusak (Suhu Naik)" : "Kitchen Chiller Broken (Temp Rise)"}</span>
+            <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9px]">{isId ? "Prioritas IDS" : "IDS Priority"}</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-amber-800 dark:text-amber-200 font-bold">
+            <span>#2 🟡 {isId ? "Keterlambatan Pasokan Beras" : "Rice Supply Delay"}</span>
+            <span className="px-1.5 py-0.5 rounded bg-amber-600 text-white text-[9px]">{isId ? "Prioritas IDS" : "IDS Priority"}</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 text-slate-600 dark:text-zinc-400">
+            <span>#3 ⚪ {isId ? "Lampu Gudang Padam" : "Storage Light Off"}</span>
+            <span className="text-[9px] text-slate-400">{isId ? "Antrian Nanti" : "Queue Later"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "🔍",
+      titleId: "Bedah Akar Masalah (Identify)",
+      titleEn: "Identify Root Cause",
+      descId: "Tanyakan 'Mengapa?' beberapa kali hingga menemukan akar sesungguhnya — bukan sekadar mengatasi gejala.",
+      descEn: "Ask 'Why?' multiple times to uncover the real root cause, not just the surface symptom.",
+      tipsId: "Mengatasi gejala = masalah berulang. Mengatasi akar = masalah lenyap selamanya.",
+      tipsEn: "Treating symptoms = recurring bugs. Solving root cause = permanent fix.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{isId ? "Analisis Akar Masalah (5 Whys)" : "Root Cause (5 Whys)"}</span>
+          <div className="text-[10px] text-slate-600 dark:text-zinc-300 pl-2 border-l-2 border-rose-500 space-y-0.5">
+            <div><strong>{isId ? "Gejala:" : "Symptom:"}</strong> {isId ? "Karet seal pintu sobek terbentur troli." : "Door seal torn by supply trolley."}</div>
+            <div><strong>{isId ? "Akar Nyata:" : "Root Cause:"}</strong> {isId ? "Belum ada pelindung bemper pada kusen pintu chiller." : "No protective bumper guard on door frame."}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Sudah Ketemu Solusi?",
+      questionEn: "Solution Found?",
+      yes: { labelId: "✅ Ya, Ketemu", labelEn: "✅ Yes, Found", emoji: "🔄", titleId: "Konversi Jadi To-Do", titleEn: "Convert to To-Do", descId: "Gunakan tombol Konversi — solusi langsung jadi kartu To-Do 7 hari dengan 1 PIC tanpa ketik ulang.", descEn: "Click Convert — solution becomes a 7-day To-Do card with 1 PIC without retyping.", variant: "success" },
+      no: { labelId: "❓ Belum Jelas", labelEn: "❓ Not Yet Clear", emoji: "📅", titleId: "Tunda & Riset Lebih Dalam", titleEn: "Defer & Investigate Deeper", descId: "Tandai sebagai 'Perlu Riset'. Lanjutkan bedah akar di rapat berikutnya dengan data lebih lengkap.", descEn: "Mark as 'Needs Research'. Continue root-cause analysis at next meeting with more data.", variant: "warning" }
+    },
+    { type: "end", emoji: "✅", titleId: "Masalah Terpecahkan", titleEn: "Issue Resolved" }
+  ];
+
+  // 5. Todos 7-Day Nodes
+  const todosFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "✅", titleId: "Tugas Baru Masuk", titleEn: "New Task Incoming" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "👤",
+      titleId: "Terima Komitmen 7 Hari",
+      titleEn: "Accept 7-Day Commitment",
+      descId: "Setiap To-Do harus memiliki tepat 1 PIC penanggung jawab dan batas waktu maksimal 7 hari — tidak lebih.",
+      descEn: "Every To-Do must have exactly 1 PIC owner and a max 7-day deadline — no exceptions.",
+      tipsId: "Jika 2 orang bertanggung jawab atas 1 tugas, tidak ada yang benar-benar bertanggung jawab!",
+      tipsEn: "If two people own a task, nobody truly owns it. Always 1 PIC.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-800 dark:text-zinc-100 truncate">{isId ? "Pasang pelat stainless pelindung chiller" : "Install stainless guard plate on chiller"}</span>
+            <span className="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold shrink-0">7 Hari</span>
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span>{isId ? "PIC Tunggal: Budi (Maint)" : "Single PIC: Budi (Maint)"}</span>
+            <span>{isId ? "Batas: Jumat 17:00" : "Deadline: Friday 17:00"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "📎",
+      titleId: "Lampirkan Berkas / Foto Bukti",
+      titleEn: "Attach Files & Proof",
+      descId: "Unggah nota pembelian (PDF/Excel), instruksi kerja (Word), atau foto pemasangan sebagai bukti verifikasi rapat.",
+      descEn: "Upload receipts (PDF/Excel), work SOPs (Word), or photo evidence for meeting verification.",
+      tipsId: "Foto/video langsung tampil di web kita; dokumen lain otomatis buka tab baru.",
+      tipsEn: "Photos/videos open in-app; documents automatically open in a new tab.",
+      mockup: (
+        <div className="space-y-1 text-[10px] font-sans">
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">
+            <span className="text-slate-700 dark:text-zinc-300 font-medium truncate">📎 nota_pembelian_bemper.pdf (180 KB)</span>
+            <span className="text-blue-500 font-bold shrink-0">{isId ? "[Tab Baru]" : "[New Tab]"}</span>
+          </div>
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">
+            <span className="text-slate-700 dark:text-zinc-300 font-medium truncate">📸 foto_pemasangan_selesai.jpg</span>
+            <span className="text-emerald-500 font-bold shrink-0">{isId ? "[Lightbox]" : "[Lightbox]"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "⚡",
+      titleId: "Eksekusi di Lapangan",
+      titleEn: "Field Execution",
+      descId: "PIC mengeksekusi tugas sebelum rapat mingguan berikutnya. Jika ada bloker, segera koordinasikan dengan tim.",
+      descEn: "PIC completes the commitment before next week's meeting. Communicate blockers promptly.",
+      tipsId: "To-Do adalah tugas taktis 7 hari, bukan backlog tahunan.",
+      tipsEn: "To-Dos are 7-day tactical actions, not annual backlog items.",
+      mockup: (
+        <div className="p-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between text-[11px] font-sans shadow-2xs">
+          <span className="font-bold text-indigo-900 dark:text-indigo-200">{isId ? "Status: Eksekusi Lapangan Tuntas" : "Status: Field Execution Complete"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[10px]">☑️ {isId ? "Done" : "Done"}</span>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Tugas Selesai Sebelum Rapat?",
+      questionEn: "Task Done Before Meeting?",
+      yes: { labelId: "✅ Selesai", labelEn: "✅ Done", emoji: "🎉", titleId: "Centang & Konfirmasi di Rapat", titleEn: "Check-off & Confirm at Meeting", descId: "Centang kartu To-Do — tim mengkonfirmasi resmi di tahap 4 rapat L10 mingguan.", descEn: "Check the card — team officially confirms at step 4 of L10 meeting.", variant: "success" },
+      no: { labelId: "❌ Belum Selesai", labelEn: "❌ Not Done", emoji: "🔁", titleId: "Jelaskan & Buat Ulang", titleEn: "Explain & Recreate", descId: "Jelaskan kendalanya di rapat. Buat To-Do baru dengan batas waktu yang diperbarui.", descEn: "Explain the blocker at the meeting. Create a new To-Do with an updated deadline.", variant: "danger" }
+    },
+    { type: "end", emoji: "🏁", titleId: "Tugas Tuntas", titleEn: "Task Complete" }
+  ];
+
+  // 6. Headlines Nodes
+  const headlinesFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "📢", titleId: "Ada Kabar untuk Dibagikan?", titleEn: "Something to Share?" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "🏷️",
+      titleId: "Pilih Kategori Warta",
+      titleEn: "Choose Category",
+      descId: "Tentukan jenis: Kabar Baik 🎉, Pencapaian 🏆, Pengumuman Resmi 📢, Kendala Eksternal ⚠️, atau Pengingat 📅.",
+      descEn: "Pick category: Good News 🎉, Achievement 🏆, Official Notice 📢, External Issue ⚠️, or Reminder 📅.",
+      tipsId: "Gunakan 'Pencapaian' untuk merayakan rekor penjualan atau keberhasilan audit.",
+      tipsEn: "Use 'Achievement' to celebrate sales records or flawless audit results.",
+      mockup: (
+        <div className="flex flex-wrap gap-1 text-[10px] font-sans">
+          <span className="px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold">🏆 {isId ? "Pencapaian" : "Achievement"}</span>
+          <span className="px-2 py-1 rounded bg-cyan-100 text-cyan-700 font-bold">🎉 {isId ? "Kabar Baik" : "Good News"}</span>
+          <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 font-bold">📢 {isId ? "Pengumuman" : "Notice"}</span>
+          <span className="px-2 py-1 rounded bg-rose-100 text-rose-700 font-bold">⚠️ {isId ? "Kendala" : "Issue"}</span>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "✍️",
+      titleId: "Tulis Pesan & Lampiran",
+      titleEn: "Compose Message & Media",
+      descId: "Tulis judul berita yang menarik dan deskripsi padat. Lampirkan foto dokumentasi jika ada.",
+      descEn: "Write a clear headline and concise summary. Attach documentation photos if applicable.",
+      tipsId: "Pesan yang padat dan positif lebih mudah diingat oleh seluruh staf operasional.",
+      tipsEn: "Short, positive headlines are more digestible for frontline restaurant staff.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <span className="font-bold text-slate-800 dark:text-zinc-100 block">{isId ? "🏆 Rekor 1.500 Porsi Nasi Gerilya Terjual!" : "🏆 1,500 Portions of Nasi Gerilya Sold!"}</span>
+          <p className="text-[10px] text-slate-500">{isId ? "Apresiasi atas kerja keras luar biasa seluruh tim operasional weekend ini." : "Appreciation for the whole ops team this weekend."}</p>
+          <span className="text-[9px] text-slate-400 block">{isId ? "Oleh: Manager Operational • Disiarkan Hari Ini" : "By: Operational Manager • Broadcast Today"}</span>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "📡",
+      titleId: "Publikasikan ke Tim",
+      titleEn: "Broadcast to Team",
+      descId: "Pilih target: 'Global' untuk seluruh perusahaan, atau pilih divisi spesifik (misal Kitchen saja).",
+      descEn: "Select target: 'Global' for the whole company, or scope to a specific division.",
+      tipsId: "Kebijakan resmi manajemen wajib disiarkan dengan cakupan Global.",
+      tipsEn: "Official management policies must always be broadcast globally.",
+      mockup: (
+        <div className="p-2 rounded-lg bg-cyan-50/70 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800 flex items-center justify-between text-[11px] font-sans shadow-2xs">
+          <span className="font-bold text-cyan-900 dark:text-cyan-200">🌐 {isId ? "Lingkup Siaran: Global (Semua Divisi)" : "Broadcast Scope: Global (All Depts)"}</span>
+          <span className="px-2 py-0.5 rounded-full bg-cyan-600 text-white font-bold text-[9px]">{isId ? "Tersiar" : "Live"}</span>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Perlu Tindakan Nyata?",
+      questionEn: "Needs Follow-up Action?",
+      yes: { labelId: "✅ Ya, Perlu Aksi", labelEn: "✅ Yes, Action Needed", emoji: "🔄", titleId: "Konversi ke To-Do", titleEn: "Convert to To-Do", descId: "Klik Konversi — warta langsung jadi kartu To-Do 7 hari dengan PIC penanggung jawab.", descEn: "Click Convert — headline becomes a 7-day To-Do card with a responsible PIC.", variant: "info" },
+      no: { labelId: "📌 Informasi Saja", labelEn: "📌 Info Only", emoji: "✅", titleId: "Tersimpan di Feed Tim", titleEn: "Saved in Team Feed", descId: "Warta tersimpan di feed tim sebagai rekam jejak informasi — tidak butuh aksi lebih lanjut.", descEn: "Headline saved in team feed as an information record — no further action needed.", variant: "success" }
+    },
+    { type: "end", emoji: "📬", titleId: "Warta Berhasil Disiarkan", titleEn: "Headline Successfully Broadcast" }
+  ];
+
+  // 7. Archives Nodes
+  const archivesFlowNodes: ChartNode[] = [
+    { type: "start", emoji: "🗂️", titleId: "Buka Halaman Arsip", titleEn: "Open Archives Page" },
+    {
+      type: "step",
+      num: 1,
+      emoji: "📂",
+      titleId: "Pilih Tab Modul Arsip",
+      titleEn: "Select Archive Module",
+      descId: "Buka menu Arsip (Owner & Developer). Pilih tab: Metrik KPI, Agenda Tugas, Masalah Selesai, atau Warta Lama.",
+      descEn: "Open Archives (Owner/Dev only). Pick tab: KPI Metrics, To-Dos, Solved Issues, or Headlines.",
+      tipsId: "Arsip menyimpan rekam jejak lengkap — data tidak pernah terhapus atau tertimpa.",
+      tipsEn: "Archives preserve the complete audit trail — data is never deleted or overwritten.",
+      mockup: (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-[10px] font-sans text-center">
+          <span className="p-1 rounded bg-purple-600 text-white font-bold">{isId ? "Metrik KPI" : "KPI Metrics"}</span>
+          <span className="p-1 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600">{isId ? "Agenda Tugas" : "To-Dos"}</span>
+          <span className="p-1 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600">{isId ? "Masalah Selesai" : "Resolved Issues"}</span>
+          <span className="p-1 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600">{isId ? "Warta Lama" : "Headlines"}</span>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 2,
+      emoji: "🔍",
+      titleId: "Filter Divisi & Rentang Waktu",
+      titleEn: "Filter Dept & Timeframe",
+      descId: "Gunakan dropdown untuk menyaring data divisi tertentu, status penyelesaian, atau kata kunci pencarian.",
+      descEn: "Use dropdowns to filter by specific division, completion status, or search keywords.",
+      tipsId: "Toggle mode 'Tabel' untuk data padat, atau mode 'Kartu' untuk visual rincian.",
+      tipsEn: "Toggle 'Table' mode for dense data, or 'Card' mode for rich visual details.",
+      mockup: (
+        <div className="flex flex-wrap gap-1.5 text-[10px] font-sans">
+          <div className="px-2 py-1 rounded bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">{isId ? "Divisi: Semua ▼" : "Dept: All ▼"}</div>
+          <div className="px-2 py-1 rounded bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">{isId ? "Tahun: 2026 ▼" : "Year: 2026 ▼"}</div>
+          <div className="px-2 py-1 rounded bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">{isId ? "Status: Selesai ▼" : "Status: Done ▼"}</div>
+        </div>
+      )
+    },
+    {
+      type: "step",
+      num: 3,
+      emoji: "📊",
+      titleId: "Analisis Ringkasan Kinerja",
+      titleEn: "Inspect Historical Summary",
+      descId: "Tinjau kartu ringkasan atas: lihat rasio completion rate, rata-rata durasi, dan performa divisi secara historis.",
+      descEn: "Review top summary cards: completion rate, average duration, and division performance history.",
+      tipsId: "Statistik historis sangat berharga saat evaluasi kinerja kuartalan manajemen.",
+      tipsEn: "Historical metrics are invaluable for quarterly executive performance reviews.",
+      mockup: (
+        <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-1 text-[11px] font-sans shadow-2xs">
+          <div className="flex justify-between text-[10px]">
+            <span className="text-slate-500">{isId ? "Rasio Penyelesaian Tugas" : "Task Completion Rate"}</span>
+            <span className="font-extrabold text-emerald-600">94.8% 🟢</span>
+          </div>
+          <div className="flex justify-between text-[10px]">
+            <span className="text-slate-500">{isId ? "Total Masalah Terselesaikan" : "Total Solved Issues"}</span>
+            <span className="font-extrabold text-purple-600">88 {isId ? "Kasus (100% IDS)" : "Cases (100% IDS)"}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "decision",
+      questionId: "Butuh Laporan Tercetak?",
+      questionEn: "Need Printed Report?",
+      yes: { labelId: "📥 Ya, Unduh", labelEn: "📥 Yes, Export", emoji: "📊", titleId: "Ekspor Excel / CSV", titleEn: "Export Excel / CSV", descId: "Klik 'Ekspor Data' — file .xlsx / .csv terunduh otomatis, siap dibuka di Excel atau Google Sheets.", descEn: "Click 'Export Data' — .xlsx/.csv downloads instantly, ready for Excel or Google Sheets.", variant: "info" },
+      no: { labelId: "👁️ Lihat Saja", labelEn: "👁️ View Only", emoji: "✅", titleId: "Analisis Selesai di Platform", titleEn: "Analysis Complete In-Platform", descId: "Tidak perlu unduh — semua data tersedia langsung di platform secara online.", descEn: "No download needed — all data is available directly online in the platform.", variant: "success" }
+    },
+    { type: "end", emoji: "📋", titleId: "Pelaporan Selesai", titleEn: "Reporting Complete" }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 -my-1.5 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
         {[
           { id: "all", labelId: "Semua Panduan", labelEn: "All Guides" },
           { id: "workflow", labelId: "Alur Rapat L10", labelEn: "L10 Routine" },
@@ -219,16 +837,16 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
             </nav>
           </div>
 
-          {/* Practical Tip Card */}
-          <div className="rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/20 p-4 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-xs text-blue-900 dark:text-blue-300">
-              <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span>{isId ? "Tips Irama Rapat L10" : "L10 Meeting Best Practice"}</span>
-            </div>
-            <p className="text-[11px] text-blue-900/80 dark:text-blue-400/80 leading-relaxed">
+          {/* Quick Info Box */}
+          <div className="p-4 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/20 dark:to-indigo-950/20 space-y-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isId ? "Prinsip Utama" : "Key Principle"}</span>
+            </span>
+            <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-medium">
               {isId
-                ? "Rapat mingguan efektif berdurasi 90 menit. 60 menit porsi terbesar dialokasikan murni untuk memecahkan kendala pada sesi IDS."
-                : "A high-performing weekly meeting lasts 90 minutes, with the majority (60 mins) dedicated to IDS problem solving."}
+                ? "Gunakan flowchart 1 ➔ 2 ➔ 3 ➔ 4 di setiap modul sebagai panduan standar kerja tim operasional."
+                : "Follow the 1 ➔ 2 ➔ 3 ➔ 4 flowchart in each module as standard operating procedure for the ops team."}
             </p>
           </div>
         </aside>
@@ -286,86 +904,8 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                   : "The weekly Level 10 Meeting begins on time every week using RockyTen as the central dashboard. Follow these 5 consecutive steps:"}
               </p>
 
-              {/* 5-Step Pipeline Card Visual */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                {[
-                  {
-                    step: "1",
-                    titleId: "Scoreboard KPI",
-                    titleEn: "Scoreboard KPI",
-                    timeId: "5 Menit",
-                    timeEn: "5 Mins",
-                    descId: "Input capaian W1-W4. Jika angka merah, lempar langsung ke Issue.",
-                    descEn: "Input weekly numbers. If red, throw directly to Issue.",
-                    color: "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300",
-                    badge: "bg-emerald-600 text-white"
-                  },
-                  {
-                    step: "2",
-                    titleId: "Review Rocks",
-                    titleEn: "Rocks Review",
-                    timeId: "5 Menit",
-                    timeEn: "5 Mins",
-                    descId: "Cek progres 90 hari. Status On Track atau Off Track. Jangan diskusikan solusi di sini.",
-                    descEn: "Check 90-day progress. On track or off track. Avoid solutions here.",
-                    color: "border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300",
-                    badge: "bg-amber-600 text-white"
-                  },
-                  {
-                    step: "3",
-                    titleId: "Warta Headlines",
-                    titleEn: "Headlines News",
-                    timeId: "5 Menit",
-                    timeEn: "5 Mins",
-                    descId: "Bagi kabar baik, prestasi cabang, pengumuman resmi divisi.",
-                    descEn: "Share team wins, customer feedback, and company news.",
-                    color: "border-cyan-200 dark:border-cyan-900/50 bg-cyan-50/40 dark:bg-cyan-950/20 text-cyan-700 dark:text-cyan-300",
-                    badge: "bg-cyan-600 text-white"
-                  },
-                  {
-                    step: "4",
-                    titleId: "Daftar To-Do",
-                    titleEn: "To-Do List",
-                    timeId: "5 Menit",
-                    timeEn: "5 Mins",
-                    descId: "Tandai tugas yang selesai dalam 7 hari lalu. Target kepatuhan > 90%.",
-                    descEn: "Check off 7-day completed tasks. Goal is > 90% completion rate.",
-                    color: "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300",
-                    badge: "bg-indigo-600 text-white"
-                  },
-                  {
-                    step: "5",
-                    titleId: "Sesi IDS",
-                    titleEn: "IDS Solving",
-                    timeId: "60 Menit",
-                    timeEn: "60 Mins",
-                    descId: "Pilih 3 issue paling kritis. Bedah akar masalah, putuskan jadi To-Do minggu depan.",
-                    descEn: "Pick top 3 issues. Identify root cause, discuss, solve into To-Dos.",
-                    color: "border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300",
-                    badge: "bg-rose-600 text-white"
-                  }
-                ].map((item) => (
-                  <div
-                    key={item.step}
-                    className={`p-3.5 rounded-2xl border ${item.color} space-y-2 flex flex-col justify-between`}
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`w-5 h-5 rounded-md ${item.badge} text-[11px] font-black flex items-center justify-center`}>
-                          {item.step}
-                        </span>
-                        <span className="text-[10px] font-bold opacity-80">{isId ? item.timeId : item.timeEn}</span>
-                      </div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white pt-1">
-                        {isId ? item.titleId : item.titleEn}
-                      </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-snug">
-                        {isId ? item.descId : item.descEn}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={l10RoutineNodes} accent="blue" />
 
               {/* Golden Rule Callout */}
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-start gap-3">
@@ -409,71 +949,8 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    1
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Input Nilai Harian / Mingguan" : "Input Weekly Values"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Klik salah satu baris metrik di tabel Scoreboard untuk membuka dialog input harian Senin–Minggu. Angka harian akan diakumulasi otomatis (SUM atau AVG)."
-                      : "Click any metric row in the Scoreboard to open daily inputs (Mon–Sun). Values are automatically summed or averaged."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    2
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Evaluasi Warna Status" : "Status Color Evaluation"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Badge Hijau (Aman): Capaian memenuhi target. Badge Merah (Masalah): Capaian di bawah target dan perlu tindakan perbaikan."
-                      : "Green Badge: Target met or exceeded. Red Badge: Failing metric that requires corrective action."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    3
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Konversi Cepat ke Issue" : "Instant Conversion to Issue"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Jika metrik gagal berturut-turut, klik tombol 'Konversi' di modal detail untuk melempar metrik langsung ke Pusat Kendala (Issues) tanpa ketik ulang."
-                      : "If a metric fails repeatedly, click 'Convert' in the detail modal to push it directly into the Issue Tracker without retyping."}
-                  </p>
-                </div>
-              </div>
-
-              {/* Interactive Mockup Visual */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800 space-y-3">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>{isId ? "Ilustrasi Tampilan Baris Scoreboard" : "Scoreboard Row Visual Preview"}</span>
-                </span>
-                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/70 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-slate-900 dark:text-white font-sans text-xs">
-                      Omset Penjualan Harian (Kitchen)
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-sans block">Target: Rp 15.000.000 / hari</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
-                      Rp 16.200.000 (108%)
-                    </span>
-                    <span className="text-slate-400 text-[10px]">W3 Aktif</span>
-                  </div>
-                </div>
-              </div>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={scoreboardFlowNodes} accent="emerald" />
             </section>
           )}
 
@@ -506,49 +983,8 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    1
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Tentukan 3-7 Sasaran Kunci" : "Set 3-7 Key Goals"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Setiap kuartal (90 hari), setiap divisi hanya boleh memiliki maksimal 3–7 Rock prioritas tinggi. Tetapkan PIC tunggal dan due date."
-                      : "Each division should focus on only 3–7 high-priority Rocks per quarter, each owned by 1 clear PIC."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    2
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Pantau Radar Kesehatan Otomatis" : "Monitor Automatic Health Radar"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Sistem otomatis mendeteksi status: On Track (progres sehat), Off Track Beresiko (sisa waktu <= 14 hari tp progres < 50%), atau Terlambat."
-                      : "The radar engine flags Rocks automatically: On Track, Off Track at Risk (<= 14 days left with < 50% progress), or Overdue."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    3
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Verifikasi Selesai Dua Langkah" : "Two-Step Done Verification"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Ketika progres mencapai 100%, status berubah jadi 'Siap Review'. Khusus akun Owner yang dapat menekan tombol resmi 'Verifikasi Selesai'."
-                      : "When progress reaches 100%, status shifts to 'Ready for Review'. Only Owners can officially click 'Verify Completed'."}
-                  </p>
-                </div>
-              </div>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={rocksFlowNodes} accent="amber" />
             </section>
           )}
 
@@ -581,53 +1017,12 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    1
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Lapor Kendala + Upload Bukti Foto" : "Report Issue + Upload Photo"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Klik 'Tambah Masalah', pilih divisi, tulis kendala secara jelas, dan lampirkan foto/file (misal foto kompor rusak atau chiller bocor hingga 5MB)."
-                      : "Click 'Add Issue', pick division, describe the obstacle, and upload photo/file evidence up to 5MB."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    2
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Pilih 3 Masalah Prioritas Teratas" : "Triage Top 3 Issues"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Saat rapat L10, jangan bahas semua masalah sekaligus! Pilih masalah urutan 1, 2, dan 3 yang paling berdampak besar ke operasional."
-                      : "During L10, avoid tackling all issues! Vote and pick the top 3 highest-impact obstacles to solve."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <div className="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center text-xs">
-                    3
-                  </div>
-                  <strong className="text-xs text-slate-900 dark:text-white block">
-                    {isId ? "Selesaikan Menjadi Action Item To-Do" : "Solve into Actionable To-Do"}
-                  </strong>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Diskusi IDS dianggap tuntas HANYA jika menghasilkan To-Do konkret dengan 1 PIC pelaksana dan tenggat waktu 7 hari ke depan."
-                      : "An IDS discussion is solved ONLY when it produces an action item To-Do with 1 owner and a 7-day deadline."}
-                  </p>
-                </div>
-              </div>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={issuesFlowNodes} accent="rose" />
             </section>
           )}
 
-          {/* Section 5: Panduan To-Do & Headlines */}
+          {/* Section 5: Panduan To-Do List */}
           {visibleSectionIds.has("guide-todos") && (
             <section
               id="guide-todos"
@@ -656,31 +1051,8 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 dark:text-zinc-300">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-500" />
-                    <span>{isId ? "Prinsip Komitmen 7 Hari" : "7-Day Commitment Principle"}</span>
-                  </span>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "To-Do bukan daftar impian panjang, melainkan janji tugas yang bisa diselesaikan dalam kurun 7 hari sebelum rapat minggu berikutnya."
-                      : "To-Dos are short-term tactical commitments that must be executed within 7 days before the next team meeting."}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/70 dark:border-zinc-800 space-y-2">
-                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
-                    <RefreshCw className="w-4 h-4 text-cyan-500" />
-                    <span>{isId ? "Konversi To-Do Jadi Metrik Permanen" : "Promote To-Do to Scoreboard"}</span>
-                  </span>
-                  <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                    {isId
-                      ? "Jika suatu tugas terbukti perlu dipantau rutin setiap minggu, klik 'Konversi' pada tugas tersebut untuk menjadikannya metrik resmi di Scoreboard."
-                      : "If a task requires ongoing weekly tracking, convert it directly into a permanent Scoreboard metric."}
-                  </p>
-                </div>
-              </div>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={todosFlowNodes} accent="indigo" />
             </section>
           )}
 
@@ -713,21 +1085,42 @@ export function UserGuideView({ isId, searchQuery }: UserGuideViewProps) {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {[
-                  { tag: "Achievement", labelId: "Prestasi / Rekor", descId: "Rayakan capaian omset atau rekor cabang", color: "text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60" },
-                  { tag: "Good News", labelId: "Kabar Baik", descId: "Ulasan positif pelanggan / ekspansi", color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60" },
-                  { tag: "Bad News", labelId: "Kendala Eksternal", descId: "Kenaikan harga bahan baku pasar", color: "text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60" },
-                  { tag: "Reminder", labelId: "Pengingat Jadwal", descId: "Batas waktu audit atau stok opname", color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900/60" },
-                  { tag: "Announcement", labelId: "Pengumuman Resmi", descId: "SOP baru atau kebijakan manajemen", color: "text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60" }
-                ].map((cat) => (
-                  <div key={cat.tag} className={`p-3 rounded-2xl border ${cat.color} space-y-1`}>
-                    <span className="text-[10px] font-black uppercase tracking-wider block">{cat.tag}</span>
-                    <strong className="text-xs text-slate-900 dark:text-white block">{cat.labelId}</strong>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-snug">{cat.descId}</p>
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={headlinesFlowNodes} accent="cyan" />
+            </section>
+          )}
+
+          {/* Section 7: Panduan Arsip & Ekspor Laporan */}
+          {visibleSectionIds.has("guide-archives") && (
+            <section
+              id="guide-archives"
+              className="scroll-mt-24 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 shadow-xs space-y-6"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/60 flex items-center justify-center shrink-0">
+                    <Archive className="w-5 h-5" />
                   </div>
-                ))}
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                      {isId ? "PANDUAN MODUL 6 (OWNER & DEVELOPER)" : "MODULE GUIDE 6 (OWNER & DEVELOPER)"}
+                    </span>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {isId ? "Arsip Data & Ekspor Laporan" : "Archives & Reporting Export"}
+                    </h2>
+                  </div>
+                </div>
+                <Link
+                  href="/archives"
+                  className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold hover:bg-purple-100 transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+                >
+                  <span>{isId ? "Buka Halaman Arsip" : "Open Archives"}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
               </div>
+
+              {/* True Flowchart — Top Down SOP Style */}
+              <GuideFlowchart isId={isId} nodes={archivesFlowNodes} accent="purple" />
             </section>
           )}
         </main>

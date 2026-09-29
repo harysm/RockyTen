@@ -39,6 +39,10 @@ export const fetchTodosFromDb = async (): Promise<Todo[]> => {
 export const insertTodoToDb = async (todo: Todo): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    let createdBy = todo.createdBy;
+    if (!createdBy || !createdBy.startsWith("prof-")) {
+      createdBy = "prof-pic-it";
+    }
     const payload = {
       id: todo.id,
       department_id: todo.departmentId,
@@ -47,7 +51,7 @@ export const insertTodoToDb = async (todo: Todo): Promise<boolean> => {
       priority: todo.priority,
       deadline: todo.deadline || null,
       status: todo.status,
-      created_by: todo.createdBy || null,
+      created_by: createdBy,
       converted_to_metric_id: todo.convertedToMetricId || null,
       attachments: todo.attachments || []
     };

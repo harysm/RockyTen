@@ -53,11 +53,14 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
     { name: language === "id" ? "Headline" : "Headlines", href: "/headlines", icon: Newspaper },
     { name: language === "id" ? "To Do List" : "To-Do", href: "/todos", icon: CheckSquare },
     { name: language === "id" ? "Issue" : "Issues", href: "/issues", icon: AlertCircle },
-    { name: language === "id" ? "Histori Log" : "History", href: "/history", icon: History },
   ];
 
   const navItems = isOwnerOrDev
-    ? [...baseNavItems, { name: language === "id" ? "Arsip" : "Archives", href: "/archives", icon: Archive }]
+    ? [
+        ...baseNavItems,
+        { name: language === "id" ? "Histori Log" : "History", href: "/history", icon: History },
+        { name: language === "id" ? "Arsip" : "Archives", href: "/archives", icon: Archive },
+      ]
     : baseNavItems;
 
   const SidebarContent = ({ isCollapsed = false }: { isCollapsed?: boolean }) => (

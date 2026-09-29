@@ -173,7 +173,7 @@ export function SystemSpecsView({ isId, searchQuery }: SystemSpecsViewProps) {
   return (
     <div className="space-y-6">
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 -my-1.5 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
         {[
           { id: "all", labelId: "Semua Spesifikasi", labelEn: "All Specs" },
           { id: "concept", labelId: "Logika & Konsep", labelEn: "Logic & Concepts" },
@@ -558,38 +558,52 @@ export function SystemSpecsView({ isId, searchQuery }: SystemSpecsViewProps) {
                     <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 text-[11px]">
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
                         <td className="py-2.5 px-4 font-bold text-amber-600 dark:text-amber-400">Owner</td>
-                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Richard</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-500">richard@gmail.com</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-400">owner123</td>
-                        <td className="py-2.5 px-4">Global (Semua Divisi & Verifikasi Rocks)</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
-                        <td className="py-2.5 px-4 font-bold text-amber-600 dark:text-amber-400">Owner</td>
-                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Kim</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-500">kim@gmail.com</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Owner</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">owner@ng.com</td>
                         <td className="py-2.5 px-4 font-mono text-slate-400">owner123</td>
                         <td className="py-2.5 px-4">Global (Semua Divisi & Verifikasi Rocks)</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
                         <td className="py-2.5 px-4 font-bold text-blue-600 dark:text-blue-400">Developer</td>
                         <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Developer</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-500">developer@nasigerilya.com</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">developer@ng.com</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-400">dev123</td>
                         <td className="py-2.5 px-4">Global + Akses Fitur Debug & Reset</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
                         <td className="py-2.5 px-4 font-bold text-slate-600 dark:text-zinc-400">PIC Divisi</td>
-                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Harys (IT)</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-500">harys@nasigerilya.com</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">IT</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">it@ng.com</td>
                         <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
                         <td className="py-2.5 px-4">Divisi IT Saja</td>
                       </tr>
                       <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
                         <td className="py-2.5 px-4 font-bold text-slate-600 dark:text-zinc-400">PIC Divisi</td>
-                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Kitchen Lead</td>
-                        <td className="py-2.5 px-4 font-mono text-slate-500">kitchen@nasigerilya.com</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Kitchen</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">kitchen@ng.com</td>
                         <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
                         <td className="py-2.5 px-4">Divisi Kitchen Saja</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
+                        <td className="py-2.5 px-4 font-bold text-slate-600 dark:text-zinc-400">PIC Divisi</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Service</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">service@ng.com</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
+                        <td className="py-2.5 px-4">Divisi Service Saja</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
+                        <td className="py-2.5 px-4 font-bold text-slate-600 dark:text-zinc-400">PIC Divisi</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Finance</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">finance@ng.com</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
+                        <td className="py-2.5 px-4">Divisi Finance Saja</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-zinc-850/30">
+                        <td className="py-2.5 px-4 font-bold text-slate-600 dark:text-zinc-400">PIC Divisi</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">Marketing</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-500">marketing@ng.com</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-400">123456</td>
+                        <td className="py-2.5 px-4">Divisi Marketing Saja</td>
                       </tr>
                     </tbody>
                   </table>

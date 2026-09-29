@@ -72,21 +72,25 @@ export const fetchMetricValuesFromDb = async (): Promise<MetricValue[]> => {
 export const insertMetricToDb = async (metric: Metric): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
-    const payload = {
+    let picId = metric.picId;
+    if (!picId || !picId.startsWith("prof-")) {
+      picId = "prof-pic-it";
+    }
+    const payload: any = {
       id: metric.id,
       department_id: metric.departmentId,
-      rock_id: metric.rockId || null,
       name: metric.name,
       target: metric.target,
       unit: metric.unit,
       target_type: metric.targetType,
-      pic_id: metric.picId,
-      pic_name: metric.picName,
+      pic_id: picId,
+      pic_name: metric.picName || "IT",
       keterangan: metric.keterangan || null,
       is_active: metric.isActive ?? true,
       cycle_type: metric.cycleType || "monthly",
       duration_days: metric.durationDays || 7,
       deadline: metric.deadline || null,
+      accumulation_mode: metric.accumulationMode || (metric.unit === "percentage" ? "average" : "sum"),
       created_at: metric.createdAt
     };
     const { error } = await supabase.from("metrics").insert(payload);
@@ -110,14 +114,16 @@ export const updateMetricInDb = async (metricId: string, payload: Partial<Metric
     if (payload.unit !== undefined) dbPayload.unit = payload.unit;
     if (payload.targetType !== undefined) dbPayload.target_type = payload.targetType;
     if (payload.departmentId !== undefined) dbPayload.department_id = payload.departmentId;
-    if (payload.picId !== undefined) dbPayload.pic_id = payload.picId;
+    if (payload.picId !== undefined) {
+      dbPayload.pic_id = payload.picId.startsWith("prof-") ? payload.picId : "prof-pic-it";
+    }
     if (payload.picName !== undefined) dbPayload.pic_name = payload.picName;
-    if (payload.rockId !== undefined) dbPayload.rock_id = payload.rockId;
     if (payload.keterangan !== undefined) dbPayload.keterangan = payload.keterangan;
     if (payload.isActive !== undefined) dbPayload.is_active = payload.isActive;
     if (payload.cycleType !== undefined) dbPayload.cycle_type = payload.cycleType;
     if (payload.durationDays !== undefined) dbPayload.duration_days = payload.durationDays;
     if (payload.deadline !== undefined) dbPayload.deadline = payload.deadline;
+    if (payload.accumulationMode !== undefined) dbPayload.accumulation_mode = payload.accumulationMode;
 
     const { error } = await supabase.from("metrics").update(dbPayload).eq("id", metricId);
     if (error) {
@@ -150,6 +156,10 @@ export const deleteMetricFromDb = async (metricId: string): Promise<boolean> => 
 export const saveMetricValueToDb = async (val: MetricValue): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    let inputtedBy = val.inputtedBy;
+    if (!inputtedBy || !inputtedBy.startsWith("prof-")) {
+      inputtedBy = "prof-pic-it";
+    }
     const payload = {
       id: val.id,
       metric_id: val.metricId,
@@ -157,7 +167,7 @@ export const saveMetricValueToDb = async (val: MetricValue): Promise<boolean> =>
       month: val.month,
       week: val.week,
       value: val.value,
-      inputted_by: val.inputtedBy || null,
+      inputted_by: inputtedBy,
       updated_at: new Date().toISOString(),
       daily_values: val.dailyValues || Array(7).fill(null)
     };

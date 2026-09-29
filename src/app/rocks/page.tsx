@@ -186,11 +186,15 @@ export default function RocksPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newDeptId, setNewDeptId] = useState(currentProfile.departmentId || "dept-it");
-  const [newPicId, setNewPicId] = useState(currentProfile.id);
+  const [newPicId, setNewPicId] = useState(() => {
+    if (currentProfile.role.toLowerCase() === "developer") {
+      const match = allProfiles.find(p => p.departmentId === (currentProfile.departmentId || "dept-it") && p.role.toLowerCase() !== "developer") || allProfiles.find(p => p.role.toLowerCase() !== "developer");
+      return match ? match.id : currentProfile.id;
+    }
+    return currentProfile.id;
+  });
   const [newQuarter, setNewQuarter] = useState<"Q1" | "Q2" | "Q3" | "Q4">("Q3");
-  const [newYear, setNewYear] = useState<number>(2026);
   const [newDueDate, setNewDueDate] = useState("2026-09-30");
-  const [newInitialProgress, setNewInitialProgress] = useState<number>(0);
 
   // Edit Rock Modal State
   const [editingRock, setEditingRock] = useState<Rock | null>(null);
@@ -275,15 +279,16 @@ export default function RocksPage() {
     }
 
     const pic = allProfiles.find(p => p.id === newPicId) || currentProfile;
+    const parsedYear = Number(newDueDate.split("-")[0]) || new Date().getFullYear();
 
     addRock({
       departmentId: newDeptId,
       title: newTitle.trim(),
       description: newDesc.trim() || undefined,
       quarter: newQuarter,
-      year: newYear,
+      year: parsedYear,
       status: "on_track",
-      progress: Math.min(100, Math.max(0, newInitialProgress || 0)),
+      progress: 0,
       picId: pic.id,
       picName: pic.name,
       dueDate: newDueDate
@@ -292,7 +297,6 @@ export default function RocksPage() {
     setIsAddModalOpen(false);
     setNewTitle("");
     setNewDesc("");
-    setNewInitialProgress(0);
     showToast("Rock prioritas baru berhasil dibuat!", "success");
   };
 
@@ -934,23 +938,33 @@ export default function RocksPage() {
                     onChange={e => setNewPicId(e.target.value)}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    {allProfiles.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.role.toUpperCase()})
-                      </option>
-                    ))}
+                    {allProfiles
+                      .filter(p => p.role.toLowerCase() !== "developer" && p.id !== "prof-dev")
+                      .map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.role.toUpperCase()})
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                     Kuartal
                   </label>
                   <select
                     value={newQuarter}
-                    onChange={e => setNewQuarter(e.target.value as any)}
+                    onChange={e => {
+                      const q = e.target.value as "Q1" | "Q2" | "Q3" | "Q4";
+                      setNewQuarter(q);
+                      const currentY = Number(newDueDate.split("-")[0]) || new Date().getFullYear();
+                      if (q === "Q1") setNewDueDate(`${currentY}-03-31`);
+                      else if (q === "Q2") setNewDueDate(`${currentY}-06-30`);
+                      else if (q === "Q3") setNewDueDate(`${currentY}-09-30`);
+                      else if (q === "Q4") setNewDueDate(`${currentY}-12-31`);
+                    }}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="Q1">Q1 (Jan-Mar)</option>
@@ -962,45 +976,24 @@ export default function RocksPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Tahun
-                  </label>
-                  <input
-                    type="number"
-                    value={newYear}
-                    onChange={e => setNewYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                     Batas Waktu (Due Date)
                   </label>
                   <input
                     type="date"
                     value={newDueDate}
-                    onChange={e => setNewDueDate(e.target.value)}
+                    onChange={e => {
+                      setNewDueDate(e.target.value);
+                      if (e.target.value) {
+                        const month = parseInt(e.target.value.split("-")[1], 10);
+                        if (month >= 1 && month <= 3) setNewQuarter("Q1");
+                        else if (month >= 4 && month <= 6) setNewQuarter("Q2");
+                        else if (month >= 7 && month <= 9) setNewQuarter("Q3");
+                        else if (month >= 10 && month <= 12) setNewQuarter("Q4");
+                      }
+                    }}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Progres Mandiri Awal (%)
-                  <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400 ml-1">
-                    (Jika Rock tidak terhubung ke sub-metrik Scoreboard)
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={newInitialProgress}
-                  onChange={e => setNewInitialProgress(Number(e.target.value))}
-                  placeholder="0 - 100"
-                  className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
               </div>
 
               <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2">
@@ -1100,11 +1093,13 @@ export default function RocksPage() {
                     }}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    {allProfiles.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.role.toUpperCase()})
-                      </option>
-                    ))}
+                    {allProfiles
+                      .filter(p => p.role.toLowerCase() !== "developer" && p.id !== "prof-dev")
+                      .map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.role.toUpperCase()})
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>

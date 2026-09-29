@@ -140,17 +140,30 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
           <NetworkStatusBadge />
         </div>
 
-        {/* Dark / Light Theme Quick Toggle */}
+        {/* Dark / Light Theme Quick Toggle with Smooth Morph Animation */}
         <button
+          type="button"
           onClick={toggleTheme}
-          title={theme === "dark" ? "Mode Terang" : "Mode Gelap"}
-          className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-xl transition-colors cursor-pointer"
+          title={theme === "dark" ? (language === "id" ? "Beralih ke Mode Terang" : "Switch to Light Mode") : (language === "id" ? "Beralih ke Mode Gelap" : "Switch to Dark Mode")}
+          className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-xl transition-all duration-200 cursor-pointer active:scale-90 group overflow-hidden"
+          aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-amber-400 shrink-0" />
-          ) : (
-            <Moon className="w-5 h-5 text-slate-600 dark:text-zinc-400 shrink-0" />
-          )}
+          <div className="relative w-5 h-5 flex items-center justify-center">
+            <Sun
+              className={`w-5 h-5 text-amber-400 absolute transition-all duration-300 ease-out transform ${
+                theme === "dark"
+                  ? "rotate-0 scale-100 opacity-100"
+                  : "rotate-90 scale-0 opacity-0 pointer-events-none"
+              }`}
+            />
+            <Moon
+              className={`w-5 h-5 text-slate-600 dark:text-zinc-400 absolute transition-all duration-300 ease-out transform ${
+                theme === "dark"
+                  ? "-rotate-90 scale-0 opacity-0 pointer-events-none"
+                  : "rotate-0 scale-100 opacity-100"
+              }`}
+            />
+          </div>
         </button>
 
         {/* NOTIFICATION BELL ICON WITH DROPDOWN (Directly to the left of Account) */}
@@ -224,7 +237,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleSidebar }) => {
                       {currentProfile.name}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-zinc-400 truncate mt-0.5">
-                      {currentProfile.email || "user@nasigerilya.com"}
+                      {currentProfile.email || "user@ng.com"}
                     </p>
                   </div>
                 </div>

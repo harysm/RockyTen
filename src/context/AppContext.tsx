@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase, ENABLE_DATABASE } from "@/lib/supabase";
 import { insertMetricToDb, saveMetricValueToDb } from "@/services/metricService";
 import { insertTodoToDb } from "@/services/todoService";
@@ -18,6 +18,7 @@ import {
   INITIAL_ISSUES, 
   INITIAL_HEADLINES 
 } from "@/constants";
+import { hashPassword, verifyPassword, isPasswordEncrypted } from "@/lib/crypto";
 
 // Import central types for local usage and re-export
 import type {
@@ -33,7 +34,8 @@ import type {
   Headline,
   HistoryLog,
   ToastInfo,
-  ConfirmModalInfo
+  ConfirmModalInfo,
+  AlertModalInfo
 } from "@/types";
 
 export type {
@@ -49,7 +51,8 @@ export type {
   Headline,
   HistoryLog,
   ToastInfo,
-  ConfirmModalInfo
+  ConfirmModalInfo,
+  AlertModalInfo
 };
 
 export interface EmailNotifSettings {
@@ -163,10 +166,15 @@ interface AppContextType {
   // Email Notifications Settings
   emailNotifSettings: EmailNotifSettings;
   updateEmailNotifSettings: (newSettings: Partial<EmailNotifSettings>) => void;
-  // Toast Notification
+  // Toast Notifications (Stacked & Centered)
   toast: ToastInfo | null;
+  toasts: ToastInfo[];
   showToast: (message: string, type?: ToastInfo["type"]) => void;
-  hideToast: () => void;
+  hideToast: (id?: string) => void;
+  // Alert Modal (Button-based dialog)
+  alertModal: AlertModalInfo | null;
+  showAlert: (info: AlertModalInfo | string) => void;
+  hideAlert: () => void;
   // Confirm Modal
   confirmModal: ConfirmModalInfo | null;
   showConfirm: (info: ConfirmModalInfo) => void;
@@ -176,7 +184,7 @@ interface AppContextType {
   // Auth & Profile
   isLoggedIn: boolean;
   credentials: Record<string, { password: string; profileId: string }>;
-  loginProfile: (email: string, password: string) => { success: boolean; error?: string };
+  loginProfile: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutProfile: () => void;
   addProfile: (profile: Omit<Profile, "id">, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   updateProfileAndSave: (profile: Profile, newEmail?: string, newPassword?: string) => void;
@@ -185,35 +193,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const INITIAL_LOGS: HistoryLog[] = [
-  {
-    id: "log-1",
-    profileId: "prof-pic-it",
-    profileName: "Devin Satria",
-    departmentId: "dept-it",
-    action: "Update Metric",
-    details: "Mengisi capaian Server Uptime W3: 99.7%",
-    createdAt: "18/07 10:15"
-  },
-  {
-    id: "log-2",
-    profileId: "prof-pic-marketing",
-    profileName: "Dewi Lestari",
-    departmentId: "dept-marketing",
-    action: "Add Issue",
-    details: "Mencatat issue konversi leads B2B Q3 turun",
-    createdAt: "18/07 09:30"
-  },
-  {
-    id: "log-3",
-    profileId: "prof-pic-kitchen",
-    profileName: "Chef Budi Santoso",
-    departmentId: "dept-kitchen",
-    action: "Update Rock",
-    details: "Memperbarui progres Rock Standardisasi Resep & Reduksi Food Waste",
-    createdAt: "17/07 14:00"
-  }
-];
+const INITIAL_LOGS: HistoryLog[] = [];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth state
@@ -237,7 +217,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [highContrast, setHighContrast] = useState<boolean>(false);
   const [reduceMotion, setReduceMotion] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
-  const [toast, setToast] = useState<ToastInfo | null>(null);
+  const [toasts, setToasts] = useState<ToastInfo[]>([]);
+  const [alertModal, setAlertModal] = useState<AlertModalInfo | null>(null);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalInfo | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -321,10 +302,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const showToast = useCallback((message: string, type: ToastInfo["type"] = "info") => {
-    setToast({ id: String(Date.now()), message, type });
+    const newToast: ToastInfo = {
+      id: `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      message,
+      type
+    };
+    setToasts(prev => [newToast, ...prev.slice(0, 3)]); // Keep max 4 toasts stacked
   }, []);
 
-  const hideToast = useCallback(() => setToast(null), []);
+  const hideToast = useCallback((id?: string) => {
+    setToasts(prev => id ? prev.filter(t => t.id !== id) : prev.slice(1));
+  }, []);
+
+  const showAlert = useCallback((info: AlertModalInfo | string) => {
+    if (typeof info === "string") {
+      let variant: AlertModalInfo["variant"] = "info";
+      const lower = info.toLowerCase();
+      if (lower.includes("berhasil") || lower.includes("sukses") || lower.includes("saved") || lower.includes("berhasil disimpan")) {
+        variant = "success";
+      } else if (lower.includes("gagal") || lower.includes("tidak cocok") || lower.includes("error") || lower.includes("salah") || lower.includes("terputus")) {
+        variant = "error";
+      } else if (lower.includes("harap") || lower.includes("wajib") || lower.includes("peringatan") || lower.includes("melebihi") || lower.includes("maksimal") || lower.includes("perhatian")) {
+        variant = "warning";
+      }
+      setAlertModal({ message: info, variant, buttonText: "Mengerti" });
+    } else {
+      setAlertModal(info);
+    }
+  }, []);
+
+  const hideAlert = useCallback(() => {
+    setAlertModal(null);
+  }, []);
 
   const sanitizeForStorage = (val: any): any => {
     if (!val) return val;
@@ -367,15 +376,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load from localstorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Intercept browser default window.alert with modern CustomAlertModal
       window.alert = (message: string) => {
-        let type: ToastInfo["type"] = "info";
-        const lower = message.toLowerCase();
-        if (lower.includes("berhasil") || lower.includes("sukses") || lower.includes("saved") || lower.includes("berhasil disimpan")) {
-          type = "success";
-        } else if (lower.includes("gagal") || lower.includes("tidak cocok") || lower.includes("tidak bisa") || lower.includes("tidak diperbolehkan") || lower.includes("maksimal") || lower.includes("error")) {
-          type = "error";
-        }
-        showToast(message, type);
+        showAlert(message);
       };
 
       // Intercept browser-default HTML5 form validation balloon tooltips ("Please fill in this field")
@@ -431,6 +434,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       document.addEventListener("invalid", handleInvalid, true);
 
+      // One-time automatic purge of previous dummy data from browser cache
+      try {
+        const hasCleanedDummy = localStorage.getItem("dummy_cleanup_done_v2");
+        if (hasCleanedDummy !== "true") {
+          localStorage.removeItem("metrics");
+          localStorage.removeItem("metricValues");
+          localStorage.removeItem("todos");
+          localStorage.removeItem("issues");
+          localStorage.removeItem("headlines");
+          localStorage.removeItem("historyLogs");
+          localStorage.removeItem("rocks");
+          localStorage.setItem("dummy_cleanup_done_v2", "true");
+        }
+      } catch (e) { }
+
       // In Database Mode, purge old stale local cache keys. In Local Mode, keep localStorage intact!
       if (ENABLE_DATABASE) {
         try {
@@ -440,6 +458,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.removeItem("issues");
           localStorage.removeItem("headlines");
           localStorage.removeItem("historyLogs");
+          localStorage.removeItem("rocks");
         } catch (e) { }
       } else {
         // Local Mode: Restore persistent data from localStorage (if any non-empty data exists)
@@ -522,7 +541,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try { setAllProfiles(JSON.parse(savedProfiles)); } catch (e) { }
       }
       if (savedCredentials) {
-        try { setCredentials(JSON.parse(savedCredentials)); } catch (e) { }
+        try {
+          const parsed = JSON.parse(savedCredentials);
+          setCredentials({ ...DEFAULT_CREDENTIALS, ...parsed });
+        } catch (e) { }
       }
 
       if (savedLang) {
@@ -612,7 +634,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               name: p.name,
               role: p.role,
               departmentId: p.department_id || null,
-              avatarUrl: p.avatar_url || undefined
+              avatarUrl: p.avatar_url || undefined,
+              email: p.email || undefined
             }));
             setAllProfiles(mappedProfiles);
             saveState("allProfiles", mappedProfiles);
@@ -627,8 +650,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               }
             });
             if (Object.keys(mappedCreds).length > 0) {
-              setCredentials(mappedCreds);
-              saveState("credentials", mappedCreds);
+              const mergedCreds = { ...DEFAULT_CREDENTIALS, ...mappedCreds };
+              setCredentials(mergedCreds);
+              saveState("credentials", mergedCreds);
             }
 
             // Sync active currentProfile with DB profile record
@@ -920,10 +944,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // Auth functions
-  const loginProfile = (email: string, password: string): { success: boolean; error?: string } => {
-    const cred = credentials[email.toLowerCase()];
+  const loginProfile = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const emailLower = email.toLowerCase().trim();
+    const cred = credentials[emailLower];
     if (!cred) return { success: false, error: "Email tidak ditemukan." };
-    if (cred.password !== password) return { success: false, error: "Password salah." };
+    
+    const isValid = await verifyPassword(password, cred.password);
+    if (!isValid) return { success: false, error: "Password salah." };
+
+    // Auto-upgrade legacy unencrypted password to PBKDF2 hash on successful login
+    if (!isPasswordEncrypted(cred.password)) {
+      try {
+        const secureHash = await hashPassword(password);
+        const upgradedCreds = { ...credentials, [emailLower]: { ...cred, password: secureHash } };
+        setCredentials(upgradedCreds);
+        saveState("credentials", upgradedCreds);
+        if (ENABLE_DATABASE) {
+          supabase.from("profiles").update({ password: secureHash }).eq("id", cred.profileId).then();
+        }
+      } catch (e) {
+        console.warn("Password hash auto-upgrade error:", e);
+      }
+    }
+
     const profile = allProfiles.find(p => p.id === cred.profileId);
     if (!profile) return { success: false, error: "Profil tidak ditemukan." };
     setCurrentProfile(profile);
@@ -947,23 +990,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem("headlines");
       localStorage.removeItem("historyLogs");
       localStorage.removeItem("rocks");
-      localStorage.removeItem("allProfiles");
-      localStorage.removeItem("credentials");
     } catch (e) { }
 
-    setMetrics(INITIAL_METRICS);
-    setMetricValues(INITIAL_METRIC_VALUES);
-    setTodos(INITIAL_TODOS);
-    setIssues(INITIAL_ISSUES);
-    setHeadlines(INITIAL_HEADLINES);
-    setRocks(INITIAL_ROCKS);
-    setHistoryLogs(INITIAL_LOGS);
-    setAllProfiles(DEFAULT_PROFILES);
-    setCredentials(DEFAULT_CREDENTIALS);
-    setCurrentProfile(DEFAULT_PROFILES[1]);
-    setIsLoggedIn(true);
+    setMetrics([]);
+    setMetricValues([]);
+    setTodos([]);
+    setIssues([]);
+    setHeadlines([]);
+    setRocks([]);
+    setHistoryLogs([]);
 
-    showToast("Semua data berhasil direset ke data dummy bawaan!", "success");
+    showToast("Seluruh data operasional berhasil dibersihkan ke lembar kosong!", "info");
   };
 
   const addProfile = async (
@@ -979,6 +1016,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const userId = `prof-${Date.now()}`;
     const newProfile: Profile = { ...profileData, id: userId };
+    const hashedPassword = await hashPassword(password);
 
     if (ENABLE_DATABASE) {
       const { error: dbError } = await supabase.from("profiles").upsert({
@@ -988,7 +1026,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         department_id: newProfile.departmentId || null,
         avatar_url: newProfile.avatarUrl || null,
         email: emailLower,
-        password: password
+        password: hashedPassword
       });
 
       if (dbError) {
@@ -998,7 +1036,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const newProfiles = [...allProfiles.filter(p => p.id !== newProfile.id), newProfile];
-    const newCredentials = { ...credentials, [emailLower]: { password, profileId: newProfile.id } };
+    const newCredentials = { ...credentials, [emailLower]: { password: hashedPassword, profileId: newProfile.id } };
     setAllProfiles(newProfiles);
     setCredentials(newCredentials);
     setCurrentProfile(newProfile);
@@ -1011,7 +1049,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true };
   };
 
-  const updateProfileAndSave = (profile: Profile, newEmail?: string, newPassword?: string) => {
+  const updateProfileAndSave = async (profile: Profile, newEmail?: string, newPassword?: string) => {
     setCurrentProfile(profile);
     saveState("currentProfile", profile);
 
@@ -1023,13 +1061,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     let targetEmail = newEmail;
     let targetPass = newPassword;
+    if (newPassword && newPassword.trim().length > 0) {
+      targetPass = await hashPassword(newPassword);
+    }
 
     setCredentials(prev => {
       let updatedCreds = { ...prev };
       const oldEmailKey = Object.keys(prev).find(key => prev[key].profileId === profile.id);
       if (oldEmailKey) {
         const currentPass = prev[oldEmailKey].password;
-        targetPass = newPassword && newPassword.trim().length > 0 ? newPassword : currentPass;
+        targetPass = targetPass || currentPass;
         targetEmail = newEmail && newEmail.trim().length > 0 ? newEmail.toLowerCase().trim() : oldEmailKey;
 
         if (targetEmail !== oldEmailKey) {
@@ -1064,14 +1105,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveState("language", lang);
   };
 
+  const themeTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const updateTheme = (newTheme: "light" | "dark") => {
     setTheme(newTheme);
     saveState("theme", newTheme);
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+
+    const applyTheme = () => {
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+
+    if (typeof document === "undefined") return;
+
+    if (reduceMotion) {
+      applyTheme();
+      return;
     }
+
+    // Try modern View Transitions API first
+    if (
+      "startViewTransition" in document &&
+      typeof (document as any).startViewTransition === "function"
+    ) {
+      try {
+        (document as any).startViewTransition(() => {
+          applyTheme();
+        });
+        return;
+      } catch (e) {
+        // Fallback if startViewTransition throws
+      }
+    }
+
+    // High-performance smooth CSS transition class fallback
+    if (themeTransitionTimerRef.current) {
+      clearTimeout(themeTransitionTimerRef.current);
+    }
+    document.documentElement.classList.add("theme-transitioning");
+    applyTheme();
+    themeTransitionTimerRef.current = setTimeout(() => {
+      document.documentElement.classList.remove("theme-transitioning");
+      themeTransitionTimerRef.current = null;
+    }, 380);
   };
 
   const toggleSidebarCollapsed = () => {
@@ -1260,7 +1339,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (ENABLE_DATABASE) {
       supabase.from("metric_values").upsert({
-        id: `val-${metricId}-${week}`,
+        id: `val-${metricId}-${currentYear}-${currentMonth}-${week}`,
         metric_id: metricId,
         year: currentYear,
         month: currentMonth,
@@ -1591,7 +1670,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newTodo: Todo = {
       ...todoData,
       id: `td-${Date.now()}`,
-      createdBy: todoData.createdBy || currentProfile.name
+      createdBy: todoData.createdBy || currentProfile.id
     };
 
     const success = await insertTodoToDb(newTodo);
@@ -2077,7 +2156,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       todos: todos.filter(t => t.departmentId === deptId),
       issues: issues.filter(i => i.departmentId === deptId),
       headlines: headlines.filter(h => h.departmentId === deptId || h.departmentId === null),
-      historyLogs: historyLogs.filter(l => l.departmentId === deptId),
+      historyLogs: [],
       rocks: rocks.filter(r => r.departmentId === deptId)
     };
   };
@@ -2232,9 +2311,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isSidebarCollapsed,
         toggleSidebarCollapsed,
         setSidebarCollapsed,
-        toast,
+        toast: toasts[0] || null,
+        toasts,
         showToast,
         hideToast,
+        alertModal,
+        showAlert,
+        hideAlert,
         confirmModal,
         showConfirm,
         hideConfirm,
