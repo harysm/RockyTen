@@ -18,12 +18,16 @@ import {
   Megaphone, 
   Building2 
 } from "lucide-react";
+import { InteractiveDotGrid } from "@/components/auth/InteractiveDotGrid";
+import { InteractiveSpotlight } from "@/components/auth/InteractiveSpotlight";
+import { InteractiveFloatingBlobs } from "@/components/auth/InteractiveFloatingBlobs";
 
 export default function AuthPage() {
   const { loginProfile, addProfile, isLoggedIn, departments } = useApp();
   const router = useRouter();
 
   const [tab, setTab] = useState<"login" | "register">("login");
+  const [bgEffect, setBgEffect] = useState<"dot-grid" | "spotlight" | "blobs">("dot-grid");
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -94,7 +98,7 @@ export default function AuthPage() {
     else router.push("/");
   };
 
-  const ic = "w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-950/70 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 transition-all";
+  const ic = "w-full px-4 py-2.5 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md border border-slate-200/90 dark:border-zinc-800/90 rounded-xl text-xs font-semibold text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 transition-all shadow-2xs";
   const lc = "block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5";
 
   // Helper for department icon
@@ -110,36 +114,49 @@ export default function AuthPage() {
   const selectedDept = departments.find(d => d.id === regDept);
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Mobile logo */}
-      <div className="lg:hidden flex items-center gap-3 mb-8">
-        <img 
-          src="/gerilya-logo-merah-transparent.svg" 
-          className="w-10 h-10 object-contain flex-shrink-0" 
-          alt="Nasi Gerilya Logo" 
-        />
-        <div>
-          <p className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase">Scoreboard</p>
-          <p className="text-slate-400 dark:text-zinc-500 text-[9px] font-bold tracking-widest uppercase">Nasi Gerilya</p>
-        </div>
-      </div>
+    <>
+      {/* 1. Dynamic Interactive Background Engine */}
+      {bgEffect === "dot-grid" && <InteractiveDotGrid />}
+      {bgEffect === "spotlight" && <InteractiveSpotlight />}
+      {bgEffect === "blobs" && <InteractiveFloatingBlobs />}
 
-      {/* Card wrapper */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm p-8 text-slate-900 dark:text-white transition-colors duration-200">
-        {/* Header text */}
-        <div className="mb-7">
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {tab === "login" ? "Selamat Datang Kembali" : "Buat Akun Baru"}
-          </h1>
-          <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1.5">
-            {tab === "login"
-              ? "Masuk untuk mengakses dashboard scoreboard Anda."
-              : "Daftarkan diri sebagai PIC divisi baru."}
-          </p>
+      <div className="relative w-full max-w-md mx-auto z-10 py-6">
+        {/* Soft Ambient Refraction Glow Orbs directly behind glass card */}
+        <div className="absolute -top-12 -left-12 w-64 h-64 bg-rose-500/15 dark:bg-rose-500/20 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-indigo-500/15 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        {/* Mobile logo */}
+        <div className="lg:hidden flex items-center gap-3 mb-8">
+          <img 
+            src="/gerilya-logo-merah-transparent.svg" 
+            className="w-10 h-10 object-contain flex-shrink-0" 
+            alt="Nasi Gerilya Logo" 
+          />
+          <div>
+            <p className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase">Scoreboard</p>
+            <p className="text-slate-400 dark:text-zinc-500 text-[9px] font-bold tracking-widest uppercase">Nasi Gerilya</p>
+          </div>
         </div>
 
-        {/* Tab switcher with smooth sliding black/white pill */}
-        <div className="relative flex p-1 bg-slate-100/90 dark:bg-zinc-800/90 rounded-2xl mb-7 border border-slate-200 dark:border-zinc-700/80">
+        {/* Glassmorphism Card Wrapper */}
+        <div className="relative backdrop-blur-2xl bg-white/75 dark:bg-zinc-900/65 border border-white/70 dark:border-white/10 rounded-2xl shadow-2xl shadow-zinc-950/10 dark:shadow-black/70 p-8 text-slate-900 dark:text-white transition-all duration-300 ring-1 ring-black/5 dark:ring-white/5 overflow-hidden">
+          {/* Subtle top edge specular light reflection */}
+          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-zinc-400/40 to-transparent pointer-events-none" />
+
+          {/* Header text */}
+          <div className="mb-7">
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {tab === "login" ? "Selamat Datang Kembali" : "Buat Akun Baru"}
+            </h1>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1.5">
+              {tab === "login"
+                ? "Masuk untuk mengakses dashboard scoreboard Anda."
+                : "Daftarkan diri sebagai PIC divisi baru."}
+            </p>
+          </div>
+
+          {/* Tab switcher with smooth sliding black/white pill */}
+          <div className="relative flex p-1 bg-slate-200/50 dark:bg-zinc-800/70 backdrop-blur-md rounded-2xl mb-7 border border-slate-200/60 dark:border-zinc-700/60">
           {/* Hardware-accelerated sliding black/white pill */}
           <div
             aria-hidden="true"
@@ -395,6 +412,49 @@ export default function AuthPage() {
           </form>
         )}
       </div>
+
+      {/* Background Effect Selector Switcher */}
+      <div className="mt-6 flex items-center justify-center">
+        <div className="inline-flex items-center gap-1 p-1 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/70 dark:border-zinc-800/80 rounded-full shadow-lg shadow-black/5 text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+          <span className="pl-2.5 pr-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+            Uji Latar:
+          </span>
+          <button
+            type="button"
+            onClick={() => setBgEffect("dot-grid")}
+            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+              bgEffect === "dot-grid"
+                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
+                : "hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            ✨ Dot Grid
+          </button>
+          <button
+            type="button"
+            onClick={() => setBgEffect("spotlight")}
+            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+              bgEffect === "spotlight"
+                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
+                : "hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            💡 Spotlight
+          </button>
+          <button
+            type="button"
+            onClick={() => setBgEffect("blobs")}
+            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+              bgEffect === "blobs"
+                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
+                : "hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            🫧 Blobs
+          </button>
+        </div>
+      </div>
     </div>
+  </>
   );
 }

@@ -87,8 +87,8 @@ export const AppShell: React.FC<{ children: React.ReactNode; fullWidth?: boolean
 
       {/* 4. Page Layout */}
       {isAuthPage ? (
-        <main className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+        <main className="relative min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden">
+          <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center justify-center">
             {children}
           </div>
         </main>

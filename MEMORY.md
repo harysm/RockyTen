@@ -58,6 +58,26 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-10-01] - Auth Experience: Glassmorphism Card & Interactive Background Suite (Dot Grid, Spotlight, Blobs)
+* **Titik Pemulihan Aman (Rollback Checkpoint)**:
+  - Git Tag: `checkpoint-pre-auth-effects` (Commit: `b9baa03`).
+  - Pengguna dapat sewaktu-waktu mengembalikan status kode murni ke baseline sebelum efek latar belakang jika diperlukan (`git checkout checkpoint-pre-auth-effects` atau `git reset --hard checkpoint-pre-auth-effects`).
+* **Glassmorphism Frosted Login Card (`src/app/auth/page.tsx`)**:
+  - Wadah kartu login menggunakan `backdrop-blur-2xl bg-white/75 dark:bg-zinc-900/65 border border-white/70 dark:border-white/10 rounded-2xl shadow-2xl shadow-zinc-950/10 dark:shadow-black/70 ring-1 ring-black/5 dark:ring-white/5`.
+  - Dilengkapi garis specular bevel highlight di tepi atas kartu (`h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-zinc-400/40 to-transparent`) untuk menangkap refleksi cahaya alami.
+  - Ditambahkan orb radiant ambient glow (marun/rose & indigo) di balik kartu agar efek frosted glass memiliki materi refraksi warna yang hidup.
+  - Input field diselaraskan dengan semi-translucent backdrop (`bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md`) untuk menjamin keterbacaan teks tanpa noise.
+* **Suite Latar Belakang Interaktif (`src/components/auth/`)**:
+  1. **Interactive Dot Grid (`InteractiveDotGrid.tsx`)** *(Default Aktif)*:
+     - HTML5 Canvas berjarak 30px dengan fisika pegas (*spring physics*). Saat mouse mendekat, titik-titik dot membesar, terdorong lembut menjauhi kursor, dan berpendar merah ruby (*rose-500 glow*).
+     - Mekanisme Zero-Idle-CPU: jika kursor diam dan partikel telah kembali ke titik istirahat, loop `requestAnimationFrame` otomatis tidur.
+  2. **Interactive Spotlight Beam (`InteractiveSpotlight.tsx`)**:
+     - Latar micro-grid geometris dengan pendaran sorot cahaya kursor (*flashlight lerp follow*) yang menyinari permukaan secara dinamis.
+  3. **Interactive Floating Blobs (`InteractiveFloatingBlobs.tsx`)**:
+     - 4 metaballs luminous bergradien organik (ruby, indigo, amber, emerald) yang melayang lembut dengan daya tarik magnetik tipis terhadap kursor.
+* **Pill Selector Uji Coba Latar Langsung ("Uji Latar")**:
+  - Disediakan tombol floating pill di bawah kartu login (`✨ Dot Grid`, `💡 Spotlight`, `🫧 Blobs`) sehingga pengguna dapat langsung membandingkan ketiga rasa interaktivitas secara instan tanpa perlu kompilasi ulang.
+
 ### [2026-10-01] - Auth UI Dark Mode Contrast & Tab Switcher Color Bugfix
 * **Perbaikan Bentrok Warna & Kontras Mode Gelap pada Halaman Login (`src/app/auth/page.tsx`)**:
   - **Akar Masalah**: Halaman otentikasi sebelumnya tidak memiliki kelas utilitas `dark:` untuk tab switcher dan tombol aksi utama. Akibatnya, saat sistem berada dalam Mode Gelap, bilah wadah tab switcher tetap berwarna abu-abu terang bawaan light mode (`bg-slate-100`) sementara tombol aktifnya berwarna hitam pekat (`bg-zinc-950`), dan tombol aksi utama "Masuk ke Dashboard" berwarna hitam sehingga menyatu tanpa kontras dengan kartu gelap.
