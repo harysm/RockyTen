@@ -94,17 +94,17 @@ export default function AuthPage() {
     else router.push("/");
   };
 
-  const ic = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10 transition-all";
-  const lc = "block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
+  const ic = "w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-950/70 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 transition-all";
+  const lc = "block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5";
 
   // Helper for department icon
   const getDeptIcon = (id: string, isSelected: boolean = false) => {
-    if (id.includes("it")) return <Laptop className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-blue-500"}`} />;
-    if (id.includes("kitchen")) return <UtensilsCrossed className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-amber-500"}`} />;
-    if (id.includes("service")) return <Users className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-emerald-500"}`} />;
-    if (id.includes("finance")) return <Coins className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-indigo-500"}`} />;
-    if (id.includes("marketing")) return <Megaphone className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-rose-500"}`} />;
-    return <Building2 className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-slate-400"}`} />;
+    if (id.includes("it")) return <Laptop className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-blue-500"}`} />;
+    if (id.includes("kitchen")) return <UtensilsCrossed className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-amber-500"}`} />;
+    if (id.includes("service")) return <Users className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-emerald-500"}`} />;
+    if (id.includes("finance")) return <Coins className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-indigo-500"}`} />;
+    if (id.includes("marketing")) return <Megaphone className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-rose-500"}`} />;
+    return <Building2 className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-zinc-950" : "text-slate-400"}`} />;
   };
 
   const selectedDept = departments.find(d => d.id === regDept);
@@ -119,31 +119,31 @@ export default function AuthPage() {
           alt="Nasi Gerilya Logo" 
         />
         <div>
-          <p className="text-slate-900 font-extrabold text-sm tracking-wider uppercase">Scoreboard</p>
-          <p className="text-slate-400 text-[9px] font-bold tracking-widest uppercase">Nasi Gerilya</p>
+          <p className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase">Scoreboard</p>
+          <p className="text-slate-400 dark:text-zinc-500 text-[9px] font-bold tracking-widest uppercase">Nasi Gerilya</p>
         </div>
       </div>
 
       {/* Card wrapper */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm p-8 text-slate-900 dark:text-white transition-colors duration-200">
         {/* Header text */}
         <div className="mb-7">
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {tab === "login" ? "Selamat Datang Kembali" : "Buat Akun Baru"}
           </h1>
-          <p className="text-slate-500 text-sm font-medium mt-1.5">
+          <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1.5">
             {tab === "login"
               ? "Masuk untuk mengakses dashboard scoreboard Anda."
               : "Daftarkan diri sebagai PIC divisi baru."}
           </p>
         </div>
 
-        {/* Tab switcher with smooth sliding black pill */}
-        <div className="relative flex p-1 bg-slate-100/90 rounded-2xl mb-7 border border-slate-200">
-          {/* Hardware-accelerated sliding black pill */}
+        {/* Tab switcher with smooth sliding black/white pill */}
+        <div className="relative flex p-1 bg-slate-100/90 dark:bg-zinc-800/90 rounded-2xl mb-7 border border-slate-200 dark:border-zinc-700/80">
+          {/* Hardware-accelerated sliding black/white pill */}
           <div
             aria-hidden="true"
-            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl bg-zinc-950 shadow-md transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-xl bg-zinc-950 dark:bg-white shadow-md transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
             style={{
               transform: tab === "login" ? "translateX(0%)" : "translateX(100%)",
             }}
@@ -153,8 +153,8 @@ export default function AuthPage() {
             onClick={() => { setTab("login"); setLoginError(""); }}
             className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 select-none cursor-pointer ${
               tab === "login"
-                ? "text-white"
-                : "text-slate-500 hover:text-slate-900"
+                ? "text-white dark:text-zinc-950"
+                : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <LogIn className="w-3.5 h-3.5" /> Masuk
@@ -164,8 +164,8 @@ export default function AuthPage() {
             onClick={() => { setTab("register"); setRegError(""); }}
             className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 select-none cursor-pointer ${
               tab === "register"
-                ? "text-white"
-                : "text-slate-500 hover:text-slate-900"
+                ? "text-white dark:text-zinc-950"
+                : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" /> Daftar
@@ -203,7 +203,8 @@ export default function AuthPage() {
                 <button 
                   type="button" 
                   onClick={() => setLoginShowPw(!loginShowPw)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                  aria-label={loginShowPw ? "Sembunyikan password" : "Lihat password"}
                 >
                   {loginShowPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -211,7 +212,7 @@ export default function AuthPage() {
             </div>
 
             {loginError && (
-              <div className="flex items-start gap-2.5 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600">
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400">
                 <span className="mt-0.5">⚠</span> {loginError}
               </div>
             )}
@@ -219,10 +220,10 @@ export default function AuthPage() {
             <button 
               type="submit" 
               disabled={loginLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-950 hover:bg-zinc-800 active:bg-black text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-zinc-950/20 hover:shadow-zinc-950/30 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-950 hover:bg-zinc-800 active:bg-black dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-zinc-950/20 dark:shadow-white/5 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {loginLoading ? (
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-white/40 dark:border-zinc-950/40 border-t-white dark:border-t-zinc-950 rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Masuk ke Dashboard</span> 
@@ -268,22 +269,22 @@ export default function AuthPage() {
                 type="button"
                 onClick={() => setDeptDropdownOpen(!deptDropdownOpen)}
                 className={`${ic} cursor-pointer flex items-center justify-between text-left ${
-                  deptDropdownOpen ? "border-zinc-400 ring-2 ring-zinc-900/10 bg-white" : ""
+                  deptDropdownOpen ? "border-zinc-400 dark:border-zinc-600 ring-2 ring-zinc-900/10 dark:ring-white/10 bg-white dark:bg-zinc-900" : ""
                 }`}
               >
                 <div className="flex items-center gap-2 truncate pr-2 min-w-0">
                   {selectedDept ? (
                     <>
                       <span className="shrink-0">{getDeptIcon(selectedDept.id)}</span>
-                      <span className="truncate font-bold text-slate-900">{selectedDept.name}</span>
+                      <span className="truncate font-bold text-slate-900 dark:text-white">{selectedDept.name}</span>
                     </>
                   ) : (
-                    <span className="text-slate-400 font-normal">Pilih divisi Anda...</span>
+                    <span className="text-slate-400 dark:text-zinc-500 font-normal">Pilih divisi Anda...</span>
                   )}
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    deptDropdownOpen ? "rotate-180 text-zinc-900" : ""
+                    deptDropdownOpen ? "rotate-180 text-zinc-900 dark:text-white" : ""
                   }`}
                 />
               </button>
@@ -292,7 +293,7 @@ export default function AuthPage() {
               {deptDropdownOpen && (
                 <div
                   role="listbox"
-                  className="absolute left-0 right-0 top-full mt-1.5 z-50 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-in fade-in-0 slide-in-from-top-1 duration-150"
+                  className="absolute left-0 right-0 top-full mt-1.5 z-50 overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1.5 shadow-xl shadow-slate-900/10 dark:shadow-black/70 animate-in fade-in-0 slide-in-from-top-1 duration-150"
                 >
                   <div className="space-y-0.5">
                     {departments.map((d) => {
@@ -309,8 +310,8 @@ export default function AuthPage() {
                           }}
                           className={`w-full px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-100 flex items-center justify-between cursor-pointer select-none text-left ${
                             isSelected
-                              ? "bg-zinc-950 text-white font-bold shadow-2xs"
-                              : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                              ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-2xs"
+                              : "text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-950 dark:hover:text-white"
                           }`}
                         >
                           <div className="flex items-center gap-2.5 truncate min-w-0 pr-2">
@@ -320,7 +321,7 @@ export default function AuthPage() {
                             <span className="truncate">{d.name}</span>
                           </div>
                           {isSelected && (
-                            <Check className="w-3.5 h-3.5 shrink-0 stroke-[3] text-white" />
+                            <Check className="w-3.5 h-3.5 shrink-0 stroke-[3] text-white dark:text-zinc-950" />
                           )}
                         </button>
                       );
@@ -346,7 +347,8 @@ export default function AuthPage() {
                   <button 
                     type="button" 
                     onClick={() => setRegShowPw(!regShowPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                    aria-label={regShowPw ? "Sembunyikan password" : "Lihat password"}
                   >
                     {regShowPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
@@ -358,7 +360,7 @@ export default function AuthPage() {
                   type="password" 
                   required 
                   value={regConfirm} 
-                  onChange={e => setRegConfirm(e.target.value)}
+                  onChange={e => setRegConfirm(e.target.value)} 
                   placeholder="••••••••" 
                   className={ic} 
                   autoComplete="new-password" 
@@ -367,7 +369,7 @@ export default function AuthPage() {
             </div>
 
             {regError && (
-              <div className="flex items-start gap-2.5 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600">
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400">
                 <span className="mt-0.5">⚠</span> {regError}
               </div>
             )}
@@ -375,10 +377,10 @@ export default function AuthPage() {
             <button 
               type="submit" 
               disabled={regLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-950 hover:bg-zinc-800 active:bg-black text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-zinc-950/20 hover:shadow-zinc-950/30 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-950 hover:bg-zinc-800 active:bg-black dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-zinc-950/20 dark:shadow-white/5 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {regLoading ? (
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-white/40 dark:border-zinc-950/40 border-t-white dark:border-t-zinc-950 rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Daftar & Masuk</span> 
@@ -387,7 +389,7 @@ export default function AuthPage() {
               )}
             </button>
 
-            <p className="text-[10px] text-slate-400 text-center font-medium">
+            <p className="text-[10px] text-slate-400 dark:text-zinc-500 text-center font-medium">
               Akun Owner hanya bisa dibuat oleh Owner lewat menu Pengaturan → Kelola User.
             </p>
           </form>

@@ -58,6 +58,27 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-10-01] - Auth UI Dark Mode Contrast & Tab Switcher Color Bugfix
+* **Perbaikan Bentrok Warna & Kontras Mode Gelap pada Halaman Login (`src/app/auth/page.tsx`)**:
+  - **Akar Masalah**: Halaman otentikasi sebelumnya tidak memiliki kelas utilitas `dark:` untuk tab switcher dan tombol aksi utama. Akibatnya, saat sistem berada dalam Mode Gelap, bilah wadah tab switcher tetap berwarna abu-abu terang bawaan light mode (`bg-slate-100`) sementara tombol aktifnya berwarna hitam pekat (`bg-zinc-950`), dan tombol aksi utama "Masuk ke Dashboard" berwarna hitam sehingga menyatu tanpa kontras dengan kartu gelap.
+  - **Resolusi Styling Dual-Theme (Light & Dark)**:
+    - Wadah tab switcher diselaraskan dengan kelas `dark:bg-zinc-800/90 dark:border-zinc-700/80` yang menyatu harmonis dengan kartu latar gelap.
+    - Kapsul tab aktif beralih dinamis: di Light Mode berupa kapsul hitam solid (`bg-zinc-950 text-white`), di Dark Mode berupa kapsul putih tajam berbobot tebal (`dark:bg-white dark:text-zinc-950`).
+    - Tombol aksi utama "Masuk ke Dashboard" dan "Daftar & Masuk" diselaraskan dengan pola desain global: `bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 shadow-sm`, menjamin keterbacaan dan batas tombol 100% tegas dan kontras tinggi di layar gelap.
+    - Menyelaraskan seluruh elemen kartu (`dark:bg-zinc-900 dark:border-zinc-800`), label (`dark:text-zinc-400`), input text & placeholder (`dark:bg-zinc-950/70 dark:border-zinc-800 dark:text-zinc-100`), eye toggle icon, dan dropdown divisi popover.
+
+### [2026-10-01] - Session Security: Tab-Scoped Authentication (sessionStorage) & 30-Minute Inactivity Auto-Logout
+* **Migrasi Sesi Login ke `sessionStorage` (`src/context/AppContext.tsx`)**:
+  - Mengubah penyimpanan status sesi aktif (`isLoggedIn`, `currentProfile`, `lastActivityTime`) dari `localStorage` menjadi `sessionStorage`.
+  - **Efek Penutupan Tab**: Saat tab browser ditutup lalu dibuka kembali di tab baru, `sessionStorage` otomatis kosong sehingga pengguna diwajibkan untuk login kembali (*relog*).
+  - **Efek Refresh (F5)**: Halaman yang di-*refresh* / di-*reload* tetap mempertahankan sesi login aktif tanpa me-logout pengguna.
+  - **Pembersihan Cache Lawas**: Menghapus sisa kunci otentikasi lama (`localStorage.removeItem("isLoggedIn")` dan `localStorage.removeItem("currentProfile")`) saat inisialisasi agar sesi dari versi sebelumnya tidak bocor.
+* **Mesin Pelacak Inaktivitas 30 Menit (Inactivity Auto-Logout Tracker)**:
+  - Mengimplementasikan sistem pendeteksi inaktivitas terpusat: jika pengguna tidak melakukan interaksi selama 30 menit (`30 * 60 * 1000` ms), sesi otomatis ditutup dan pengguna dialihkan ke `/auth`.
+  - Memantau interaksi pengguna (`mousedown`, `mousemove`, `keydown`, `scroll`, `touchstart`, `click`) dengan mekanisme throttle (5 detik) untuk menjamin performa render 60 FPS tanpa beban CPU.
+  - Dilengkapi *heartbeat listener* `visibilitychange`: saat tab dibuka kembali setelah diminimalkan atau ditinggal di latar belakang (*background tab throttling*), sistem langsung mengevaluasi selisih waktu `Date.now() - lastActiveTime`. Jika melebihi 30 menit, logout langsung dieksekusi seketika.
+  - Menampilkan notifikasi Toast informatif (*warning*) di halaman login: *"Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali."*.
+
 ### [2026-09-29] - Visual Analytics: Authentic 0% Metric Trend Rate & Role-Scoped Division View
 * **Penghapusan Formula Dummy pada Grafik Tren Ketercapaian (`src/app/page.tsx`)**:
   - Menghapus formula pengisi dummy `(w <= currentWeek ? (70 + (w * 4)) : 0)` saat `evaluated === 0`, sehingga jika belum ada input data metrik di minggu tersebut, nilai ketercapaian mutlak bernilai `0%` (garis grafik rata di dasar).

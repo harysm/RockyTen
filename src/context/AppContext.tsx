@@ -186,7 +186,7 @@ interface AppContextType {
   isAuthReady: boolean;
   credentials: Record<string, { password: string; profileId: string }>;
   loginProfile: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logoutProfile: () => void;
+  logoutProfile: (reason?: string) => void;
   addProfile: (profile: Omit<Profile, "id">, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   updateProfileAndSave: (profile: Profile, newEmail?: string, newPassword?: string) => void;
   resetToDummyData: () => void;
@@ -370,6 +370,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const saveSessionState = (key: string, data: any) => {
+    if (typeof window !== "undefined") {
+      try {
+        const sanitized = sanitizeForStorage(data);
+        sessionStorage.setItem(key, JSON.stringify(sanitized));
+      } catch (e) {
+        // Catch QuotaExceededError silently
+      }
+    }
+  };
+
   // Set fixed simulated active time to 18 July 2026 as per user screen
   const currentYear = 2026;
   const currentMonth = 7;
@@ -526,23 +537,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) { }
       }
 
-      const savedProfile = localStorage.getItem("currentProfile");
+      // One-time cleanup: Remove legacy localStorage session keys to enforce tab-scoped session
+      try {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("currentProfile");
+      } catch (e) { }
+
+      const savedProfile = sessionStorage.getItem("currentProfile");
       const savedLang = localStorage.getItem("language");
       const savedTheme = localStorage.getItem("theme");
-      const savedLoggedIn = localStorage.getItem("isLoggedIn");
+      const savedLoggedIn = sessionStorage.getItem("isLoggedIn");
+      const savedLastActivity = sessionStorage.getItem("lastActivityTime");
       const savedProfiles = localStorage.getItem("allProfiles");
       const savedCredentials = localStorage.getItem("credentials");
 
+      const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
       let hasValidSession = false;
       if (savedLoggedIn === "true" && savedProfile) {
-        try {
-          const parsed = JSON.parse(savedProfile);
-          if (parsed && parsed.id) {
-            setCurrentProfile(parsed);
-            setIsLoggedIn(true);
-            hasValidSession = true;
-          }
-        } catch (e) { }
+        const lastActivityNum = savedLastActivity ? parseInt(savedLastActivity, 10) : 0;
+        const isExpired = lastActivityNum > 0 && (Date.now() - lastActivityNum > INACTIVITY_TIMEOUT);
+
+        if (!isExpired) {
+          try {
+            const parsed = JSON.parse(savedProfile);
+            if (parsed && parsed.id) {
+              setCurrentProfile(parsed);
+              setIsLoggedIn(true);
+              hasValidSession = true;
+              sessionStorage.setItem("lastActivityTime", Date.now().toString());
+            }
+          } catch (e) { }
+        } else {
+          try {
+            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.removeItem("currentProfile");
+            sessionStorage.removeItem("lastActivityTime");
+          } catch (e) { }
+        }
       }
       if (!hasValidSession) {
         setIsLoggedIn(false);
@@ -667,7 +698,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
 
             // Sync active currentProfile with DB profile record
-            const savedCurrent = typeof window !== "undefined" ? localStorage.getItem("currentProfile") : null;
+            const savedCurrent = typeof window !== "undefined" ? sessionStorage.getItem("currentProfile") : null;
             let targetId = currentProfile.id;
             if (savedCurrent) {
               try { targetId = JSON.parse(savedCurrent).id || currentProfile.id; } catch (e) { }
@@ -675,7 +706,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const matchCurrent = mappedProfiles.find(p => p.id === targetId || p.name.toLowerCase() === currentProfile.name.toLowerCase());
             if (matchCurrent) {
               setCurrentProfile(matchCurrent);
-              saveState("currentProfile", matchCurrent);
+              saveSessionState("currentProfile", matchCurrent);
             }
           }
         } catch (e) {
@@ -982,19 +1013,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!profile) return { success: false, error: "Profil tidak ditemukan." };
     setCurrentProfile(profile);
     setIsLoggedIn(true);
-    saveState("currentProfile", profile);
-    saveState("isLoggedIn", true);
+    saveSessionState("currentProfile", profile);
+    saveSessionState("isLoggedIn", true);
+    saveSessionState("lastActivityTime", Date.now().toString());
     return { success: true };
   };
 
-  const logoutProfile = () => {
+  const logoutProfile = useCallback((reason?: string) => {
     setIsLoggedIn(false);
-    saveState("isLoggedIn", false);
     try {
+      sessionStorage.removeItem("isLoggedIn");
+      sessionStorage.removeItem("currentProfile");
+      sessionStorage.removeItem("lastActivityTime");
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("currentProfile");
     } catch (e) { }
-  };
+    if (reason) {
+      showToast(reason, "warning");
+    }
+  }, [showToast]);
+
+  // 30-Minute Inactivity Auto-Logout Tracker with Visibility Change Heartbeat
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 menit
+    let lastActivity = Date.now();
+    try {
+      sessionStorage.setItem("lastActivityTime", lastActivity.toString());
+    } catch (e) { }
+
+    let throttleTimer: NodeJS.Timeout | null = null;
+    const handleUserActivity = () => {
+      const now = Date.now();
+      lastActivity = now;
+
+      if (!throttleTimer) {
+        throttleTimer = setTimeout(() => {
+          try {
+            sessionStorage.setItem("lastActivityTime", Date.now().toString());
+          } catch (e) { }
+          throttleTimer = null;
+        }, 5000); // Throttled 5 detik untuk efisiensi performa render
+      }
+    };
+
+    const checkInactivity = () => {
+      const now = Date.now();
+      const storedLast = typeof window !== "undefined" ? sessionStorage.getItem("lastActivityTime") : null;
+      const lastActiveTime = storedLast ? parseInt(storedLast, 10) : lastActivity;
+
+      if (now - lastActiveTime >= INACTIVITY_TIMEOUT) {
+        logoutProfile("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
+      }
+    };
+
+    // Periodic check interval setiap 15 detik
+    const intervalId = setInterval(checkInactivity, 15000);
+
+    // Cek seketika saat tab dibuka kembali dari latar belakang / aplikasi lain
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkInactivity();
+      }
+    };
+
+    const activityEvents = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
+    activityEvents.forEach((evt) => {
+      window.addEventListener(evt, handleUserActivity, { passive: true });
+    });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      if (throttleTimer) clearTimeout(throttleTimer);
+      activityEvents.forEach((evt) => {
+        window.removeEventListener(evt, handleUserActivity);
+      });
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isLoggedIn, logoutProfile]);
 
   const resetToDummyData = () => {
     try {
@@ -1058,15 +1156,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoggedIn(true);
     saveState("allProfiles", newProfiles);
     saveState("credentials", newCredentials);
-    saveState("currentProfile", newProfile);
-    saveState("isLoggedIn", true);
+    saveSessionState("currentProfile", newProfile);
+    saveSessionState("isLoggedIn", true);
+    saveSessionState("lastActivityTime", Date.now().toString());
 
     return { success: true };
   };
 
   const updateProfileAndSave = async (profile: Profile, newEmail?: string, newPassword?: string) => {
     setCurrentProfile(profile);
-    saveState("currentProfile", profile);
+    saveSessionState("currentProfile", profile);
 
     setAllProfiles(prev => {
       const updated = prev.map(p => p.id === profile.id ? profile : p);
