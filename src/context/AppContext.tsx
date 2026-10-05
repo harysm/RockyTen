@@ -16,7 +16,8 @@ import {
   INITIAL_METRIC_VALUES, 
   INITIAL_TODOS, 
   INITIAL_ISSUES, 
-  INITIAL_HEADLINES 
+  INITIAL_HEADLINES,
+  INITIAL_LOGS_DATA
 } from "@/constants";
 import { hashPassword, verifyPassword, isPasswordEncrypted } from "@/lib/crypto";
 
@@ -194,7 +195,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const INITIAL_LOGS: HistoryLog[] = [];
+const INITIAL_LOGS: HistoryLog[] = INITIAL_LOGS_DATA;
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth state - Secure by default: unauthenticated until verified
@@ -724,7 +725,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               description: r.description || undefined,
               quarter: r.quarter || "Q3",
               year: r.year ? Number(r.year) : 2026,
-              status: r.status || "on_track",
+              status: r.status === "done" ? "completed" : (r.status || "on_track"),
               picId: r.pic_id,
               picName: r.pic_name,
               dueDate: r.due_date || "",
@@ -1105,15 +1106,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem("rocks");
     } catch (e) { }
 
-    setMetrics([]);
-    setMetricValues([]);
-    setTodos([]);
-    setIssues([]);
-    setHeadlines([]);
-    setRocks([]);
-    setHistoryLogs([]);
+    setMetrics(INITIAL_METRICS);
+    setMetricValues(INITIAL_METRIC_VALUES);
+    setTodos(INITIAL_TODOS);
+    setIssues(INITIAL_ISSUES);
+    setHeadlines(INITIAL_HEADLINES);
+    setRocks(INITIAL_ROCKS);
+    setHistoryLogs(INITIAL_LOGS_DATA);
 
-    showToast("Seluruh data operasional berhasil dibersihkan ke lembar kosong!", "info");
+    showToast("Data dummy bawaan berhasil dimuat kembali!", "success");
   };
 
   const addProfile = async (

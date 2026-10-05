@@ -17,7 +17,7 @@ export const fetchRocksFromDb = async (): Promise<Rock[]> => {
         description: r.description || undefined,
         quarter: r.quarter || "Q3",
         year: r.year ? Number(r.year) : 2026,
-        status: r.status || "on_track",
+        status: r.status === "done" ? "completed" : (r.status || "on_track"),
         picId: r.pic_id,
         picName: r.pic_name,
         dueDate: r.due_date || "",
@@ -38,6 +38,7 @@ export const insertRockToDb = async (rock: Rock): Promise<boolean> => {
     if (!picId || !picId.startsWith("prof-")) {
       picId = "prof-pic-it";
     }
+    const dbStatus = rock.status === "completed" ? "done" : rock.status;
     const { error } = await supabase.from("rocks").insert({
       id: rock.id,
       department_id: rock.departmentId,
@@ -45,7 +46,7 @@ export const insertRockToDb = async (rock: Rock): Promise<boolean> => {
       description: rock.description || null,
       quarter: rock.quarter,
       year: rock.year,
-      status: rock.status,
+      status: dbStatus,
       pic_id: picId,
       pic_name: rock.picName || "IT",
       due_date: rock.dueDate,
@@ -65,12 +66,13 @@ export const insertRockToDb = async (rock: Rock): Promise<boolean> => {
 export const updateRockInDb = async (rock: Rock): Promise<boolean> => {
   if (!ENABLE_DATABASE) return true;
   try {
+    const dbStatus = rock.status === "completed" ? "done" : rock.status;
     const { error } = await supabase.from("rocks").update({
       title: rock.title,
       description: rock.description || null,
       quarter: rock.quarter,
       year: rock.year,
-      status: rock.status,
+      status: dbStatus,
       pic_id: rock.picId,
       pic_name: rock.picName,
       due_date: rock.dueDate

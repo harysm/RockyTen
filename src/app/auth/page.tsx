@@ -19,15 +19,12 @@ import {
   Building2 
 } from "lucide-react";
 import { InteractiveDotGrid } from "@/components/auth/InteractiveDotGrid";
-import { InteractiveSpotlight } from "@/components/auth/InteractiveSpotlight";
-import { InteractiveFloatingBlobs } from "@/components/auth/InteractiveFloatingBlobs";
 
 export default function AuthPage() {
   const { loginProfile, addProfile, isLoggedIn, departments } = useApp();
   const router = useRouter();
 
   const [tab, setTab] = useState<"login" | "register">("login");
-  const [bgEffect, setBgEffect] = useState<"dot-grid" | "spotlight" | "blobs">("dot-grid");
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -115,10 +112,8 @@ export default function AuthPage() {
 
   return (
     <>
-      {/* 1. Dynamic Interactive Background Engine */}
-      {bgEffect === "dot-grid" && <InteractiveDotGrid />}
-      {bgEffect === "spotlight" && <InteractiveSpotlight />}
-      {bgEffect === "blobs" && <InteractiveFloatingBlobs />}
+      {/* 1. Dynamic Interactive Dot Grid Background */}
+      <InteractiveDotGrid />
 
       <div className="relative w-full max-w-md mx-auto z-10 py-6">
         {/* Soft Ambient Refraction Glow Orbs directly behind glass card */}
@@ -413,47 +408,6 @@ export default function AuthPage() {
         )}
       </div>
 
-      {/* Background Effect Selector Switcher */}
-      <div className="mt-6 flex items-center justify-center">
-        <div className="inline-flex items-center gap-1 p-1 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/70 dark:border-zinc-800/80 rounded-full shadow-lg shadow-black/5 text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
-          <span className="pl-2.5 pr-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-            Uji Latar:
-          </span>
-          <button
-            type="button"
-            onClick={() => setBgEffect("dot-grid")}
-            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
-              bgEffect === "dot-grid"
-                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
-                : "hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            ✨ Dot Grid
-          </button>
-          <button
-            type="button"
-            onClick={() => setBgEffect("spotlight")}
-            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
-              bgEffect === "spotlight"
-                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
-                : "hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            💡 Spotlight
-          </button>
-          <button
-            type="button"
-            onClick={() => setBgEffect("blobs")}
-            className={`px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
-              bgEffect === "blobs"
-                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-bold shadow-xs"
-                : "hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            🫧 Blobs
-          </button>
-        </div>
-      </div>
     </div>
   </>
   );

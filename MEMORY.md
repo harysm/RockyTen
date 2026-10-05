@@ -58,6 +58,27 @@ Dokumen ini berisi catatan lengkap arsitektur, akun master, riwayat perubahan, d
 7. `headlines` (`id`, `department_id`, `title`, `content`, `category`, `author_id`, `author_name`, `created_at`, `attachment_name`, `attachment_size`, `attachment_type`, `attachment_data_url`, `attachments`)
 8. `history_logs` (`id`, `profile_id`, `profile_name`, `department_id`, `action`, `details`, `created_at`)
 
+### [2026-10-05] - Next.js Dev Indicator & Corner Issue Overlay Resolution
+* **Penonaktifan Dev Indicator Floating Badge (`next.config.ts`)**:
+  - Mengubah konfigurasi `devIndicators` menjadi `false` pada `next.config.ts` untuk menghilangkan ikon overlay / issue badge Next.js yang melayang di pojok kanan bawah browser pada lingkungan development.
+
+### [2026-10-05] - Comprehensive & Varied Dummy Dataset Seeding (Cloud Supabase & Local Fallback)
+* **Pengisian Data Dummy Operasional Berskala Penuh (`scripts/seed_dummy_data.js`, `src/constants/index.ts`, `src/context/AppContext.tsx`, `src/services/rockService.ts`)**:
+  - **Batu Sasaran (10 Rocks)**: 10 sasaran strategis 90-hari tersebar merata di 5 departemen (Kitchen, Service, Marketing, Finance, IT) mencakup kuartal aktif Q3 2026 dan kuartal historis Q2 2026 dengan ragam status (`on_track`, `off_track`, `completed`).
+  - **Scoreboard KPI (15 Metrik)**: Masing-masing departemen memiliki 3 metrik dengan tipe unit bervariasi (`percentage`, `currency`, `number`), polaritas arah (`higher_better` dan `lower_better`), dan mode akumulasi (`sum` dan `average`).
+  - **Riwayat Nilai Metrik (105 Nilai Aktual)**: Rekaman data mingguan W1–W4 Juni 2026 dan W1–W3 Juli 2026 lengkap dengan array `daily_values` (7 hari) yang realistis (weekday vs weekend), menciptakan grafik tren, kartu ringkasan, dan radar performa yang hidup dan bergradasi warna (hijau, kuning peringatan, merah kritis).
+  - **Agenda Tugas (15 Todos)**: 3 tugas aktif/selesai per departemen dengan ragam prioritas (`high`, `medium`, `low`), tenggat waktu, dan lampiran dokumen/foto.
+  - **Pusat Kendala IDS (12 Issues)**: Kasus kendala operasional nyata restoran (kenaikan harga bahan baku, lonjakan antrean kasir, kemasan bento bocor, selisih kas bon, dsb.) dengan status `in_progress`, `solved`, dan `open`.
+  - **Warta Tim (10 Headlines)**: Lengkap di 5 kategori warta (`achievement`, `good_news`, `announcement`, `reminder`, `bad_news`).
+  - **Audit Trail (20 History Logs)**: Riwayat audit rekam jejak sistem lintas peran pengguna.
+  - **Sinkronisasi Ganda (Dual-Sync)**: Tersinkronisasi langsung ke database PostgreSQL Supabase via script seeder dan terintegrasi ke `src/constants/index.ts` serta tombol `resetToDummyData` di menu Pengaturan.
+
+### [2026-10-05] - Auth Page Simplification: Dedicated Dot Grid Background & Cleanup of Test Switcher
+* **Penyederhanaan Efek Latar Halaman Login (`src/app/auth/page.tsx`)**:
+  - Mengunci latar belakang halaman otentikasi secara permanen dan eksklusif ke `InteractiveDotGrid`.
+  - Menghapus kontrol selector tombol floating pill "Uji Latar" (`✨ Dot Grid`, `💡 Spotlight`, `🫧 Blobs`) dan state `bgEffect`.
+  - Menghapus modul komponen eksperimental yang tidak lagi digunakan (`InteractiveSpotlight.tsx` dan `InteractiveFloatingBlobs.tsx`), merampingkan ukuran bundle dan dependency tree.
+
 ### [2026-10-01] - Auth Experience: Glassmorphism Card & Interactive Background Suite (Dot Grid, Spotlight, Blobs)
 * **Titik Pemulihan Aman (Rollback Checkpoint)**:
   - Git Tag: `checkpoint-pre-auth-effects` (Commit: `b9baa03`).

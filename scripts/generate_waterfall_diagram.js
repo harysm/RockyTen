@@ -1,0 +1,292 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const { Resvg } = require('@resvg/resvg-js');
+
+// Dimensions
+const width = 1600;
+const height = 1150;
+
+// Colors
+const cBlue = '#2563EB';
+const cTeal = '#0284C7';
+const cIndigo = '#4F46E5';
+const cAmber = '#D97706';
+const cGreen = '#059669';
+
+const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap');
+      text { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+      .title { font-size: 26px; font-weight: 800; fill: #0F172A; letter-spacing: -0.5px; }
+      .subtitle { font-size: 15px; font-weight: 500; fill: #64748B; }
+      .badge-text { font-size: 13px; font-weight: 700; fill: #FFFFFF; }
+      .card-title { font-size: 17px; font-weight: 700; fill: #0F172A; }
+      .card-subtitle { font-size: 12px; font-weight: 600; fill: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
+      .item-text { font-size: 13px; font-weight: 400; fill: #334155; line-height: 1.5; }
+      .item-bullet { font-size: 14px; font-weight: 700; }
+      .step-num { font-size: 18px; font-weight: 800; fill: #FFFFFF; }
+      .footer-text { font-size: 13px; font-weight: 500; fill: #94A3B8; }
+    </style>
+    
+    <!-- Drop Shadow Filters -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="112%" height="116%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.07" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.04" />
+    </filter>
+    
+    <filter id="badge-shadow" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.15" />
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94A3B8" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563EB" />
+    </marker>
+
+    <!-- Gradients -->
+    <linearGradient id="grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="100%" stop-color="#0369A1" />
+    </linearGradient>
+    <linearGradient id="grad-3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#4338CA" />
+    </linearGradient>
+    <linearGradient id="grad-4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="grad-5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="${width}" height="${height}" fill="#F8FAFC" rx="16" />
+  <rect x="2" y="2" width="${width - 4}" height="${height - 4}" fill="none" stroke="#E2E8F0" stroke-width="2" rx="14" />
+
+  <!-- Header Banner -->
+  <g transform="translate(80, 55)">
+    <!-- Small Category Pill -->
+    <rect x="0" y="0" width="220" height="28" rx="14" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1" />
+    <text x="110" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#1D4ED8" letter-spacing="0.5">METODE PENELITIAN SDLC</text>
+    
+    <text x="0" y="62" class="title">Metode Pengembangan Perangkat Lunak Waterfall</text>
+    <text x="0" y="88" class="subtitle">Rancang Bangun Aplikasi RockyTen Berbasis Web — PT Garciafood Nusantara Gemilang</text>
+  </g>
+
+  <!-- Step Connector Lines (Cascading Waterfall Flow) -->
+  <!-- Step 1 to Step 2 -->
+  <path d="M 680 230 C 720 230, 720 370, 750 370" fill="none" stroke="#CBD5E1" stroke-width="3" stroke-dasharray="6,6" />
+  <path d="M 680 230 L 710 230 L 710 370 L 744 370" fill="none" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- Step 2 to Step 3 -->
+  <path d="M 830 460 L 860 460 L 860 560 L 894 560" fill="none" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- Step 3 to Step 4 -->
+  <path d="M 980 650 L 1010 650 L 1010 750 L 1044 750" fill="none" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- Step 4 to Step 5 -->
+  <path d="M 1130 840 L 1160 840 L 1160 940 L 1194 940" fill="none" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- ========================================================================= -->
+  <!-- CARD 1: ANALISIS KEBUTUHAN (Requirements Analysis) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(80, 160)" filter="url(#card-shadow)">
+    <!-- Card Base -->
+    <rect width="600" height="150" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <path d="M 0 12 C 0 5.37 5.37 0 12 0 L 16 0 L 16 150 L 12 150 C 5.37 150 0 144.63 0 138 Z" fill="url(#grad-1)" />
+    
+    <!-- Number Badge -->
+    <circle cx="48" cy="40" r="20" fill="url(#grad-1)" filter="url(#badge-shadow)" />
+    <text x="48" y="47" text-anchor="middle" class="step-num">01</text>
+    
+    <!-- Title & Subtitle -->
+    <text x="82" y="36" class="card-title">Analisis Kebutuhan Sistem</text>
+    <text x="82" y="52" class="card-subtitle">Requirements Analysis</text>
+    
+    <!-- Divider -->
+    <line x1="82" y1="62" x2="570" y2="62" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- Content Bullets -->
+    <text x="82" y="82" fill="#2563EB" class="item-bullet">•</text>
+    <text x="96" y="82" class="item-text">Observasi langsung proses operasional &amp; alur kerja kasir/dapur PT Garciafood</text>
+
+    <text x="82" y="103" fill="#2563EB" class="item-bullet">•</text>
+    <text x="96" y="103" class="item-text">Wawancara terstruktur dengan Pembimbing Lapangan (Annisa) &amp; PIC 5 divisi</text>
+
+    <text x="82" y="124" fill="#2563EB" class="item-bullet">•</text>
+    <text x="96" y="124" class="item-text">Identifikasi 10 Kebutuhan Fungsional (FR) &amp; 5 Kebutuhan Non-Fungsional (NFR)</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- CARD 2: PERANCANGAN SISTEM (System Design) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(230, 340)" filter="url(#card-shadow)">
+    <!-- Card Base -->
+    <rect width="600" height="150" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <path d="M 0 12 C 0 5.37 5.37 0 12 0 L 16 0 L 16 150 L 12 150 C 5.37 150 0 144.63 0 138 Z" fill="url(#grad-2)" />
+    
+    <!-- Number Badge -->
+    <circle cx="48" cy="40" r="20" fill="url(#grad-2)" filter="url(#badge-shadow)" />
+    <text x="48" y="47" text-anchor="middle" class="step-num">02</text>
+    
+    <!-- Title & Subtitle -->
+    <text x="82" y="36" class="card-title">Perancangan Sistem</text>
+    <text x="82" y="52" class="card-subtitle">System Design</text>
+    
+    <!-- Divider -->
+    <line x1="82" y1="62" x2="570" y2="62" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- Content Bullets -->
+    <text x="82" y="82" fill="#0284C7" class="item-bullet">•</text>
+    <text x="96" y="82" class="item-text">Pemodelan aliran data: Diagram Konteks &amp; Data Flow Diagram (DFD Level 1)</text>
+
+    <text x="82" y="103" fill="#0284C7" class="item-bullet">•</text>
+    <text x="96" y="103" class="item-text">Perancangan struktur basis data relasional (ERD Supabase PostgreSQL 8 tabel)</text>
+
+    <text x="82" y="124" fill="#0284C7" class="item-bullet">•</text>
+    <text x="96" y="124" class="item-text">Perancangan matriks keamanan RBAC 3 tingkat (Developer, Owner, PIC Divisi)</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- CARD 3: IMPLEMENTASI SISTEM (Implementation / Coding) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(380, 520)" filter="url(#card-shadow)">
+    <!-- Card Base -->
+    <rect width="600" height="150" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <path d="M 0 12 C 0 5.37 5.37 0 12 0 L 16 0 L 16 150 L 12 150 C 5.37 150 0 144.63 0 138 Z" fill="url(#grad-3)" />
+    
+    <!-- Number Badge -->
+    <circle cx="48" cy="40" r="20" fill="url(#grad-3)" filter="url(#badge-shadow)" />
+    <text x="48" y="47" text-anchor="middle" class="step-num">03</text>
+    
+    <!-- Title & Subtitle -->
+    <text x="82" y="36" class="card-title">Implementasi &amp; Pengodean</text>
+    <text x="82" y="52" class="card-subtitle">Implementation / Coding</text>
+    
+    <!-- Divider -->
+    <line x1="82" y1="62" x2="570" y2="62" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- Content Bullets -->
+    <text x="82" y="82" fill="#4F46E5" class="item-bullet">•</text>
+    <text x="96" y="82" class="item-text">Konstruksi antarmuka modern dengan Next.js 16 (App Router), TypeScript, &amp; Tailwind</text>
+
+    <text x="82" y="103" fill="#4F46E5" class="item-bullet">•</text>
+    <text x="96" y="103" class="item-text">Pembangunan 5 modul L10: Scoreboard, Rocks, Headlines, To-Do, &amp; Issues IDS</text>
+
+    <text x="82" y="124" fill="#4F46E5" class="item-bullet">•</text>
+    <text x="96" y="124" class="item-text">Implementasi kontrol akses RBAC granular &amp; panel pengujian Role Switcher</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- CARD 4: PENGUJIAN SISTEM (Testing & Verification) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(530, 700)" filter="url(#card-shadow)">
+    <!-- Card Base -->
+    <rect width="600" height="150" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <path d="M 0 12 C 0 5.37 5.37 0 12 0 L 16 0 L 16 150 L 12 150 C 5.37 150 0 144.63 0 138 Z" fill="url(#grad-4)" />
+    
+    <!-- Number Badge -->
+    <circle cx="48" cy="40" r="20" fill="url(#grad-4)" filter="url(#badge-shadow)" />
+    <text x="48" y="47" text-anchor="middle" class="step-num">04</text>
+    
+    <!-- Title & Subtitle -->
+    <text x="82" y="36" class="card-title">Pengujian Sistem</text>
+    <text x="82" y="52" class="card-subtitle">Testing &amp; Verification</text>
+    
+    <!-- Divider -->
+    <line x1="82" y1="62" x2="570" y2="62" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- Content Bullets -->
+    <text x="82" y="82" fill="#D97706" class="item-bullet">•</text>
+    <text x="96" y="82" class="item-text">Pengujian fungsionalitas antarmuka menggunakan Black Box Testing (10 skenario)</text>
+
+    <text x="82" y="103" fill="#D97706" class="item-bullet">•</text>
+    <text x="96" y="103" class="item-text">Pengujian keamanan wewenang RBAC antar peran (Developer, Owner, PIC 5 divisi)</text>
+
+    <text x="82" y="124" fill="#D97706" class="item-bullet">•</text>
+    <text x="96" y="124" class="item-text">Verifikasi kompatibilitas peramban &amp; integrasi responsivitas Dark/Light mode</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- CARD 5: PENERAPAN & EVALUASI (Deployment & Maintenance) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(680, 880)" filter="url(#card-shadow)">
+    <!-- Card Base -->
+    <rect width="600" height="150" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <path d="M 0 12 C 0 5.37 5.37 0 12 0 L 16 0 L 16 150 L 12 150 C 5.37 150 0 144.63 0 138 Z" fill="url(#grad-5)" />
+    
+    <!-- Number Badge -->
+    <circle cx="48" cy="40" r="20" fill="url(#grad-5)" filter="url(#badge-shadow)" />
+    <text x="48" y="47" text-anchor="middle" class="step-num">05</text>
+    
+    <!-- Title & Subtitle -->
+    <text x="82" y="36" class="card-title">Penerapan &amp; Evaluasi Akhir</text>
+    <text x="82" y="52" class="card-subtitle">Deployment &amp; Evaluation</text>
+    
+    <!-- Divider -->
+    <line x1="82" y1="62" x2="570" y2="62" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- Content Bullets -->
+    <text x="82" y="82" fill="#059669" class="item-bullet">•</text>
+    <text x="96" y="82" class="item-text">Deployment aplikasi ke infrastruktur komputasi awan Vercel Platform</text>
+
+    <text x="82" y="103" fill="#059669" class="item-bullet">•</text>
+    <text x="96" y="103" class="item-text">Evaluasi operasional riil bersama Pembimbing Lapangan (Annisa) &amp; jajaran Owner</text>
+
+    <text x="82" y="124" fill="#059669" class="item-bullet">•</text>
+    <text x="96" y="124" class="item-text">Penyerahan sistem, penyusunan dokumentasi teknis, &amp; pengesahan laporan PKL</text>
+  </g>
+
+  <!-- Footer Brand / Meta -->
+  <g transform="translate(80, 1085)">
+    <text x="0" y="0" class="footer-text">Sumber: Olahan Penulis Berdasarkan Metode Waterfall (Pressman, 2015) &amp; Studi Kasus PT Garciafood Nusantara Gemilang (2026)</text>
+  </g>
+</svg>
+`;
+
+async function generate() {
+  console.log('🎨 Membuat berkas SVG Diagram Waterfall...');
+  const svgPath = path.join(__dirname, '..', 'laporan', 'diagram_waterfall.svg');
+  fs.writeFileSync(svgPath, svg, 'utf8');
+  console.log('✅ SVG tersimpan di:', svgPath);
+
+  console.log('🖼️ Mengonversi SVG ke PNG Resolusi Tinggi (300 DPI / High-Res) via Resvg...');
+  const resvg = new Resvg(svg, {
+    fitTo: {
+      mode: 'width',
+      value: 2400, // 2400px width for crystal clear 300 DPI print quality
+    },
+  });
+
+  const pngData = resvg.render();
+  const pngBuffer = pngData.asPng();
+
+  const pngPath1 = path.join(__dirname, '..', 'laporan', 'diagram_waterfall.png');
+  fs.writeFileSync(pngPath1, pngBuffer);
+  console.log('✅ PNG tersimpan di:', pngPath1);
+
+  // Copy to brain artifact directory so it can be previewed
+  const artifactDir = 'C:\\Users\\Haxxs\\.gemini\\antigravity\\brain\\8b3d4162-111c-43c7-829d-ad8f71546ffa';
+  const pngPath2 = path.join(artifactDir, 'diagram_waterfall.png');
+  fs.writeFileSync(pngPath2, pngBuffer);
+  console.log('✅ PNG tersimpan di artifact:', pngPath2);
+
+  const kb = (pngBuffer.length / 1024).toFixed(1);
+  console.log(`📊 Ukuran file PNG: ${kb} KB (Resolusi 2400x1725, Super Jernih)`);
+}
+
+generate().catch(console.error);
